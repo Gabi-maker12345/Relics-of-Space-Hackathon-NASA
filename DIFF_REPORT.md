@@ -231,3 +231,142 @@ Itens reportados pelo cliente e tratados nesta rodada (referência: página de p
 - `npm run build` ✔ (16.5s, 550 kB gzip).
 - Console limpo; modal abre/fecha (X/Escape), rota direta funciona, scroll do modal não move o carrossel.
 - Wheel: passos de exatamente 1 projeto por gesto, com snap.
+
+---
+
+# RODADA 4 — auditoria visual completa (SOMENTE RELATÓRIO, nada corrigido)
+
+Condições: original e clone em tabs lado a lado, 1280×900 e (spot-check) 375/768/1920, zoom 100%, mouse em (2,2). Evidências: `/tmp/diff/a2-*`, `a4-*`, `a5-*`, `a6-*`. Como o original tem **motion ambiente** (os cards respiram/driftam), diffs globais de hover ficam contaminados; onde possível usei geometria/luminância medidas.
+
+## Evidência-chave medida (1280)
+
+| Grandeza | Original | Clone | Δ |
+|---|---|---|---|
+| Silhueta do card central vs DOM (borda esquerda) | 267px (DOM 307 → **−40px**, puxa p/ dentro) | 290px (DOM 307 → **+17px**, escala p/ fora) | sinal oposto |
+| Silhueta borda direita | 922px (DOM 973 → **−51px**) | 990px (DOM 973 → +17px) | sinal oposto |
+| Variação da borda superior do card (curvatura) | **36px** de range (assimétrica) | **0px** (reta) | distorção ausente |
+| Gap visível entre nathan e casa (y=450) | **9px** de gap escuro (258→267) | **nenhum** (run contínuo 63→1216) | cards fundidos |
+| Grade, espaçamento de células (y=760) | 138px | 161px | +17% |
+| Luminância das linhas da grade (mediana/p95) | 18 / 25 | 46 / 58 | ~2× mais brilhante |
+| Hover de link no portal (pixel diff) | 349.567 px | 140 px (≈ ruído) | animação ausente |
+
+## 1. Layout / cena 3D
+
+| # | Elemento | Categoria | Original | Clone | Severidade | Correção sugerida |
+|---|---|---|---|---|---|---|
+| R4-01 | Superfície dos cards ("sheet") | distorção 3D | card convexo: bordas puxadas **para dentro** (−40/−51px), curvatura superior até 36px, lean por card | plano + arco de túnel; bordas empurradas p/ fora pela `CARD_VISUAL_SCALE` | **Alta** | portar o shader de sheet (`u_sheet/u_lean`, dome, normais analíticas) e aplicar ao card + title/desc/pill no mesmo frame |
+| R4-02 | Espaçamento entre cards | perceção | gap escuro de 9px no DOM preservado e ampliado pela curvatura | sem gap: planes encostam/sobrepõem (run contínuo) | **Alta** | remover o scale 1.05 e usar a curvatura real em vez de crescer o plano |
+| R4-03 | Sobreposição com vizinhos | z/ordem | vizinhos separados, escuros entre eles | card central “cola” nos vizinhos | **Alta** | idem R4-01/R4-02 |
+| R4-04 | Título/desc/pill do card | ancoragem | compartilham o bulge do card no mesmo espaço (warpam com ele); título projeta −19px do DOM | planos planos; só o túnel (arco) aplicado; título no DOM exato | **Alta** | avaliar o mesmo `sheetGlobals` nos três tipos |
+| R4-05 | Grade @1280 | calibração | célula 138px (y=760) | 161px | Média | `uCell` proporcional ao rem/viewport (não constante 140px) |
+| R4-06 | Grade | cor/opacidade | linhas median 18 / p95 25 | 46 / 58 | Média | baixar alpha ~50% e/ou reforçar o fog |
+| R4-07 | Cluster título+desc | contraste/interleave | desc dim e warpada; título cobre o início da linha 1 da desc | desc legível acima do título; sem warp | Média | dim da desc (~.3), mask/reveal correto e warp |
+| R4-08 | Rótulo dos placeholders | assets | arte real | rótulo grande/branco 20% muito chamativo | Baixa | reduzir opacidade/tamanho do rótulo (placeholders aceitos) |
+
+## 2. Tipografia
+
+| # | Elemento | Categoria | Original | Clone | Severidade | Correção sugerida |
+|---|---|---|---|---|---|---|
+| R4-09 | Nav `.label` largura | métrica | 122px | 124px (após tracking .05em) | Baixa | ajustar tracking por elemento (−.01em) |
+| R4-10 | Glifos do card | render | SDF; warp junto ao plano; desc com tracking fechado | CanvasTexture; planos retos | Média | coberto por R4-04 (mesma infra) |
+| R4-11 | Título do modal | escala | — | `text-[4.2rem]` arbitrário, fora dos tokens | Baixa | promover a token (`--text-42`) |
+
+## 3. Cores e superfícies
+
+| # | Elemento | Categoria | Original | Clone | Severidade | Correção sugerida |
+|---|---|---|---|---|---|---|
+| R4-12 | Linhas do floor | cor | ~18–25 lum | ~46–58 lum | Média | ver R4-06 |
+| R4-13 | Borda de recorte dos cards | AA | silhueta macia, sem rim | rim claro de ~1px na borda do plano | Baixa | suavizar alpha da máscara (feather maior) |
+
+## 4. Imagens e ícones
+
+| # | Elemento | Categoria | Original | Clone | Severidade | Correção sugerida |
+|---|---|---|---|---|---|---|
+| R4-14 | Seta do pill do card | ícone | seta fina e menor, deslocada para o canto superior-esquerdo do disco | seta mais grossa/central no disco | Baixa | redesenhar com a geometria/peso medidos (viewBox e stroke próprios) |
+| R4-15 | Aro do portal (hole) | ícone/superfície | toro metal com reflexos que se movem | gradiente shader estático | Média | [parcialmente NÃO VERIFICADO] animação do ring; adicionar variação temporal sóbria |
+| R4-16 | Cursor | ícone | nativo oculto; sem dot visível na captura; “trail” deforma a folha | bolinha branca 10px sempre visível | Média | [PARCIAL] decidir: ocultar cursor nativo e implementar trail, ou remover a bolinha |
+
+## 5. Componentes e estados
+
+| # | Elemento | Categoria | Original | Clone | Severidade | Correção sugerida |
+|---|---|---|---|---|---|---|
+| R4-17 | Hover nos links do portal | estado | `alpha × .6` em `.3s power2.out` (`hoverText`) | nenhuma mudança visual (diff 140px) | **Alta** | wire de `pointerenter/leave` nos `[data-gl=text]` de links → tween de alpha do plano |
+| R4-18 | Hover do pill | estado | lens/ring + `mark` (in 1s / out .75s expo) + offset do label (`u_pillA/u_lens`) | escala 1.08 apenas | Média | shader do pill com disc+ring+lens e animações de mark |
+| R4-19 | Pill dentro do card | estado | idem R4-18, disparado no hover do card | estático | Média | idem |
+| R4-20 | Input do newsletter (hover) | estado | lens/ring no pill de input | escala do pill | Média | idem R4-18 |
+| R4-21 | Botão Subscribe | estado | arrow mark enter/exit | só `disabled` | Média | animar a seta (mark) nos estados busy/idle |
+| R4-22 | Modal de projeto — foco | a11y | página real (sem trap) | `role=dialog` sem focus trap completo (Tab escapa) | Média | trap de foco + aria-hidden no conteúdo de fundo |
+| R4-23 | Close (X) hover | estado | não capturado | `scale 1.05` CSS | Baixa | [NÃO VERIFICADO] confirmar no original |
+
+## 6. Animações e transições
+
+| # | Elemento | Categoria | Original | Clone | Severidade | Correção sugerida |
+|---|---|---|---|---|---|---|
+| R4-24 | Idle do carrossel | motion ambiente | cards driftam/respiram continuamente (diferenças entre frames parados) | cena estática em repouso | Média | clock de idle (senoidal lento por card) com amplitude pequena |
+| R4-25 | Easter egg "llama rain" (chunk `Rain`) | animação | existe no bundle | não portado | Baixa | [NÃO VERIFICADO] gatilho |
+
+## 7. Suavidade
+
+| # | Elemento | Categoria | Original | Clone | Severidade | Correção sugerida |
+|---|---|---|---|---|---|---|
+| R4-26 | Frame pacing | suavidade | não medido (headless) | pump 100ms em aba oculta; 60fps em aba ativa | Baixa | [NÃO VERIFICADO] medir em aba ativa com PerformanceObserver |
+
+## 8. Comportamento e lógica
+
+| # | Elemento | Categoria | Original | Clone | Severidade | Correção sugerida |
+|---|---|---|---|---|---|---|
+| R4-27 | Indicador de scroll do projeto | UI | barra vertical/indicador no canto do sheet do original | ausente | Baixa | barra fina com progresso do scroll |
+| R4-28 | Chips do projeto | UI | inclui chip com ícone de troféu | seta + chips texto | Baixa | slot de ícone no chip |
+
+## 9. Responsividade
+
+| # | Elemento | Categoria | Original | Clone | Severidade | Correção sugerida |
+|---|---|---|---|---|---|---|
+| R4-29 | Distorção no mobile | layout 3D | cards também warpam levemente? | planos retos (túnel desligado <650) | Média | [NÃO VERIFICADO] observar original 375 em vídeo |
+
+## 10. Acessibilidade e SEO
+
+| # | Elemento | Categoria | Original | Clone | Severidade | Correção sugerida |
+|---|---|---|---|---|---|---|
+| R4-30 | sr-only/headings/meta | a11y | 1982 chars, meta verbatim | idêntico ✓ | — | — |
+| R4-31 | Focus do modal | a11y | — | ver R4-22 | Média | idem |
+
+## 11. Desempenho
+
+| # | Elemento | Categoria | Original | Clone | Severidade | Correção sugerida |
+|---|---|---|---|---|---|---|
+| R4-32 | Carga/assets | perf | 50 KTX2; texturas por card | placeholders SVG + 192 requests (dev) | — | [NÃO VERIFICADO] nesta rodada; build prod 550kB gzip |
+
+---
+
+## Resumo por severidade
+
+| Severidade | Qtd | Itens |
+|---|---|---|
+| **Crítica** | 0 | — |
+| **Alta** | 5 | R4-01, R4-02, R4-03, R4-04, R4-17 |
+| **Média** | 11 | R4-05, R4-06, R4-07, R4-10, R4-15, R4-16, R4-18, R4-19, R4-20, R4-21, R4-22 |
+| **Baixa** | 9 | R4-08, R4-09, R4-11, R4-13, R4-14, R4-23, R4-25, R4-27, R4-28 |
+| Sem ação | 3 | R4-12 (duplo de R4-06), R4-24/R4-26/R4-29/R4-32 ([NÃO VERIFICADO/aceito]), R4-30 |
+
+## Resumo por categoria
+Layout/cena 3D: 8 · Tipografia: 3 · Cores: 2 · Ícones: 3 · Componentes/estados: 7 · Animações: 2 · Suavidade: 1 · Comportamento: 2 · Responsividade: 1 · A11y: 2 · Perf: 1
+
+## Incongruências internas do clone
+
+1. **`CARD_VISUAL_SCALE = 1.05`** contradiz o método 1:1 do DOM (rects medidos iguais) e é a causa direta dos cards “colados” (R4-02/R4-03).
+2. **Texto dos cards** compartilha só o túnel (arco) e não o “sheet” → título/desc/pill flutuam retos sobre superfície curva (R4-04).
+3. **Cursor**: bolinha branca global sempre visível; a lógica de esconder cobre só shields abertos — inconsistente com o original e com os próprios cards (R4-16).
+4. **Pills**: um único caminho de desenho com atributos ad-hoc (`data-arrow`, `data-ring`) gera três iconografias sem tokens compartilhados (R4-14/R4-18).
+5. **Modal**: paddings/margens e `text-[4.2rem]` fora dos tokens do chrome; sheet não usa o mesmo sistema do site (R4-11).
+6. **Grade**: `uCell` fixo em 140px enquanto o original escala por viewport (1280 errado, 1920 certo) — R4-05.
+
+## Não comparados / [NÃO VERIFICADO]
+
+1. Forma exata do hover dos links do portal (motion ambiente contamina o diff: 349.567px) — só presença/ausência foi determinada.
+2. Visual exato das animações `mark`/`lens` dos pills (`u_markIn/out`, `u_lens`) — sem slow-motion do original.
+3. Gatilho do easter egg “llama rain”.
+4. Comportamento do cursor custom por estado (não aparece na captura do original; possivelmente oculto sobre o card).
+5. KTX2 do original às vezes não pinta em headless (capturas com cards ausentes descartadas).
+6. Frame pacing/FSR real (só comparável em aba visível com profiling).
+7. Rasterização de glifos (SDF vs Canvas + fonte substituta) — comparação qualitativa apenas.
