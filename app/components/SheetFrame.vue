@@ -2,8 +2,10 @@
   <div class="flex items-center justify-center overflow-hidden" :class="overlay ? 'fixed inset-0 z-[90]' : 'absolute inset-0'">
     <div v-if="overlay" class="absolute inset-0 bg-black/95" aria-hidden="true" @click="emit('close')" />
     <div
-      class="sheet"
+      ref="frameRef"
+      class="sheet outline-none"
       role="dialog"
+      tabindex="-1"
       :aria-modal="overlay ? 'true' : undefined"
       :aria-label="label"
     >
@@ -52,6 +54,7 @@ const props = defineProps<{
 const emit = defineEmits<{ close: [] }>()
 
 const scrollRef = ref<HTMLElement | null>(null)
+const frameRef = ref<HTMLElement | null>(null)
 const closeRef = ref<HTMLElement | null>(null)
 const progress = ref(0)
 let raf = 0
@@ -67,9 +70,10 @@ const onScroll = (): void => {
   })
 }
 
-const focusClose = (): void => {
-  requestAnimationFrame(() => closeRef.value?.focus())
+/** Foco no próprio dialog (sem anel no botão); Tab leva ao close. */
+const focusSelf = (): void => {
+  requestAnimationFrame(() => frameRef.value?.focus({ preventScroll: true }))
 }
 
-defineExpose({ focusClose, scrollEl: scrollRef })
+defineExpose({ focusSelf, scrollEl: scrollRef })
 </script>

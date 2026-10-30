@@ -19,7 +19,7 @@
 import { projects } from '~/data/projects'
 
 const { activeSlug, close } = useProjectModal()
-const frame = ref<{ focusClose: () => void } | null>(null)
+const frame = ref<{ focusSelf: () => void } | null>(null)
 let lastFocus: HTMLElement | null = null
 
 const project = computed(() => projects.find(p => p.id === activeSlug.value) ?? null)
@@ -61,7 +61,7 @@ watch(project, (value) => {
   if (value !== null) {
     lastFocus = (document.activeElement as HTMLElement | null) ?? null
     window.addEventListener('keydown', onKey)
-    void nextTick(() => frame.value?.focusClose())
+    void nextTick(() => frame.value?.focusSelf())
   } else {
     window.removeEventListener('keydown', onKey)
     lastFocus?.focus?.()
