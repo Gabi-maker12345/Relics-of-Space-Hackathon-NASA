@@ -1,0 +1,85 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+/* Tokens — valores exatos de CLONE_SPEC.md §2 */
+@theme {
+  --font-sans: "Inter Variable", sans-serif;
+  --breakpoint-s: 650px;
+  --spacing: 0.1rem; /* px-20 = 2rem, gap-y-8 = .8rem … */
+  --radius-15: 1.5rem;
+  --radius-20: 2rem;
+  --text-8: 0.8rem;
+  --text-14: 1.4rem;
+  --text-16: 1.6rem;
+  --text-18: 1.8rem;
+  --text-35: 3.5rem;
+  --leading-14: 1.4;
+  --ease-out-expo: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-scrollbar: cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* Base — Tailwind preflight já zera margins/paddings; aqui só o que o original define. */
+html {
+  font-family: var(--font-sans);
+  font-size: clamp(5px, 20px, 10 * 100vw / var(--size));
+  -webkit-text-size-adjust: none;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+:root {
+  --size: 390;
+  @media (min-width: 650px) {
+    --size: 1500;
+  }
+}
+body,
+html {
+  height: 100%;
+  max-height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  position: fixed;
+  touch-action: none;
+  width: 100%;
+}
+body {
+  background: #000;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 1.4rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+a {
+  text-decoration: none;
+}
+
+/* Estados hover/touch — regras compiladas de CLONE_SPEC.md §3 */
+@media (hover: hover) and (pointer: fine) {
+  .has-hover\:hover\:opacity-60:hover { opacity: 0.6; }
+  .has-hover\:hover\:opacity-100:hover { opacity: 1; }
+}
+@media (hover: none), (pointer: coarse) {
+  .has-not-hover\:text-\[max\(1\.4rem\,16px\)\] { font-size: max(1.4rem, 16px); }
+}
+
+/* .label e sr-only — §2.2/§4 */
+.label {
+  font-size: 1rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  /* compensação de largura da fonte substituta (Inter ~6% mais estreita que ABC Diatype) */
+  letter-spacing: 0.05em;
+}
+
+/* movimento reduzido: transições essenciais só (o engine também respeita) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

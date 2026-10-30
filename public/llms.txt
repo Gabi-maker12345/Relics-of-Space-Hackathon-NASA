@@ -1,0 +1,8 @@
+# llms.txt — clone de jesperlandberg.com
+
+# [INFERIDO] conteúdo do original em /llms.txt não foi capturado passivamente.
+Este é um clone educacional da homepage de jesperlandberg.com (SPEC CLONE_SPEC.md).
+Stack do original: Nuxt + Three.js (r185) + GSAP + Tailwind v4 + DatoCMS.
+O clone usa dados mockados e placeholders — nenhum asset original foi copiado.
+Rotas mapeadas: / (carrossel de featured work), /full (índice), /newsletter.
+Rotas /projects/* fora do escopo do clone (ver CLONE_PLAN.md §5.6).

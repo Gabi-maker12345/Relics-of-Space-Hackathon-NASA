@@ -1,0 +1,3 @@
+<template>
+  <FeaturedCarousel />
+</template>
