@@ -142,6 +142,10 @@ a {
   bottom: 3rem;
   width: 2.8rem;
   height: 2.8rem;
+  padding: 0.2rem;
+  border-radius: 9999px;
+  /* disco de papel: o anel lê mesmo sobre a coluna de mídia (mobile) */
+  background: var(--color-paper);
   pointer-events: none;
   color: rgb(0 0 0 / 0.55);
 }
