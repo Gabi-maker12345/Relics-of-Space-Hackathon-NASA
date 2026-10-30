@@ -1,1 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="979" viewBox="0 0 1800 979"><rect width="1800" height="979" fill="#414a5e"/><rect x="0" y="881" width="1800" height="98" fill="#ffffff" fill-opacity="0.045"/><text x="900" y="489" fill="#ffffff" fill-opacity="0.20" font-family="Arial, sans-serif" font-size="139" font-weight="600" text-anchor="middle" dominant-baseline="middle">book-of-happiness</text><text x="900" y="548" fill="#ffffff" fill-opacity="0.09" font-family="Arial, sans-serif" font-size="44" text-anchor="middle" dominant-baseline="middle">placeholder</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="979" viewBox="0 0 1800 979">
+  <defs>
+    <radialGradient id="g" cx="0.32" cy="0.18" r="0.9">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.055"/>
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0.012"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.12"/>
+    </radialGradient>
+  </defs>
+  <rect width="1800" height="979" fill="#414a5e"/>
+  <rect width="1800" height="979" fill="url(#g)"/>
+  <text x="900.0" y="507.5" fill="#ffffff" fill-opacity="0.10" font-family="Arial, sans-serif" font-size="52" font-weight="500" letter-spacing="6" text-anchor="middle" dominant-baseline="middle">book-of-happiness</text>
+  <rect x="0" y="829" width="1800" height="150" fill="#ffffff" fill-opacity="0.03"/>
+</svg>

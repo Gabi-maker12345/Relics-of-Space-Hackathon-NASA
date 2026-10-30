@@ -31,7 +31,6 @@ export const CHOREO = {
   holeClose: { dur: 0.65, ease: 'folio' } as { dur: number; ease: 'folio' },
   holeScaleIn: { dur: 0.3, ease: 'power2out' } as { dur: number; ease: 'power2out' },
   holeScaleOut: { dur: 0.25, ease: 'power2out' } as { dur: number; ease: 'power2out' },
-  holeGrid: { dur: 0.3, ease: 'power2out' } as { dur: number; ease: 'power2out' },
   holeDelay: 0.2, // atraso dos textos do painel (ay/oy)
   // cursor custom
   cursorIn: { dur: 0.35, ease: 'power2out' } as { dur: number; ease: 'power2out' },

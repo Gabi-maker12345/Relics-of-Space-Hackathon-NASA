@@ -370,3 +370,110 @@ Layout/cena 3D: 8 · Tipografia: 3 · Cores: 2 · Ícones: 3 · Componentes/esta
 5. KTX2 do original às vezes não pinta em headless (capturas com cards ausentes descartadas).
 6. Frame pacing/FSR real (só comparável em aba visível com profiling).
 7. Rasterização de glifos (SDF vs Canvas + fonte substituta) — comparação qualitativa apenas.
+
+---
+
+# RODADA 5 — correções (porta da matemática original) + movimento
+
+Método: o bundle do original (`/_nuxt/DZyj3ghP.js`) contém os shaders **comentados e completos** (sheet/lean/floor/light). Em vez de aproximar por medição, portei as funções e constantes reais (`SHEET_*`, `leanRamp`, `sheetShape/sheetShapeSlope`, `sheetLit`, `mi` do piso) e reproduzi a câmera (`PerspectiveCamera fov 53.4`, `camZ = H/tan(26.7°)`, mundo com 1 unidade = 1 css px em z=0).
+
+## Resolução da RODADA 4 (todos os itens)
+
+| # | Status | Evidência (medida após) |
+|---|---|---|
+| R4-01 sheet/convexidade | ✅ | silhueta do card @1280 = **267..922** (original 267..922); borda superior com range **52–58px** (original 52) |
+| R4-02 espaçamento | ✅ | vão escuro de **9px** entre cards @y=450 (original 9); `CARD_VISUAL_SCALE` removida |
+| R4-03 vizinhos fundidos | ✅ | runs separados (0..258 / 267..922 / 930..1279), sem fusão |
+| R4-04 texto no sheet | ✅ | título/desc/pill avaliam `sheet(w)`+`lean` com os mesmos uniforms do card |
+| R4-05 calibração da grade | ✅ | células @1280: **111.2px (y=700) e 137.6–138.4 (y=760)** = original 111.2 / 137.6–138.4 (exato) |
+| R4-06 brilho da grade | ✅ | máx. **16–24** vs original 18 (p99 ~20) — `uGrid=.08`, `alpha=.9` |
+| R4-07 contraste desc | ✅ | desc máx **67 / p95 63** vs original 73 / 52 (antes 113/105) + scrim do título `uScrim=.45` |
+| R4-08 rótulo dos placeholders | ✅ | placeholders regerados: nome a 10% e sem o rótulo "placeholder" |
+| R4-09 labels | ✅ | `.label` weight 700 + tracking .04em: topo 35.2px (igual), largura 84 vs 85.6, máx **251** vs 255, p90 232 vs 251 |
+| R4-10 glifos warpados | ✅ | (mesma infra de R4-04) |
+| R4-11 token do título | ✅ | `--text-26/--text-42` + `.sheet__title` |
+| R4-12 = R4-06 | ✅ | — |
+| R4-13 rim do card | ✅ | máscara com feather `smoothstep(-1.6,1.4,sd)`; sem contorno de 1px |
+| R4-14 seta do pill | ✅ | ponta preenchida + haste de 1.1px (recorte 12x do original) |
+| R4-15 aro do portal | ✅ | refeito: **sem ouro**; aro fino escuro com brilho frio no topo-esq./fundo, deriva lenta (`uTime`) |
+| R4-16 cursor | ✅ parcial | dot de 6px (o original tem ~2–3px + *trail* que deforma a cena via `u_ballWarp`; ver pendências) |
+| R4-17 hover de link | ✅ | `uAlpha` ×0.6 em .3s power2.out — medido máx 254 → **153** no Instagram |
+| R4-18/19/20/21 pills | ✅ | `lens` (redesenho do canvas: fill ganha luz, seta desliza) + escala 1.03; .7s expo in / .5s out |
+| R4-22 focus trap | ✅ | Tab cicla dentro do `role=dialog`; Escape fecha; foco volta ao gatilho |
+| R4-23 hover do X | ✅ | `.sheet__close:hover { scale 1.06 }` com ease-out |
+| R4-24 idle do carrossel | ⛔ justificado | medi o original em 2 frames (1.4s): deslocamento rígido **0px** no piso/chrome; o que muda é o *conteúdo* das texturas (vídeo/arte) — sem drift a portar |
+| R4-25 llama rain | ⛔ justificado | easter egg do bundle; precisa do gatilho exato + assets próprios — não portado |
+| R4-26 frame pacing | ⛔ justificado | só mensurável em aba visível com profiling; build/produção estável |
+| R4-27 scroll indicator | ✅ | barra fixa à esquerda do sheet (progresso via scroll passivo + rAF) |
+| R4-28 trophy chip | ⛔ justificado | depende de um chip de "award" no dado do projeto (o mock não tem); slot pronto |
+| R4-29 mobile | ✅ | 375: sheet off, piso oculto, eixo Y, título **empilhado acima** do excerpt (original) |
+| R4-30 a11y | ✅ | sr-only/meta idênticos; foco do modal ver R4-22 |
+| R4-31/32 perf | ⚠️ | build 550kB gzip (three.js); sem reflexo do piso (pass espelhado descartado) |
+
+## Correções novas (não listadas na RODADA 4)
+
+| # | Achado | Correção |
+|---|---|---|
+| N1 | Portal tinha **aro dourado**; o original tem disco preto com aro fino escuro | shader refeito (metal 0.02 + brilho frio); raio corrigido de .2572W → **.225W** (medido 576px de diâmetro @1280) |
+| N2 | Texto GL **não atualizava** quando o DOM mudava (Profile→Close, email digitado, status) | `scan()` compara `textContent`, `MutationObserver` observa `characterData` |
+| N3 | `CanvasTexture` **não redimensiona** após o 1º upload (ghost "NEWSLETTER" sobre "CLOSE") | textura recriada quando o canvas muda de tamanho |
+| N4 | Canvas de texto com 2 linhas por causa do `scrollHeight` (pseudo `before:-inset-15`) | altura/largura vêm do box de layout |
+| N5 | Texto pequeno "cinzento" (downsample 2× + mipmap) | canvas desenhado a **1px de dispositivo por px**; filtro linear sem mipmap; hairline de .4px em corpos <12px |
+| N6 | Piso com convenção de z errada (ficava atrás da origem) e borda da frente no meio da tela | posicionamento do original: `z ∈ [u, −run]`, `vFar = −z/run`, contato em vFar=0 |
+| N7 | Piso sem fade de entrada | `uAlpha` 0→0.9 em 900ms power2.out junto com a faixa |
+| N8 | Piso não escurecia com o portal | `uAlpha ×= (1 − 0.6·p)` |
+| N9 | Cards escureciam demais no portal (títulos sumiam) | dim só nos cards (×1−.72p); títulos/pills ficam |
+| N10 | Velocidade "teleporte" do boot gerava rear-up de ~4s | guarda de salto (>0.045/frame) zera V |
+| N11 | Título do card no mobile ficava sobre a 2ª linha da desc | título em fluxo no mobile (`relative s:absolute`) |
+| N12 | Estilos duplicados do sheet (modal e rota) | `.sheet`, `.sheet__close`, `.sheet__title`, `.sheet__progress` compartilhados |
+| N13 | `prefers-reduced-motion` não cobria sheet/portal | V=0 sem rear-up, `uTime=0`, animações do sheet desligadas |
+
+## Movimento — valores finais
+
+| Momento | Duração | Easing |
+|---|---|---|
+| Entrada dos cards | 1.25s (delay .1 + .05/card) | expo.out |
+| Stack rise | 1.25s (delay .25 + .1) | expo.out |
+| Títulos / textos / pills | 1.25s / 1.1s / .85s (stagger .075) | expo.out |
+| Reveal por linha | janela de 1.1–1.25s, stagger por linha | expo.out |
+| Dígitos (roll) | .9s | power3.out |
+| Hover do card (dente 10% alt.) | .5s ida / .5s volta | expo.out |
+| Hover de link (α ×.6) | .3s | power2.out |
+| Hover de pill (lens + 1.03) | .7s / .5s | expo.out |
+| Portal abre/fecha | .85s / .65s | "folio" (3 curvas do original) |
+| Portal escala | .3s / .25s | power2.out |
+| Piso fade-in | .9s | power2.out |
+| Boot bars | .42s (stagger 80ms) | power2.inOut |
+| Overlay do loader | .35s | power1.out |
+| Modal (fade / sheet) | .3s / .55s | cubic-bezier(0,0,.2,1) / cubic-bezier(.23,1,.32,1) |
+| Saída do modal | .3s | cubic-bezier(.4,0,1,1) |
+
+Superfície (constantes do original): `D = .2W·(1+1.1·V)`, `T=1.15`, `C=1`, shift −.2, tail 1, `BANK=−.16`, diagonal `y += .03x`, rear-up `.1W/.2W` com `V`, twist `1.8·V` nas bordas; `lean A=−.12W` (cards `k=sheetP`, piso `k=1`); luz `LIGHT_DIR(−.4,.5,1)`, gloss 48, spec .35, diff .12.
+
+## Diferenças que ficaram (e por quê)
+
+| # | Item | Motivo |
+|---|---|---|
+| P1 | Texturas reais (arte/vídeo dos 8 projetos) | assets do original (DatoCMS/KTX2) — substituídos por placeholders com a mesma paleta |
+| P2 | Esculturas 3D do portal (mão, esfera, asas) | assets 3D do original, sem licença |
+| P3 | Reflexo dos cards nas linhas do piso | exige pass espelhado (render target) — descartado por custo; o original usa `u_refl` a 1/10 de resolução |
+| P4 | Fonte ABC Diatype (paga) | Inter com peso 700 + tracking compensados (largura/brilho medidos) |
+| P5 | Texto em SDF (crisp em qualquer corpo) | canvas 1:1 + hairline; residual p90 232 vs 251 no label de 1rem |
+| P6 | Cursor com *trail* que deforma a cena (`u_ballWarp/u_ballShade`) | shader de warp global; implementado como dot |
+| P7 | Transição "flight" card→página de projeto (o card vira o sheet) | o clone usa modal/rota; a coreografia de elemento compartilhado não foi portada |
+| P8 | Trophy chip no projeto | depende de dados de prêmio que o mock não tem |
+| P9 | Easter egg "llama rain" | gatilho/asset não determinados |
+| P10 | Specular mais visível | é a matemática do original; em arte plana o brilho aparece mais do que sobre fotos |
+
+## Fidelidade estimada (após a rodada 5)
+
+| Seção | Visual | Movimento | Funcional |
+|---|---|---|---|
+| Cena 3D (cards/sheet/lean) | 95% | 95% | 100% |
+| Piso/grade | 95% | 100% | 95% (sem reflexo) |
+| Tipografia/chrome | 88% (fonte substituta) | 100% | 100% |
+| Cards (texto/captions) | 90% (arte placeholder) | 95% | 100% |
+| Portal/painéis | 80% (sem esculturas) | 92% | 100% |
+| Modal de projeto | 85% (mídia placeholder) | 95% | 100% |
+| Responsivo 375/768/1280/1920 | 95% | 95% | 100% |
+| A11y/reduced motion | 100% | 100% | 100% |

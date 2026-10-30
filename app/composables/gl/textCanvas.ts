@@ -50,6 +50,13 @@ export function drawTextPlane(input: PlaneInput): void {
   context.clearRect(0, 0, input.canvas.width, input.canvas.height)
 
   const win = windowHeightPx(spec)
+  // labels minúsculos (1rem): a SDF do original mantém hastes cheias; no canvas
+  // um traço-fio de 0.4px de dispositivo repõe a cobertura (brilho) sem engordar
+  const hairline = spec.sizePx < 12 ? 0.4 * spec.dpr : 0
+  if (hairline > 0) {
+    context.strokeStyle = spec.color
+    context.lineWidth = hairline
+  }
   let globalIndex = 0
   for (let lineIndex = 0; lineIndex < input.lines.length; lineIndex += 1) {
     const line = input.lines[lineIndex]
@@ -84,10 +91,12 @@ export function drawTextPlane(input: PlaneInput): void {
           const yPx = baseY + (glyphIndex - digit.target + 10 * digit.roll) * win
           if (yPx < baseY - win * 0.5 || yPx > baseY + win * 1.5) continue
           context.fillText(String(shownDigit), cursorX, yPx)
+          if (hairline > 0) context.strokeText(String(shownDigit), cursorX, yPx)
         }
         cursorX += context.measureText(String(digit.target)).width
       } else {
         context.fillText(char, cursorX, baseY)
+        if (hairline > 0) context.strokeText(char, cursorX, baseY)
         cursorX += context.measureText(char).width
       }
     }

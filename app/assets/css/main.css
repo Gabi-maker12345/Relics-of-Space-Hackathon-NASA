@@ -12,7 +12,11 @@
   --text-14: 1.4rem;
   --text-16: 1.6rem;
   --text-18: 1.8rem;
+  --text-26: 2.6rem;
   --text-35: 3.5rem;
+  --text-42: 4.2rem;
+  --color-paper: #f6f4ef;
+  --color-ink: #0b0b0b;
   --leading-14: 1.4;
   --ease-out-expo: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
@@ -67,10 +71,74 @@ a {
 /* .label e sr-only — §2.2/§4 */
 .label {
   font-size: 1rem;
-  font-weight: 500;
+  /* Diatype 500 é bem mais pesada que a Inter 500 nesse corpo (8.5px); 700
+     reproduz o peso/brilho do original. Tracking compensado para manter a
+     largura medida (85.6px @1280 em "JESPER LANDBERG"). */
+  font-weight: 700;
   text-transform: uppercase;
-  /* compensação de largura da fonte substituta (Inter ~6% mais estreita que ABC Diatype) */
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
+}
+
+/* ── Sheet de projeto (modal e rota) — frame + close compartilhados ── */
+.sheet {
+  position: relative;
+  margin: 2rem auto;
+  width: calc(100% - 4rem);
+  border-radius: var(--radius-20);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  padding: 3rem 2.5rem;
+}
+.sheet__close {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 9999px;
+  background: #000;
+  color: #fff;
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.sheet__close:hover { transform: scale(1.06); }
+.sheet__title {
+  font-size: var(--text-26);
+  line-height: var(--leading-14);
+  letter-spacing: -0.03em;
+}
+.sheet__progress {
+  position: fixed;
+  left: 4.5rem;
+  top: 50%;
+  height: 12rem;
+  width: 1px;
+  translate: 0 -50%;
+  background: rgb(0 0 0 / 0.12);
+  pointer-events: none;
+}
+.sheet__progress::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: calc(var(--progress, 0) * 100%);
+  background: rgb(0 0 0 / 0.55);
+}
+@media (min-width: 650px) {
+  .sheet {
+    margin-block: 4rem;
+    width: calc(100% - 8rem);
+    padding: 5rem 6rem;
+  }
+  .sheet__close { top: 2.5rem; right: 2.5rem; width: 4.5rem; height: 4.5rem; }
+  .sheet__progress { left: 7rem; }
+  .sheet__title { font-size: var(--text-42); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet__close { transition: none; }
 }
 
 /* movimento reduzido: transições essenciais só (o engine também respeita) */

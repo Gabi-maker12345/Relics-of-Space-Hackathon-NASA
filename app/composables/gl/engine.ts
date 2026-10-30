@@ -17,29 +17,56 @@ export type GlKind = 'text' | 'card' | 'bar' | 'pill'
 export type GlRole = 'title' | 'text' | 'label'
 
 const FOLLOW_LERP = 0.28
-const TUNNEL_VIEWPORT_FRACTION = 0.75
-const TUNNEL_RAMP_START = 0.1
-const TUNNEL_RAMP_END = 0.5
-const TUNNEL_FADE_ANG = Math.PI / 2.05
 const MAX_DPR = 2
 const WHEEL_DIVISOR = 0.3
 const SNAP_DELAY_MS = 220
 const DIGIT_ROLL_DUR = 0.9
 const CAROUSEL_EASE_DUR = 0.85
-const HOLE_RADIUS_FACTOR = 0.2572 // raio = .2572 * largura do viewport (medido: 1280 e 1920)
-const BALL_SIZE = 10
-const CARD_VISUAL_SCALE = 1.05 // presença visual do card (pedido: painéis maiores)
+const HOLE_RADIUS_FACTOR = 0.225 // raio medido no portal do original (576 css de diâmetro @1280)
+const BALL_SIZE = 6
+
+/**
+ * Câmera e sheet do original (bundle): PerspectiveCamera fov 53.4 em z=camZ,
+ * H = tan(fov/2)*camZ (metade da altura do frustum em z=0). O mundo do clone
+ * usa 1 unidade = 1 css px em z=0, então H = h/2 e W = w/2.
+ */
+const CAMERA_FOV = 53.4
+const SHEET_DEPTH = 0.2 // D = W*depth (desktop WF=.2; mobile .18)
+const SHEET_DEPTH_SMALL = 0.18
+const SHEET_SPAN = 1.15 // T (desktop $F; mobile 1)
+const SHEET_SPAN_SMALL = 1
+const SHEET_VELOCITY = 1.1 // qF: D cresce com a velocidade
+const LEAN_DOOR = -0.12 // door (desktop ZF; mobile 0)
+const DENT = 0.1 // u_dent
+const TITLE_SCRIM = 0.45 // gradiente escuro no rodapé do card sob o título
+const FLOOR_RUN = 6 // Mi.run (em meias-alturas)
+const FLOOR_WIDE = 4 // Mi.wide
+const FLOOR_CELL = 0.22 // Mi.cell
+const FLOOR_GRID = 0.08 // Mi.grid
+const FLOOR_LIP = 0.2 // Mi.lip
+const FLOOR_DROP = 0.06 // Mi.drop
+const FLOOR_ALPHA = 0.9 // Mi.alpha
 
 type EngineUniforms = {
   uMap: { value: THREE.Texture | null }
   uOpacity: { value: number }
+  uAlpha: { value: number }
   uRadiusPx: { value: number }
-  uHalfSize: { value: THREE.Vector2 }
-  uR: { value: number }
-  uP: { value: number }
-  uCenterX: { value: number }
-  uFadeAng: { value: number }
+  uRes: { value: THREE.Vector2 }
+  uShade: { value: number }
+  uShadeS: { value: number }
+  uWhite: { value: number }
+  uScrim: { value: number }
   uHover: { value: number }
+  uDent: { value: number }
+  uSheetW: { value: number }
+  uSheetD: { value: number }
+  uSheetT: { value: number }
+  uSheetC: { value: number }
+  uSheetP: { value: number }
+  uSheetV: { value: number }
+  uLeanA: { value: number }
+  uLeanW: { value: number }
 }
 
 type PlaneTextState = {
@@ -56,6 +83,10 @@ type Plane = {
   kind: GlKind
   role: GlRole
   group: HTMLElement | null
+  card: HTMLElement | null
+  index: number
+  lens: number
+  textRaw: string
   mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>
   uniforms: EngineUniforms
   canvas: HTMLCanvasElement
@@ -71,20 +102,29 @@ type Plane = {
   lift: number
   scaleBridge: { x: number; y: number }
   hover: number
-  interactive: boolean
 }
 
 function planeUniforms(texture: THREE.Texture): EngineUniforms {
   return {
     uMap: { value: texture },
     uOpacity: { value: 0 },
+    uAlpha: { value: 1 },
     uRadiusPx: { value: 0 },
-    uHalfSize: { value: new THREE.Vector2(1, 1) },
-    uR: { value: 0 },
-    uP: { value: 0 },
-    uCenterX: { value: 0 },
-    uFadeAng: { value: TUNNEL_FADE_ANG },
+    uRes: { value: new THREE.Vector2(1, 1) },
+    uShade: { value: 0 },
+    uShadeS: { value: 1 },
+    uWhite: { value: 0 },
+    uScrim: { value: 0 },
     uHover: { value: 0 },
+    uDent: { value: DENT },
+    uSheetW: { value: 0 },
+    uSheetD: { value: 0 },
+    uSheetT: { value: 1 },
+    uSheetC: { value: 1 },
+    uSheetP: { value: 0 },
+    uSheetV: { value: 0 },
+    uLeanA: { value: 0 },
+    uLeanW: { value: 0 },
   }
 }
 
@@ -184,7 +224,7 @@ export class GlEngine {
   private readonly camera = new THREE.PerspectiveCamera(45, 1, 1, 9000)
   private readonly scene = new THREE.Scene()
   private readonly carrier = new THREE.Group()
-  private gridMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial> | null = null
+  private floorMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial> | null = null
   private holeMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial> | null = null
   private ballMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial> | null = null
   private planes: Plane[] = []
@@ -219,13 +259,20 @@ export class GlEngine {
   private readonly hole = { p: 0, scale: 0.2 }
   private holeWanted: boolean | null = null
   private reduced = false
+  private readonly sheet = { W: 1, H: 1, D: 0, T: 1, C: 1, V: 0, A: 0, camZ: 1000 }
+  private sheetClock = 0
+  private lastCarouselP = 0
+  private velPx = 0
+  private floorBase = 0
 
   readonly booted: Promise<void> = new Promise<void>((resolve) => {
     this.bootedResolve = resolve
   })
 
   private crispDpr(): number {
-    return Math.min((window.devicePixelRatio || 1) * 2, 3)
+    // 1 px de canvas = 1 px de dispositivo: texto nítido (o original usa SDF;
+    // o downsample 2x com mipmap deixava os labels cinzentos)
+    return Math.min(window.devicePixelRatio || 1, MAX_DPR)
   }
 
   private startRenderer(canvas: HTMLCanvasElement): void {
@@ -239,7 +286,7 @@ export class GlEngine {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_DPR))
     this.scene.add(this.carrier)
     this.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    this.buildGrid()
+    this.buildFloor()
     this.buildHole()
     this.buildBall()
     if (this.holeWanted === true) {
@@ -247,21 +294,26 @@ export class GlEngine {
     }
   }
 
-  /** Piso em grade em perspectiva (fog para o horizonte) — SPEC §9. */
-  private buildGrid(): void {
-    if (!this.gridMesh) {
-      const geometry = new THREE.PlaneGeometry(1, 1, 64, 64)
+  /**
+   * Piso — porta fiel do FLOOR do original: um quad em perspectiva cuja
+   * borda da frente é posicionada a partir do rect dos cards (syncFloor),
+   * com a dobradiça (lean) compartilhada com o strip, dissolve em vFar,
+   * grade com fwidth e banda de contato. Sem reflexo (pass extra descartado).
+   */
+  private buildFloor(): void {
+    if (!this.floorMesh) {
+      const geometry = new THREE.PlaneGeometry(1, 1)
+      geometry.rotateX(-Math.PI / 2)
       const uniforms = {
-        uCell: { value: 140 },
-        uFadeStart: { value: this.viewport.h * 1.6 },
-        uFadeEnd: { value: this.viewport.h * 9 },
-        uNearStart: { value: this.viewport.h * 0.85 },
-        uNearEnd: { value: this.viewport.h * 1.55 },
-        uSize: { value: new THREE.Vector2(1, 1) },
-        uHoleP: { value: 0 },
-        uHoleR: { value: 1 },
-        uBulgeCenter: { value: new THREE.Vector2(0, 0) },
-        uDim: { value: 1 },
+        uLeanK: { value: 1 },
+        uLeanA: { value: 0 },
+        uLeanW: { value: 1 },
+        uRun: { value: 1 },
+        uC0: { value: new THREE.Color('#000000') },
+        uC1: { value: new THREE.Color('#000000') },
+        uAlpha: { value: 0 },
+        uGrid: { value: FLOOR_GRID },
+        uGridF: { value: new THREE.Vector2(1, 1) },
       }
       const material = new THREE.ShaderMaterial({
         vertexShader: glslGridVertex,
@@ -270,23 +322,75 @@ export class GlEngine {
         transparent: true,
         depthTest: false,
         depthWrite: false,
+        side: THREE.DoubleSide,
       })
-      this.gridMesh = new THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>(geometry, material)
-      this.gridMesh.rotation.x = -Math.PI / 2
-      this.gridMesh.renderOrder = -2
-      this.scene.add(this.gridMesh)
+      this.floorMesh = new THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>(geometry, material)
+      this.floorMesh.renderOrder = -1
+      this.floorMesh.frustumCulled = false
+      this.scene.add(this.floorMesh)
     }
-    const width = this.viewport.w * 24
-    const height = this.viewport.h * 14
-    this.gridMesh.scale.set(width, height, 1)
-    const gridUniforms = this.gridMesh.material.uniforms
-    gridUniforms.uSize.value.set(width, height)
-    gridUniforms.uFadeStart.value = this.viewport.h * 1.6
-    gridUniforms.uFadeEnd.value = this.viewport.h * 9
-    gridUniforms.uHoleR.value = this.holeRadius() * 2.2
-    gridUniforms.uBulgeCenter.value.set(0, -this.viewport.h * 0.5)
-    this.gridMesh.position.set(0, -this.viewport.h * 0.3, -this.viewport.h)
-    this.gridMesh.visible = this.viewport.w >= 650
+  }
+
+  /** Recalcula a câmera e a config do sheet para o viewport atual. */
+  private updateSheetConfig(): void {
+    const { w, h } = this.viewport
+    const small = w < 650
+    const H = h / 2
+    const W = w / 2
+    const camZ = H / Math.tan(THREE.MathUtils.degToRad(CAMERA_FOV / 2))
+    this.sheet.H = H
+    this.sheet.W = W
+    this.sheet.camZ = camZ
+    this.sheet.T = small ? SHEET_SPAN_SMALL : SHEET_SPAN
+    this.sheet.C = small ? 0 : 1
+    this.sheet.A = small ? 0 : W * LEAN_DOOR
+    this.sheet.D = W * (small ? SHEET_DEPTH_SMALL : SHEET_DEPTH) * (1 + SHEET_VELOCITY * this.sheet.V)
+    this.camera.fov = CAMERA_FOV
+    this.camera.aspect = w / h
+    this.camera.position.z = camZ
+    this.camera.updateProjectionMatrix()
+  }
+
+  /**
+   * Piso posicionado pelo fundo dos cards (como o original): a borda da
+   * frente fica `drop` abaixo do strip, o run é 6 meias-alturas e a célula
+   * 0.22H (quadrada por construção).
+   */
+  private syncFloor(): void {
+    const mesh = this.floorMesh
+    if (!mesh) return
+    const on = this.viewport.w >= 650
+    mesh.visible = on
+    if (!on) return
+    const { H, W } = this.sheet
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-carousel] [data-gl="card"]'))
+    let bottom = 0
+    let found = false
+    for (const card of cards) {
+      const rect = card.getBoundingClientRect()
+      if (rect.width < 1) continue
+      // borda inferior do card em world y (negativo): a frente do piso é o ponto mais baixo
+      const edge = -(rect.top + rect.height - this.viewport.h / 2)
+      if (!found || edge < bottom) bottom = edge
+      found = true
+    }
+    if (!found) bottom = -H * 0.45
+    const nearY = bottom - H * FLOOR_DROP
+    const run = H * FLOOR_RUN
+    const width = W * 2 * FLOOR_WIDE
+    const camZ = this.sheet.camZ
+    // z da borda da frente (coordenadas do original: cards em z=0, câmera em +camZ)
+    const nearZ = Math.min(camZ * (1 - Math.abs(nearY) / H) + H * FLOOR_LIP, camZ * 0.8)
+    const depth = nearZ + run
+    mesh.scale.set(width, 1, depth)
+    mesh.position.set(0, nearY, (nearZ - run) / 2)
+    const u = mesh.material.uniforms
+    u.uRun.value = run
+    u.uLeanA.value = this.sheet.A
+    u.uLeanW.value = W
+    u.uLeanK.value = 1
+    const cell = H * FLOOR_CELL
+    u.uGridF.value.set(width / cell, run / cell)
   }
 
   private holeRadius(): number {
@@ -299,6 +403,7 @@ export class GlEngine {
     const uniforms = {
       uP: { value: 0 },
       uAspect: { value: 1 },
+      uTime: { value: 0 },
     }
     const material = new THREE.ShaderMaterial({
       vertexShader: glslHoleVertex,
@@ -392,7 +497,7 @@ export class GlEngine {
     mesh.position.y = -(this.ball.y - this.viewport.h / 2)
     const u = mesh.material.uniforms
     u.uOpacity.value = this.ball.alpha
-    u.uHalfSize.value.set(BALL_SIZE / 2, BALL_SIZE / 2)
+    u.uRes.value.set(BALL_SIZE, BALL_SIZE)
   }
 
   /** Abre/fecha o portal (hole). Durações/easing do original. */
@@ -406,10 +511,6 @@ export class GlEngine {
     this.addTween(this.hole, 'p', this.hole.p, open ? 1 : 0, now, step.dur * 1000, step.ease)
     this.addTween(this.hole, 'scale', this.hole.scale, open ? 1 : 0.2, now, scaleStep.dur * 1000, scaleStep.ease)
     mesh.visible = true
-    const gridU = this.gridMesh?.material.uniforms
-    if (gridU) {
-      this.addTween(gridU.uHoleP as unknown as Record<string, number>, 'value', gridU.uHoleP.value, open ? 1 : 0, now, CHOREO.holeGrid.dur * 1000, CHOREO.holeGrid.ease)
-    }
     if (!open) {
       this.defer(700, () => {
         if (this.hole.p < 0.01 && this.holeMesh) this.holeMesh.visible = false
@@ -436,7 +537,7 @@ export class GlEngine {
     this.startRenderer(canvas)
     this.onResize()
     this.observer = new MutationObserver(() => this.queueScan())
-    this.observer.observe(document.body, { childList: true, subtree: true })
+    this.observer.observe(document.body, { childList: true, subtree: true, characterData: true })
     window.addEventListener('resize', this.onResize)
     window.addEventListener('focusin', this.onFocusIn)
     this.startLoop()
@@ -474,6 +575,8 @@ export class GlEngine {
             value,
             (texture) => {
               texture.colorSpace = THREE.SRGBColorSpace
+              texture.minFilter = THREE.LinearFilter
+              texture.generateMipmaps = false
               this.textures.set(key, texture)
               done()
             },
@@ -515,6 +618,12 @@ export class GlEngine {
       this.planes.push(this.createPlane(el, kind))
     })
     this.planes = this.planes.filter((p) => p.el.isConnected)
+    // texto mudou no DOM (Profile→Close, input do email, status) → redesenha
+    for (const plane of this.planes) {
+      if (plane.kind !== 'text') continue
+      const current = (plane.el.textContent ?? '').replace(/\s+/g, ' ').trim()
+      if (current !== plane.textRaw) plane.dirty = true
+    }
   }
 
   private createPlane(el: HTMLElement, kind: GlKind): Plane {
@@ -522,6 +631,9 @@ export class GlEngine {
     const context2d = canvas.getContext('2d') as CanvasRenderingContext2D
     const canvasTexture = new THREE.CanvasTexture(canvas)
     canvasTexture.colorSpace = THREE.SRGBColorSpace
+    canvasTexture.minFilter = THREE.LinearFilter
+    canvasTexture.magFilter = THREE.LinearFilter
+    canvasTexture.generateMipmaps = false
     // subdivisão: o dente do hover (dome por vértice) precisa de interpolação
     const geometry = new THREE.PlaneGeometry(1, 1, 24, 24)
     const textureSource = kind === 'card' ? this.textureForCard(el) : canvasTexture
@@ -544,6 +656,10 @@ export class GlEngine {
       kind,
       role,
       group,
+      card: kind === 'card' ? el : el.closest<HTMLElement>('[data-gl="card"]'),
+      index: this.planes.length,
+      lens: 0,
+      textRaw: (el.textContent ?? '').replace(/\s+/g, ' ').trim(),
       mesh,
       uniforms,
       canvas,
@@ -566,7 +682,6 @@ export class GlEngine {
       lift: 0,
       scaleBridge: { x: 1, y: 1 },
       hover: 0,
-      interactive: false,
     }
     if (kind === 'bar') {
       plane.uniforms.uOpacity.value = 1
@@ -578,13 +693,15 @@ export class GlEngine {
     if (kind === 'pill') {
       this.attachPillHover(el, plane)
     }
+    if (kind === 'text' && el.closest('a,button') !== null) {
+      this.attachLinkHover(el, plane)
+    }
     return plane
   }
 
   /** hover do card: dente GL + (no futuro) luz — duração .5s expo (in/out). */
   private attachHover(el: HTMLElement, plane: Plane): void {
     if (this.reduced) return
-    plane.interactive = true
     const enter = (): void => {
       this.addTween(plane.uniforms.uHover as unknown as Record<string, number>, 'value', plane.uniforms.uHover.value, 1, performance.now(), CHOREO.cardHover.dur * 1000, CHOREO.cardHover.ease)
     }
@@ -595,17 +712,40 @@ export class GlEngine {
     el.addEventListener('pointerleave', leave)
   }
 
-  /** hover do pill: escala .7s expo in / .5s out. */
+  /**
+   * hover do pill: o original anima um campo de lens (fisheye) + o mark da
+   * seta em .7s expo in / .5s out. Aqui: lens redesenha o canvas (seta desliza,
+   * anel acende) com uma micro-escala de 1.03.
+   */
   private attachPillHover(el: HTMLElement, plane: Plane): void {
     if (this.reduced) return
-    plane.interactive = true
+    const tweenLens = (to: number, step: { dur: number; ease: EngineEase }): void => {
+      this.addTween(plane, 'lens', plane.lens, to, performance.now(), step.dur * 1000, step.ease, () => {
+        this.redrawStaticPlane(plane)
+      })
+    }
     const enter = (): void => {
-      this.addTween(plane.scaleBridge, 'x', plane.scaleBridge.x, 1.08, performance.now(), CHOREO.pillHover.dur * 1000, CHOREO.pillHover.ease)
-      this.addTween(plane.scaleBridge, 'y', plane.scaleBridge.y, 1.08, performance.now(), CHOREO.pillHover.dur * 1000, CHOREO.pillHover.ease)
+      this.addTween(plane.scaleBridge, 'x', plane.scaleBridge.x, 1.03, performance.now(), CHOREO.pillHover.dur * 1000, CHOREO.pillHover.ease)
+      this.addTween(plane.scaleBridge, 'y', plane.scaleBridge.y, 1.03, performance.now(), CHOREO.pillHover.dur * 1000, CHOREO.pillHover.ease)
+      tweenLens(1, CHOREO.pillHover)
     }
     const leave = (): void => {
       this.addTween(plane.scaleBridge, 'x', plane.scaleBridge.x, 1, performance.now(), CHOREO.pillHover.outDur * 1000, CHOREO.pillHover.outEase)
       this.addTween(plane.scaleBridge, 'y', plane.scaleBridge.y, 1, performance.now(), CHOREO.pillHover.outDur * 1000, CHOREO.pillHover.outEase)
+      tweenLens(0, { dur: CHOREO.pillHover.outDur, ease: CHOREO.pillHover.outEase })
+    }
+    el.addEventListener('pointerenter', enter)
+    el.addEventListener('pointerleave', leave)
+  }
+
+  /** hover dos links/pills do portal: alpha × .6 em .3s power2.out (hoverText). */
+  private attachLinkHover(el: HTMLElement, plane: Plane): void {
+    if (this.reduced) return
+    const enter = (): void => {
+      this.addTween(plane.uniforms.uAlpha as unknown as Record<string, number>, 'value', plane.uniforms.uAlpha.value, CHOREO.linkHoverDim, performance.now(), CHOREO.linkHover.dur * 1000, CHOREO.linkHover.ease)
+    }
+    const leave = (): void => {
+      this.addTween(plane.uniforms.uAlpha as unknown as Record<string, number>, 'value', plane.uniforms.uAlpha.value, 1, performance.now(), CHOREO.linkHover.dur * 1000, CHOREO.linkHover.ease)
     }
     el.addEventListener('pointerenter', enter)
     el.addEventListener('pointerleave', leave)
@@ -619,15 +759,33 @@ export class GlEngine {
 
   private buildTextCanvas(plane: Plane): void {
     const dpr = this.crispDpr()
-    const elementWidth = Math.max(plane.el.clientWidth, plane.el.scrollWidth, 4)
     plane.text.fontSpec = readFontSpec(plane.el, dpr)
+    const box = plane.el.getBoundingClientRect()
+    // largura/altura do box de layout — scrollWidth/Height incluem o pseudo
+    // elemento de hit area (before:-inset-15) e davam canvas de 2 linhas
+    const elementWidth = Math.max(box.width, 4)
     const rawText = (plane.el.textContent ?? '').replace(/\s+/g, ' ').trim()
+    plane.textRaw = rawText
     const lineCount = Math.max(
       1,
-      Math.round(plane.el.scrollHeight / Math.max(1, plane.text.fontSpec.lineHeightPx)),
+      Math.round(box.height / Math.max(1, plane.text.fontSpec.lineHeightPx)),
     )
-    plane.canvas.width = Math.ceil(elementWidth * dpr)
-    plane.canvas.height = Math.ceil(lineCount * plane.text.fontSpec.lineHeightPx * dpr)
+    const nextW = Math.ceil(elementWidth * dpr)
+    const nextH = Math.ceil(lineCount * plane.text.fontSpec.lineHeightPx * dpr)
+    if (plane.canvas.width !== nextW || plane.canvas.height !== nextH) {
+      plane.canvas.width = nextW
+      plane.canvas.height = nextH
+      // CanvasTexture não redimensiona de forma confiável após o primeiro
+      // upload (size imutável em parte dos drivers): recria a textura.
+      plane.canvasTexture.dispose()
+      const texture = new THREE.CanvasTexture(plane.canvas)
+      texture.colorSpace = THREE.SRGBColorSpace
+      texture.minFilter = THREE.LinearFilter
+      texture.magFilter = THREE.LinearFilter
+      texture.generateMipmaps = false
+      plane.canvasTexture = texture
+      plane.uniforms.uMap.value = texture
+    }
     plane.text.canvasWidth = plane.canvas.width / dpr
     plane.text.canvasHeight = plane.canvas.height / dpr
     const lines = buildLines(plane.context2d, plane.text.fontSpec, rawText, elementWidth)
@@ -757,12 +915,10 @@ export class GlEngine {
       h: window.innerHeight,
       dpr: Math.min(window.devicePixelRatio || 1, MAX_DPR),
     }
-    this.camera.aspect = this.viewport.w / this.viewport.h
-    this.camera.position.z = this.viewport.h / 2 / Math.tan(THREE.MathUtils.degToRad(22.5))
-    this.camera.updateProjectionMatrix()
+    this.updateSheetConfig()
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_DPR))
     this.renderer.setSize(this.viewport.w, this.viewport.h, false)
-    this.buildGrid()
+    this.buildFloor()
     if (this.holeMesh) {
       const d = this.holeRadius() * 2
       this.holeMesh.scale.set(d, d, 1)
@@ -927,6 +1083,8 @@ export class GlEngine {
     const renderer = this.renderer
     if (!renderer) return
     this.lastTickAt = performance.now()
+    this.sheetClock = this.lastTickAt / 1000
+    this.updateSheetVelocity()
     this.runTweens(this.lastTickAt)
     this.runMarks(this.lastTickAt)
     this.advanceCarousel()
@@ -939,8 +1097,40 @@ export class GlEngine {
       this.syncPlane(plane)
     }
     this.syncHole()
+    this.syncFloor()
     this.updateBall()
     renderer.render(this.scene, this.camera)
+  }
+
+  /** Velocidade do strip (px/s) → V 0..1; alimenta o rear-up e a amplitude D. */
+  private updateSheetVelocity(): void {
+    const dp = this.carousel.p - this.lastCarouselP
+    this.lastCarouselP = this.carousel.p
+    if (this.reduced) {
+      // movimento reduzido: sem rear-up/wring dependente de velocidade
+      if (this.sheet.V !== 0) {
+        this.sheet.V = 0
+        this.sheet.D = this.sheet.W * (this.viewport.w < 650 ? SHEET_DEPTH_SMALL : SHEET_DEPTH)
+      }
+      return
+    }
+    // teleporte (boot centering / re-medida) não é gesto: não gera rear-up
+    if (Math.abs(dp) > 0.045) {
+      this.velPx = 0
+      if (this.sheet.V !== 0) {
+        this.sheet.V = 0
+        this.sheet.D = this.sheet.W * (this.viewport.w < 650 ? SHEET_DEPTH_SMALL : SHEET_DEPTH)
+      }
+      return
+    }
+    const pxPerSecond = Math.abs(dp) * this.carousel.max * 60
+    this.velPx += (pxPerSecond - this.velPx) * 0.18
+    const v = Math.min(1, Math.abs(Math.tanh(this.velPx / 550)))
+    if (Math.abs(v - this.sheet.V) > 0.0015) {
+      this.sheet.V = v
+      const small = this.viewport.w < 650
+      this.sheet.D = this.sheet.W * (small ? SHEET_DEPTH_SMALL : SHEET_DEPTH) * (1 + SHEET_VELOCITY * v)
+    }
   }
 
   private syncHole(): void {
@@ -951,10 +1141,9 @@ export class GlEngine {
     mesh.visible = this.hole.p > 0.002 || this.hole.scale > 0.25
     const d = this.holeRadius() * 2 * Math.max(0.001, this.hole.scale)
     mesh.scale.set(d, d, 1)
-    const gridMesh = this.gridMesh
-    if (gridMesh) {
-      gridMesh.material.uniforms.uDim.value = 1 - 0.55 * this.hole.p
-    }
+    u.uTime.value = this.reduced ? 0 : this.sheetClock
+    const floor = this.floorMesh?.material.uniforms
+    if (floor) floor.uAlpha.value = this.floorBase * (1 - 0.6 * this.hole.p)
   }
 
   private advanceCarousel(): void {
@@ -987,12 +1176,6 @@ export class GlEngine {
     return value
   }
 
-  /** Largura maior → túnel mais fechado (suave): 1280 = 0.75, 1920 ≈ 0.66. */
-  private tunnelFraction(): number {
-    const base = TUNNEL_VIEWPORT_FRACTION * Math.pow(1280 / Math.max(320, this.viewport.w), 0.32)
-    return Math.min(0.9, Math.max(0.4, base))
-  }
-
   private syncPlane(plane: Plane): void {
     const rect = plane.el.getBoundingClientRect()
     if (rect.width < 1 || rect.height < 1) {
@@ -1008,12 +1191,9 @@ export class GlEngine {
       plane.lastRectHash = hash
     }
     // Text GL usa o box do canvas (line-height) — o rect do DOM inline é mais estreito
-    const baseAnchor = plane.kind === 'text'
+    const anchor = plane.kind === 'text'
       ? { w: plane.text.canvasWidth, h: plane.text.canvasHeight }
       : { w: rect.width, h: rect.height }
-    const anchor = plane.kind === 'card'
-      ? { w: baseAnchor.w * CARD_VISUAL_SCALE, h: baseAnchor.h * CARD_VISUAL_SCALE }
-      : baseAnchor
     const styles = getComputedStyle(plane.el)
     const hiddenByGroup = plane.group ? !this.isShieldOpen(plane.group) : false
     const elOpacity = parseFloat(styles.opacity) || 1
@@ -1021,7 +1201,9 @@ export class GlEngine {
     const invisClass = plane.el.classList.contains('invisible')
     const domHidden = styles.display === 'none' || (styles.visibility === 'hidden' && !glOwned) || (invisClass && plane.kind === 'text')
     const visibility = domHidden ? 0 : hiddenByGroup ? 0 : 1
-    const portalDim = plane.group === null && this.isInTrack(plane.el) ? 1 - 0.38 * this.hole.p : 1
+    // o portal escurece os cards e o piso; títulos/pills seguem visíveis
+    const inStrip = plane.group === null && this.isInTrack(plane.el)
+    const portalDim = inStrip && plane.kind === 'card' ? 1 - 0.72 * this.hole.p : 1
     const targetOpacity = elOpacity * visibility * (plane.entered ? 1 : 0) * plane.enterAlpha * portalDim
     const uniforms = plane.uniforms
     uniforms.uOpacity.value += (targetOpacity - uniforms.uOpacity.value) * FOLLOW_LERP
@@ -1030,21 +1212,39 @@ export class GlEngine {
     const worldY = -(rect.top + rect.height / 2 - this.viewport.h / 2) + plane.lift
     plane.mesh.position.x += (worldX - plane.mesh.position.x) * FOLLOW_LERP
     plane.mesh.position.y += (worldY - plane.mesh.position.y) * FOLLOW_LERP
-    uniforms.uCenterX.value = plane.mesh.position.x
-    uniforms.uHalfSize.value.set(anchor.w / 2, anchor.h / 2)
+    uniforms.uRes.value.set(anchor.w, anchor.h)
     uniforms.uRadiusPx.value = Math.min(
       plane.text.fontSpec.radiusPx,
       Math.min(anchor.w, anchor.h) / 2,
     )
-    if ((plane.kind === 'card' || this.isInTrack(plane.el)) && this.viewport.w >= 650) {
-      const vpFrac = this.tunnelFraction()
-      const dist = Math.abs((rect.left + rect.width / 2 - this.viewport.w / 2) * 2) / (this.viewport.w * vpFrac)
-      const ramp = THREE.MathUtils.smoothstep(dist, TUNNEL_RAMP_START, TUNNEL_RAMP_END)
-      uniforms.uR.value = this.viewport.w * vpFrac
-      uniforms.uP.value += (ramp - uniforms.uP.value) * 0.2
-    } else {
-      uniforms.uP.value += (0 - uniforms.uP.value) * 0.2
-    }
+
+    // Superfície: cards/títulos/pills do strip compartilham sheet + lean;
+    // texto de página (chrome, painéis, modal) fica plano.
+    const onStrip = this.isInTrack(plane.el) && this.viewport.w >= 650
+    const sheetTarget = onStrip && plane.kind !== 'bar' ? 1 : 0
+    uniforms.uSheetP.value += (sheetTarget - uniforms.uSheetP.value) * 0.2
+    uniforms.uSheetW.value = this.sheet.W
+    uniforms.uSheetD.value = this.sheet.D
+    uniforms.uSheetT.value = this.sheet.T
+    uniforms.uSheetC.value = this.sheet.C
+    uniforms.uSheetV.value = this.sheet.V
+    uniforms.uLeanA.value = this.sheet.A
+    uniforms.uLeanW.value = this.sheet.W
+    uniforms.uShade.value = plane.kind === 'card' && onStrip ? 1 : 0
+    uniforms.uScrim.value = plane.kind === 'card' && onStrip ? TITLE_SCRIM : 0
+  }
+
+  /** Mistura uma cor CSS em direção ao branco (t>0) ou preto (t<0). */
+  private shadeColor(raw: string, t: number): string {
+    const m = raw.match(/-?[\d.]+/g)
+    if (m === null || m.length < 3) return raw
+    const r = Number(m[0])
+    const g = Number(m[1])
+    const b = Number(m[2])
+    const target = t >= 0 ? 255 : 0
+    const k = Math.min(1, Math.abs(t))
+    const mix = (v: number): number => Math.round(v + (target - v) * k)
+    return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`
   }
 
   /** Bar / pill: canvas com shape sólido (bg + border-radius do CSS computado). */
@@ -1058,33 +1258,48 @@ export class GlEngine {
     const ctx = plane.context2d
     ctx.clearRect(0, 0, w, h)
     const radius = plane.text.fontSpec.radiusPx * dpr
-    ctx.fillStyle = plane.kind === 'bar' ? '#ffffff' : styles.backgroundColor
+    const lens = plane.lens
+    if (plane.kind === 'bar') {
+      ctx.fillStyle = '#ffffff'
+    } else {
+      const base = styles.backgroundColor
+      // lens: a superfície "cede" ao ponteiro — o fill ganha um tom de luz
+      const luminance = Number((base.match(/-?[\d.]+/g) ?? ['0', '0', '0']).slice(0, 3).reduce((a, v) => a + Number(v), 0)) / 765
+      ctx.fillStyle = lens > 0.002 ? this.shadeColor(base, (0.5 - luminance) * 0.35 * lens) : base
+    }
     ctx.beginPath()
     ctx.roundRect(0, 0, w, h, Math.min(radius, h / 2))
     ctx.fill()
     if (plane.kind === 'pill' && plane.el.hasAttribute('data-ring')) {
       ctx.strokeStyle = styles.color
-      ctx.lineWidth = Math.max(1, 1.2 * dpr)
+      ctx.lineWidth = Math.max(1, 1 * dpr)
       ctx.beginPath()
       ctx.roundRect(ctx.lineWidth / 2, ctx.lineWidth / 2, w - ctx.lineWidth, h - ctx.lineWidth, Math.min(radius, h / 2))
       ctx.stroke()
     }
     if (plane.kind === 'pill' && plane.el.hasAttribute('data-arrow')) {
+      // seta do original (recorte 12x): ponta preenchida, haste curta, centro
+      const d = Math.min(w, h)
+      const stroke = Math.max(1, 1.1 * dpr) * (1 + lens * 0.15)
+      ctx.fillStyle = styles.color
       ctx.strokeStyle = styles.color
-      ctx.lineWidth = Math.max(1, 1.4 * dpr)
-      const cx = w * 0.42
+      ctx.lineWidth = stroke
+      ctx.lineCap = 'round'
+      const cx = w * (0.46 + lens * 0.05)
       const cy = h / 2
-      const tail = w * 0.18
+      const tail = d * 0.1
+      const head = d * 0.1
+      const half = d * 0.075
       ctx.beginPath()
-      ctx.moveTo(cx, cy)
-      ctx.lineTo(cx + tail, cy)
+      ctx.moveTo(cx - tail, cy)
+      ctx.lineTo(cx, cy)
       ctx.stroke()
-      const head = h * 0.13
       ctx.beginPath()
-      ctx.moveTo(cx + tail - head, cy - head)
-      ctx.lineTo(cx + tail, cy)
-      ctx.lineTo(cx + tail - head, cy + head)
-      ctx.stroke()
+      ctx.moveTo(cx + head, cy)
+      ctx.lineTo(cx - head * 0.15, cy - half)
+      ctx.lineTo(cx - head * 0.15, cy + half)
+      ctx.closePath()
+      ctx.fill()
     }
     plane.canvasTexture.needsUpdate = true
   }
@@ -1140,6 +1355,12 @@ export class GlEngine {
 
   /** Entrada em cascata — réplica da coreografia Kp do original. */
   enterAll(): void {
+    // o piso entra junto com a faixa (u_alpha é tweened por show/hide no original)
+    if (this.reduced) {
+      this.floorBase = FLOOR_ALPHA
+    } else {
+      this.addTween(this as unknown as Record<string, number>, 'floorBase', 0, FLOOR_ALPHA, performance.now(), 900, 'power2out')
+    }
     if (this.reduced) {
       for (const plane of this.planes) {
         plane.entered = true
@@ -1313,8 +1534,8 @@ export class GlEngine {
     this.holeMesh?.material.dispose()
     this.ballMesh?.geometry.dispose()
     this.ballMesh?.material.dispose()
-    this.gridMesh?.geometry.dispose()
-    this.gridMesh?.material.dispose()
+    this.floorMesh?.geometry.dispose()
+    this.floorMesh?.material.dispose()
     this.renderer?.dispose()
     this.renderer = null
   }

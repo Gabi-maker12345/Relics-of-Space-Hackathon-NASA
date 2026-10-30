@@ -109,3 +109,12 @@ Base: `CLONE_SPEC.md` (valores exatos) + `CLONE_PLAN.md` (ordem).
 - Nitidez: `renderer.setPixelRatio(min(dpr,2))` (resolvido em HiDPI).
 - Metadados: `meta` nos projetos (casa = UNSEEN/2024; demais vazio).
 - Build 16.5s; console sem erros; verificação de wheel (1 projeto/gesto) e modal (desktop+mobile).
+
+## RODADA 5 (30/10)
+- Shaders portados do bundle original (sheet/lean/floor/light) com câmera 53.4°.
+- Piso reconstruído (grade .08, célula .22H, dissolve em vFar, contato) e dobradiça compartilhada.
+- Texto GL: canvas 1:1 (dpr de dispositivo), sem mipmap, recriação de textura no resize, atualização em mudança de texto (Close/email/status), peso 700 + tracking .04em.
+- Portal: raio .225W, aro escuro fino, dim só nos cards.
+- Interações: hover de link (α×.6/.3s), pill lens + 1.03, seta preenchida; guarda de velocidade no boot.
+- Modal: focus trap, indicador de scroll, tokens e classes compartilhadas (.sheet).
+- Reduced motion: sem rear-up/wring, shimmer congelado, animações do sheet desligadas.

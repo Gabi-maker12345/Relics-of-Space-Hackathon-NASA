@@ -16,14 +16,14 @@
       <p class="pointer-events-none absolute bottom-10 inset-x-10 s:bottom-10 s:inset-x-20 flex items-end justify-between">
         <span class="relative block min-w-0 flex-1 mr-10">
           <span
-            class="absolute left-0 bottom-0 whitespace-nowrap text-16 s:text-18 tracking-[-0.05em] [-webkit-text-fill-color:transparent]"
+            class="relative block s:absolute s:left-0 s:bottom-0 whitespace-nowrap text-16 s:text-18 tracking-[-0.05em] [-webkit-text-fill-color:transparent]"
             data-title
             data-gl="text"
           >{{ project.title }}</span>
           <span
             data-gl="text"
             aria-hidden="true"
-            class="block whitespace-normal line-clamp-2 text-14 s:text-16 leading-14 tracking-[-0.05em] text-white/40 max-w-[30rem] overflow-hidden [-webkit-text-fill-color:transparent]"
+            class="block whitespace-normal line-clamp-2 text-14 s:text-16 leading-14 tracking-[-0.05em] text-white/20 max-w-[30rem] overflow-hidden [-webkit-text-fill-color:transparent]"
           >{{ project.excerpt }}</span>
         </span>
         <span

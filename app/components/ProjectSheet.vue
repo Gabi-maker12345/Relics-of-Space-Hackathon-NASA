@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-y-40 s:flex-row s:gap-x-80">
     <div class="w-full s:w-[40rem] flex-none">
-      <h2 class="text-[2.6rem] s:text-[4.2rem] leading-14 tracking-[-0.03em]">{{ project.title }}</h2>
+      <h2 class="sheet__title">{{ project.title }}</h2>
       <p class="mt-25 text-16 s:text-18 leading-14 tracking-[-0.02em] max-w-[36rem] text-black/80">
         {{ project.description.replace(/^—\s*/, '') }}
       </p>

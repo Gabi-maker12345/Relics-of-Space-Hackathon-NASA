@@ -3,18 +3,18 @@
     <Transition name="pj" appear>
       <div v-if="project" data-modal class="fixed inset-0 z-[90]">
         <div class="absolute inset-0 bg-black/95" aria-hidden="true" @click="close" />
-        <div class="absolute inset-0 overflow-y-auto overscroll-contain">
+        <div ref="scrollRef" class="absolute inset-0 overflow-y-auto overscroll-contain" @scroll.passive="onScroll">
           <div
-            class="pj-sheet relative mx-auto my-20 s:my-40 w-[calc(100%-40px)] s:w-[calc(100%-80px)] rounded-20 bg-[#f6f4ef] text-[#0b0b0b] px-25 py-30 s:px-60 s:py-50"
-            role="dialog"
-            aria-modal="true"
-            :aria-label="project.title"
-          >
+            class="sheet__progress"
+            aria-hidden="true"
+            :style="{ '--progress': String(progress) }"
+          />
+          <div class="sheet" role="dialog" aria-modal="true" :aria-label="project.title">
             <button
               ref="closeRef"
               type="button"
               aria-label="Close"
-              class="absolute right-20 top-20 s:right-25 s:top-25 inline-flex size-40 s:size-45 items-center justify-center rounded-full bg-black text-white transition-transform duration-300 ease-out hover:scale-105"
+              class="sheet__close"
               @click="close"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -34,18 +34,61 @@ import { projects } from '~/data/projects'
 
 const { activeSlug, close } = useProjectModal()
 const closeRef = ref<HTMLButtonElement | null>(null)
+const scrollRef = ref<HTMLElement | null>(null)
+const progress = ref(0)
 let lastFocus: HTMLElement | null = null
+let raf = 0
 
 const project = computed(() => projects.find(p => p.id === activeSlug.value) ?? null)
 
+const focusables = (): HTMLElement[] => {
+  const root = closeRef.value?.closest<HTMLElement>('[role="dialog"]')
+  if (!root) return []
+  return Array.from(
+    root.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+  ).filter(el => el.offsetParent !== null || el === document.activeElement)
+}
+
 const onKey = (e: KeyboardEvent): void => {
-  if (e.key === 'Escape' && project.value !== null) close()
+  if (project.value === null) return
+  if (e.key === 'Escape') {
+    close()
+    return
+  }
+  if (e.key !== 'Tab') return
+  const items = focusables()
+  if (items.length === 0) {
+    e.preventDefault()
+    return
+  }
+  const first = items[0]
+  const last = items[items.length - 1]
+  const active = document.activeElement as HTMLElement | null
+  if (e.shiftKey && (active === first || active === null || !items.includes(active))) {
+    e.preventDefault()
+    last.focus()
+  } else if (!e.shiftKey && (active === last || active === null || !items.includes(active))) {
+    e.preventDefault()
+    first.focus()
+  }
+}
+
+const onScroll = (): void => {
+  if (raf !== 0) return
+  raf = requestAnimationFrame(() => {
+    raf = 0
+    const el = scrollRef.value
+    if (!el) return
+    const max = el.scrollHeight - el.clientHeight
+    progress.value = max > 0 ? Math.min(1, Math.max(0, el.scrollTop / max)) : 0
+  })
 }
 
 watch(project, (value) => {
   if (!import.meta.client) return
   if (value !== null) {
     lastFocus = (document.activeElement as HTMLElement | null) ?? null
+    progress.value = 0
     window.addEventListener('keydown', onKey)
     requestAnimationFrame(() => closeRef.value?.focus())
   } else {
@@ -55,7 +98,10 @@ watch(project, (value) => {
   }
 })
 
-onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKey)
+  if (raf !== 0) cancelAnimationFrame(raf)
+})
 </script>
 
 <style scoped>
@@ -67,8 +113,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 .pj-leave-to {
   opacity: 0;
 }
-.pj-enter-active .pj-sheet {
+.pj-enter-active .sheet {
   animation: sheet-in 0.55s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.pj-leave-active .sheet {
+  animation: sheet-out 0.3s cubic-bezier(0.4, 0, 1, 1) both;
 }
 @keyframes sheet-in {
   from {
@@ -78,6 +127,22 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+@keyframes sheet-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.992);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pj-enter-active .sheet,
+  .pj-leave-active .sheet {
+    animation: none;
   }
 }
 </style>
