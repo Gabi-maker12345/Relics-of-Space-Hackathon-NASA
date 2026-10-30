@@ -16,10 +16,9 @@ import { CHOREO } from './choreo'
 export type GlKind = 'text' | 'card' | 'bar' | 'pill'
 export type GlRole = 'title' | 'text' | 'label'
 
-const FOLLOW_LERP = 0.28
+const FOLLOW_LERP = 0.1 // damp do original (a.a = lerp(a.a, a.t, .1*ratio))
 const MAX_DPR = 2
 const WHEEL_DIVISOR = 0.3
-const SNAP_DELAY_MS = 220
 const DIGIT_ROLL_DUR = 0.9
 const CAROUSEL_EASE_DUR = 0.85
 const HOLE_RADIUS_FACTOR = 0.225 // raio medido no portal do original (576 css de diâmetro @1280)
@@ -242,9 +241,6 @@ export class GlEngine {
   private mobileRange = { start: 0, end: 0 }
   private readonly pointer = { down: false, id: -1, x: 0, y: 0 }
   private carouselDriven = false
-  private snapTimer = 0
-  private burstStart = 0
-  private burstDelta = 0
   private lastDragPx = 0
   private ball = { x: 0, y: 0, tx: 0, ty: 0, alpha: 0, targetAlpha: 0, seen: false }
   private pointerTarget: HTMLElement | null = null
@@ -262,7 +258,7 @@ export class GlEngine {
   private readonly sheet = { W: 1, H: 1, D: 0, T: 1, C: 1, V: 0, A: 0, camZ: 1000 }
   private sheetClock = 0
   private lastCarouselP = 0
-  private velPx = 0
+  private lastAdvanceAt = 0
   private floorBase = 0
 
   readonly booted: Promise<void> = new Promise<void>((resolve) => {
@@ -942,64 +938,16 @@ export class GlEngine {
   }
 
   private nudge(deltaPx: number): void {
-    if (this.snapTimer === 0) {
-      this.burstStart = this.carousel.target
-      this.burstDelta = 0
-    }
-    this.burstDelta += deltaPx
-    if (this.snapTimer !== 0) window.clearTimeout(this.snapTimer)
-    this.snapTimer = window.setTimeout(() => {
-      this.snapTimer = 0
-      this.snapAfterBurst()
-    }, SNAP_DELAY_MS)
-    // passo limitado por evento e por "burst": no máximo ~1 card por gesto
-    const step = THREE.MathUtils.clamp(deltaPx / (this.carousel.max * WHEEL_DIVISOR), -0.09, 0.09)
-    const raw = THREE.MathUtils.clamp(this.carousel.target + step, 0, 1)
-    const target = THREE.MathUtils.clamp(raw, this.burstStart - 0.12, this.burstStart + 0.12)
-    this.driveCarousel(target, 0.5, 'power2out')
-  }
-
-  /** Fim de gesto: avança/recua UM projeto se houve intenção; senão, encaixa no mais próximo. */
-  private snapAfterBurst(): void {
-    const el = this.trackEl
-    if (!el) return
-    const cards = Array.from(el.querySelectorAll<HTMLElement>('[data-gl="card"]'))
-    if (cards.length === 0) return
-    const centers = cards.map(card => this.pForCard(card))
-    const direction = Math.sign(this.burstDelta)
-    if (Math.abs(this.burstDelta) >= 40 && direction !== 0) {
-      let baseIndex = 0
-      let bestDist = Number.POSITIVE_INFINITY
-      centers.forEach((value, index) => {
-        const dist = Math.abs(value - this.burstStart)
-        if (dist < bestDist) {
-          bestDist = dist
-          baseIndex = index
-        }
-      })
-      const nextIndex = THREE.MathUtils.clamp(baseIndex + direction, 0, centers.length - 1)
-      this.driveCarousel(centers[nextIndex], 0.5, 'expoOut')
-    } else {
-      this.driveCarousel(this.nearestCardP(), 0.5, 'expoOut')
-    }
-    this.burstDelta = 0
-  }
-
-  private nearestCardP(): number {
-    const el = this.trackEl
-    if (!el) return this.carousel.target
-    const cards = Array.from(el.querySelectorAll<HTMLElement>('[data-gl="card"]'))
-    let best = this.carousel.target
-    let bestDist = Number.POSITIVE_INFINITY
-    for (const card of cards) {
-      const value = this.pForCard(card)
-      const dist = Math.abs(value - this.carousel.target)
-      if (dist < bestDist) {
-        bestDist = dist
-        best = value
-      }
-    }
-    return best
+    // Original: `a.t += delta`, depois clamp suave de 1 viewport
+    // (`a.t = a.a + tanh((a.t - a.a)/ww) * ww`); sem snap — a faixa para onde
+    // o damp chegar (confirmado: repousa entre cards).
+    const ww = this.viewport.w
+    const next = this.carousel.target + deltaPx / this.carousel.max
+    // clamp suave a 1 viewport de distância do ponto atual (tanh)
+    const away = (next - this.carousel.p) * this.carousel.max
+    const limited = this.carousel.p + (Math.tanh(away / ww) * ww) / this.carousel.max
+    this.carousel.target = THREE.MathUtils.clamp(limited, 0, 1)
+    this.stopCarouselTween()
   }
 
   /** Move o carrossel com tween próprio (não depende do RAF/GSAP). */
@@ -1053,13 +1001,13 @@ export class GlEngine {
     const scaled = this.carousel.target + (delta / this.carousel.max) * 1.6
     this.carousel.target = THREE.MathUtils.clamp(scaled, 0, 1)
     this.carousel.p = this.carousel.target
+    this.lastAdvanceAt = 0
   }
 
   private onPointerUp = (e: PointerEvent): void => {
     if (e.pointerId !== this.pointer.id) return
     this.pointer.down = false
     this.pointer.id = -1
-    this.driveCarousel(this.nearestCardP(), 0.55, 'expoOut')
   }
 
   private startLoop(): void {
@@ -1102,31 +1050,23 @@ export class GlEngine {
     renderer.render(this.scene, this.camera)
   }
 
-  /** Velocidade do strip (px/s) → V 0..1; alimenta o rear-up e a amplitude D. */
+  /**
+   * V do sheet = tanh(distância restante em px / 550)² — idêntico ao original
+   * (`setVelocity(a.t - a.a)` → `t*|t|`). Usar px/s aqui saturava o twist
+   * (SHEET_VTWIST 1.8 rad) e o rear-up em qualquer scroll.
+   */
   private updateSheetVelocity(): void {
-    const dp = this.carousel.p - this.lastCarouselP
-    this.lastCarouselP = this.carousel.p
     if (this.reduced) {
-      // movimento reduzido: sem rear-up/wring dependente de velocidade
       if (this.sheet.V !== 0) {
         this.sheet.V = 0
         this.sheet.D = this.sheet.W * (this.viewport.w < 650 ? SHEET_DEPTH_SMALL : SHEET_DEPTH)
       }
       return
     }
-    // teleporte (boot centering / re-medida) não é gesto: não gera rear-up
-    if (Math.abs(dp) > 0.045) {
-      this.velPx = 0
-      if (this.sheet.V !== 0) {
-        this.sheet.V = 0
-        this.sheet.D = this.sheet.W * (this.viewport.w < 650 ? SHEET_DEPTH_SMALL : SHEET_DEPTH)
-      }
-      return
-    }
-    const pxPerSecond = Math.abs(dp) * this.carousel.max * 60
-    this.velPx += (pxPerSecond - this.velPx) * 0.18
-    const v = Math.min(1, Math.abs(Math.tanh(this.velPx / 550)))
-    if (Math.abs(v - this.sheet.V) > 0.0015) {
+    const remainingPx = Math.abs(this.carousel.target - this.carousel.p) * this.carousel.max
+    const t = Math.tanh(remainingPx / 550)
+    const v = Math.min(1, Math.abs(t * t))
+    if (Math.abs(v - this.sheet.V) > 0.0008) {
       this.sheet.V = v
       const small = this.viewport.w < 650
       this.sheet.D = this.sheet.W * (small ? SHEET_DEPTH_SMALL : SHEET_DEPTH) * (1 + SHEET_VELOCITY * v)
@@ -1149,9 +1089,17 @@ export class GlEngine {
   private advanceCarousel(): void {
     if (!this.trackEl) return
     if (this.carouselDriven) return
-    if (Math.abs(this.carousel.target - this.carousel.p) > 0.0001) {
-      this.carousel.p += (this.carousel.target - this.carousel.p) * FOLLOW_LERP
+    const delta = this.carousel.target - this.carousel.p
+    if (Math.abs(delta) > 0.00015) {
+      // damp exponencial independente de framerate (0.1 por frame a 60fps)
+      const now = this.lastTickAt
+      const dt = this.lastAdvanceAt === 0 ? 1 / 60 : Math.min(0.1, (now - this.lastAdvanceAt) / 1000)
+      this.lastAdvanceAt = now
+      const p = 1 - Math.pow(1 - FOLLOW_LERP, dt * 60)
+      this.carousel.p += delta * p
       this.applyTrack()
+    } else {
+      this.lastAdvanceAt = this.lastTickAt
     }
   }
 
@@ -1278,26 +1226,27 @@ export class GlEngine {
       ctx.stroke()
     }
     if (plane.kind === 'pill' && plane.el.hasAttribute('data-arrow')) {
-      // seta do original (recorte 12x): ponta preenchida, haste curta, centro
+      // "mark" do original: seta diagonal ↗ (haste curta + ponta preenchida),
+      // desliza no hover (lens)
       const d = Math.min(w, h)
-      const stroke = Math.max(1, 1.1 * dpr) * (1 + lens * 0.15)
+      const stroke = Math.max(1, 1.15 * dpr) * (1 + lens * 0.2)
       ctx.fillStyle = styles.color
       ctx.strokeStyle = styles.color
       ctx.lineWidth = stroke
       ctx.lineCap = 'round'
-      const cx = w * (0.46 + lens * 0.05)
-      const cy = h / 2
-      const tail = d * 0.1
-      const head = d * 0.1
-      const half = d * 0.075
+      const cx = w * (0.5 + lens * 0.05)
+      const cy = h * (0.5 - lens * 0.03)
+      const tail = d * 0.115
+      const head = d * 0.105
+      const half = d * 0.085
       ctx.beginPath()
-      ctx.moveTo(cx - tail, cy)
-      ctx.lineTo(cx, cy)
+      ctx.moveTo(cx - tail, cy + tail)
+      ctx.lineTo(cx - head * 0.1, cy + head * 0.1)
       ctx.stroke()
       ctx.beginPath()
-      ctx.moveTo(cx + head, cy)
-      ctx.lineTo(cx - head * 0.15, cy - half)
-      ctx.lineTo(cx - head * 0.15, cy + half)
+      ctx.moveTo(cx + head, cy - head)
+      ctx.lineTo(cx - head * 0.5, cy - head * 0.5)
+      ctx.lineTo(cx + head * 0.5, cy + head * 0.5)
       ctx.closePath()
       ctx.fill()
     }

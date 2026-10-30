@@ -5,23 +5,25 @@
       <p class="mt-25 text-16 s:text-18 leading-14 tracking-[-0.02em] max-w-[36rem] text-black/80">
         {{ project.description.replace(/^—\s*/, '') }}
       </p>
-      <ul class="mt-25 s:mt-30 flex list-none items-center gap-x-8">
+      <ul class="mt-25 s:mt-30 flex list-none items-center gap-x-10">
         <li>
-          <span
-            class="inline-flex size-35 s:size-45 items-center justify-center rounded-full bg-black text-white"
-            aria-hidden="true"
+          <NuxtLink
+            :to="project.slug"
+            class="chip chip--arrow"
+            :aria-label="`Open ${project.title}`"
+            @click="onNavigate"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-              <path d="M2 7h9M8 3.5 11.5 7 8 10.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M3.6 10.4 10.2 3.8M4.9 3.8h5.3v5.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
-          </span>
+          </NuxtLink>
         </li>
         <li v-for="badge in project.meta" :key="badge">
-          <span class="label inline-flex h-35 s:h-45 items-center rounded-full bg-black/5 px-20 text-black/70">{{ badge }}</span>
+          <span class="chip chip--tag">{{ badge }}</span>
         </li>
       </ul>
     </div>
-    <div class="flex-1 flex flex-col gap-y-20 min-w-0">
+    <div class="sheet__media flex-1 flex flex-col gap-y-20 min-w-0">
       <div
         v-for="(ratio, index) in mediaRatios"
         :key="index"
@@ -38,6 +40,13 @@
 import type { Project } from '~/data/projects'
 
 const props = defineProps<{ project: Project }>()
+
+const { close } = useProjectModal()
+
+/** Do sheet/modal para a rota do projeto (fecha o modal antes de navegar). */
+function onNavigate(): void {
+  close()
+}
 
 /** slots de mídia vazios, apenas estilizados (sem assets originais) */
 const mediaRatios = ['16 / 10', '4 / 3', '16 / 10', '1 / 1', '16 / 9']

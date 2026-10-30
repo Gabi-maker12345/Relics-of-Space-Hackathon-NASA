@@ -118,3 +118,9 @@ Base: `CLONE_SPEC.md` (valores exatos) + `CLONE_PLAN.md` (ordem).
 - Interações: hover de link (α×.6/.3s), pill lens + 1.03, seta preenchida; guarda de velocidade no boot.
 - Modal: focus trap, indicador de scroll, tokens e classes compartilhadas (.sheet).
 - Reduced motion: sem rear-up/wring, shimmer congelado, animações do sheet desligadas.
+
+## RODADA 6 (30/10)
+- V do sheet = tanh(restante/550)²; damp 0.1/frame; clamp de 1 viewport; snap removido (repousa entre cards como o original).
+- Pill "mark" ↗; hover da pill do card destravado (hit span).
+- Sheet do projeto virou moldura com scroll interno; X e anel de progresso fixos; chips com animações; SheetFrame compartilhado (modal + rota).
+- Placeholders com grade/gradiente para a curvatura ler como superfície.

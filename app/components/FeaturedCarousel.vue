@@ -31,7 +31,7 @@
           data-arrow
           class="invisible relative inline-flex size-25 s:size-25 items-center justify-center rounded-full bg-black text-white"
           aria-hidden="true"
-        ></span>
+        ><span class="visible absolute inset-0 rounded-[inherit] pointer-events-auto"></span></span>
       </p>
     </article>
   </div>

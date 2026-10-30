@@ -477,3 +477,53 @@ Superfície (constantes do original): `D = .2W·(1+1.1·V)`, `T=1.15`, `C=1`, sh
 | Modal de projeto | 85% (mídia placeholder) | 95% | 100% |
 | Responsivo 375/768/1280/1920 | 95% | 95% | 100% |
 | A11y/reduced motion | 100% | 100% | 100% |
+
+---
+
+# RODADA 6 — scroll (sheet) e botões do modal
+
+## 1. Por que a distorção no scroll parecia "desleixada" (causa raiz)
+
+O original alimenta `V` com a **distância restante em px** e usa um damp de 0.1/frame:
+
+```js
+setVelocity(e){ const t = Math.tanh(e / 550); this.vel = t * Math.abs(t) }   // e = target − current
+E(){ a.a = damp(a.a, a.t, 0.1 * min(ratio, 2)); velocity(a.t - a.a) }
+A(){ a.t += delta; a.t = a.a + Math.tanh((a.t - a.a)/ww) * ww }               // clamp suave de 1 viewport
+```
+
+O clone usava px/s com `tanh(px/s / 550)`: qualquer wheel saturava `V ≈ 0.95`, e `V` multiplica **twist 1.8 rad** e o rear-up → os cards viravam de lado. Além disso, o clone "encaixava no card" (snap) logo após o gesto: o alvo voltava a 1 card de distância, mantendo o S deformado e puxando a faixa de volta (o "puxão" que parecia mal feito).
+
+**Verificação no original**: após um wheel de 700px, a faixa **repousa entre cards** (t2-orig-settled: "Book of Happiness" fora de centro, sem snap). O clone foi alinhado a isso: sem snap, damp 0.1/frame frame-rate-independent, clamp de `tanh(away/ww)`. Resultado medido: wheel de 700px → `p` 0.098→0.24 suave, `V` pico 0.2 e decaimento; flick de 960px → `D` 128→131 (antes 128→262).
+
+## 2. Geometria/ícones e hovers
+
+| Item | Correção | Evidência |
+|---|---|---|
+| "mark" das pills era → | seta **↗** (diagonal), ponta preenchida + haste 1.15px | recorte 6x do chip do original |
+| hover da pill do card nunca disparava | pill é `visibility:hidden` dentro de `pointer-events:none` → hit span `visible pointer-events-auto` | `lens` 0 → **1**, escala **1.03** |
+| Variação de texto no DOM | (já corrigido) — Close/Newsletter/email atualizam a textura GL | — |
+
+## 3. Modal: estrutura, botões e posições (contra a referência do original)
+
+A referência (`q2-orig-project.png`, rota `/projects/casa-di-solare`) é uma **moldura de altura fixa com scroll interno**, X fixo no canto e um **anel de progresso** no canto inferior esquerdo. O clone tinha o sheet crescendo com o conteúdo (X caía sobre a coluna de imagens).
+
+| Medida | Original | Clone (após) |
+|---|---|---|
+| sheet | 43..1236 × 17.6..860 | 34..1246 × 17..883 |
+| close (tamanho / canto) | 36.8px · top 27 · right 26 | 32px · top 26 · right 22 |
+| anel de progresso | 64..92 × 828..856 (28px) | 68..92 × 825..849 (24px) |
+| mídia → close | 54px de vão | 52px de vão |
+
+- `.sheet` virou moldura (`height: calc(100dvh - 4rem)`, `overflow:hidden`) + `.sheet__scroll` interno; X e anel ficam fixos.
+- Botões animados (valores do pill do original, `.7s/.5s cubic-bezier(.16,1,.3,1)`): close `#0a0a0a → #232323` + `scale 1.06` (active `.94`); chip-seta idem + deslocamento do ícone `1px,-1px`; tags mudam o tom em `.3s`.
+- `SheetFrame.vue` + `SheetCloseIcon.vue`: modal e rota compartilham moldura, scroll, anel, X e foco (sem duplicação de markup).
+- Focus trap: abre com foco no X; Tab cicla dentro do `role=dialog`; Escape fecha.
+
+## 4. Placeholders com estrutura
+
+Sem textura interna, a curvatura lia como "borrão cinza" — a maior parte da sensação de "desleixo" no scroll. Os placeholders ganharam: grade fina (46px, 8% branco) que deforma com a superfície, gradiente radial, banda inferior e nome centralizado em 18%. A dobra agora é legível como superfície (ver `ae2-mid.png`).
+
+## 5. Pendências (inalteradas)
+
+Arte/vídeo real dos cards, esculturas do portal, fonte ABC Diatype, SDF de texto, reflexo do piso, cursor com trail — dependem de assets ou de um pass de render descartado (ver RODADA 5 §P1–P10).

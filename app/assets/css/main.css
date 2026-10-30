@@ -80,65 +80,154 @@ a {
 }
 
 /* ── Sheet de projeto (modal e rota) — frame + close compartilhados ── */
+/* moldura do sheet: altura fixa + scroll interno (X e anel ficam fixos) */
 .sheet {
   position: relative;
+  display: flex;
+  flex-direction: column;
   margin: 2rem auto;
   width: calc(100% - 4rem);
+  height: calc(100dvh - 4rem);
+  max-height: calc(100dvh - 4rem);
+  overflow: hidden;
   border-radius: var(--radius-20);
   background: var(--color-paper);
   color: var(--color-ink);
+}
+.sheet__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 3rem 2.5rem;
 }
 .sheet__close {
   position: absolute;
-  top: 2rem;
-  right: 2rem;
+  top: 2.6rem;
+  right: 2.6rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 4rem;
-  height: 4rem;
+  width: 3.7rem;
+  height: 3.7rem;
   border-radius: 9999px;
-  background: #000;
+  background: #0a0a0a;
   color: #fff;
-  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  /* pill do original: fill “acende” e a superfície cede (.7s in / .5s out) */
+  transition:
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.sheet__close:hover { transform: scale(1.06); }
+.sheet__close:hover {
+  transform: scale(1.06);
+  background: #232323;
+  transition-duration: 0.5s;
+}
+.sheet__close:active {
+  transform: scale(0.94);
+  transition-duration: 0.15s;
+}
+.sheet__close:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 3px;
+}
 .sheet__title {
   font-size: var(--text-26);
   line-height: var(--leading-14);
   letter-spacing: -0.03em;
 }
 .sheet__progress {
-  position: fixed;
-  left: 4.5rem;
-  top: 50%;
-  height: 12rem;
-  width: 1px;
-  translate: 0 -50%;
-  background: rgb(0 0 0 / 0.12);
-  pointer-events: none;
-}
-.sheet__progress::after {
-  content: "";
   position: absolute;
-  inset: 0 auto auto 0;
-  width: 100%;
-  height: calc(var(--progress, 0) * 100%);
-  background: rgb(0 0 0 / 0.55);
+  left: 3rem;
+  bottom: 3rem;
+  width: 2.8rem;
+  height: 2.8rem;
+  pointer-events: none;
+  color: rgb(0 0 0 / 0.55);
+}
+.sheet__progress circle {
+  fill: none;
+  stroke-width: 2;
+}
+.sheet__progress .track { stroke: #d9d8d4; }
+.sheet__progress .fill {
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-dasharray: 81.68;
+  stroke-dashoffset: calc(81.68 - var(--progress, 0) * 81.68);
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 0.1s linear;
 }
 @media (min-width: 650px) {
   .sheet {
-    margin-block: 4rem;
+    margin-block: 2rem;
     width: calc(100% - 8rem);
-    padding: 5rem 6rem;
+    height: calc(100dvh - 4rem);
+    max-height: calc(100dvh - 4rem);
   }
-  .sheet__close { top: 2.5rem; right: 2.5rem; width: 4.5rem; height: 4.5rem; }
-  .sheet__progress { left: 7rem; }
+  .sheet__scroll { padding: 5rem 6rem; }
+  .sheet__close { top: 2.6rem; right: 2.6rem; width: 3.7rem; height: 3.7rem; }
+  .sheet__progress { left: 4rem; bottom: 4rem; }
+  /* gutter à direita da mídia: o close nunca cruza a coluna de imagens */
+  .sheet__media { padding-right: 6.4rem; }
   .sheet__title { font-size: var(--text-42); }
 }
 @media (prefers-reduced-motion: reduce) {
   .sheet__close { transition: none; }
+}
+
+/* ── Chips do sheet (arrow + tags) — animações do pill do original ── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 3.5rem;
+  border-radius: 9999px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.chip--arrow {
+  width: 3.5rem;
+  background: #0a0a0a;
+  color: #fff;
+  transition:
+    background-color 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.chip--arrow svg {
+  transition: translate 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.chip--arrow:hover {
+  background: #232323;
+  transform: scale(1.05);
+  transition-duration: 0.5s;
+}
+.chip--arrow:hover svg {
+  translate: 1px -1px;
+  transition-duration: 0.5s;
+}
+.chip--arrow:active {
+  transform: scale(0.94);
+  transition-duration: 0.15s;
+}
+.chip--tag {
+  padding-inline: 2rem;
+  background: #efeee9;
+  color: rgb(0 0 0 / 0.85);
+  transition: background-color 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.chip--tag:hover {
+  background: #e6e4de;
+}
+@media (min-width: 650px) {
+  .chip { height: 3.6rem; }
+  .chip--arrow { width: 3.6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chip, .chip svg, .chip--arrow { transition: none; }
 }
 
 /* movimento reduzido: transições essenciais só (o engine também respeita) */
