@@ -194,3 +194,21 @@ Auditoria ao original (CDP, 9225, UA de browser): o cartão nítido troca com
 | Starfield | deriva 26 px/42 s | 42 px/11 s + oscilação vertical 7 px + glow nas estrelas brilhantes + névoa a respirar (26 s) |
 
 Verificado: insets `["0%","49.98%","50%"]` no início → `["0%","22.21%","50%"]` a meio do passo → `["0%","0%","24.98%"]` no passo seguinte; canvas com pixels diferentes entre frames (390→284 amostras acesas).
+
+## Iteração 3 — visualizador de mídia no modal
+
+Pedido: transição menos estática, sem barra de scroll, **um media por gesto**, anel
+de progresso por media, suporte a vídeo e lightbox quase fullscreen.
+
+| Mudança | Detalhe |
+|---|---|
+| Entrada do modal | `sheet-in` 0,95 s (`cubic-bezier(.16,1,.3,1)`) com `translateY(38px) scale(.94) blur(14px)`; colunas entram em stagger 0,1→0,32 s; backdrop 0,55 s |
+| Scroll | removido: `.sheet__body{overflow:hidden}`; roda tratada com acumulador (limiar 36 px) e **lock de 820 ms** por gesto |
+| Navegação | roda, setas, PageUp/PageDown; `data-lenis-prevent` impede a página de rolar |
+| Progresso | anel recebe `(index+1)/n` (25/50/75/100 %) com transição de 0,75 s; dots com pill ativo |
+| Media | modelo `Media { kind: 'image'|'video' }`; vídeo só recebe `src` quando é o passo ativo (evita requests abortados) |
+| Vídeo demo | `public/media/relic-loop.mp4` (451 KB, 5 s, 1280×720, h264) gerado com ffmpeg do `imageopportunity.jpg` |
+| Lightbox | overlay 96vw × 88vh, `object-fit: contain`, backdrop blur 18 px, barra com rótulo + fechar, `Esc` fecha primeiro o lightbox |
+| Rota `/projects/:slug` | passou a `fixed` e ganhou o mesmo visualizador + lightbox |
+
+Verificado: 01/04 → 02/04 → 03/04 (vídeo a tocar), anel 0,25 → 0,5 → 0,75; lightbox abre em imagem e vídeo; `Esc` fecha em camadas; 0 erros de consola.

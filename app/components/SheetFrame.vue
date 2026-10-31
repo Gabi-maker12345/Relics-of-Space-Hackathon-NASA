@@ -9,7 +9,7 @@
       :aria-modal="overlay ? 'true' : undefined"
       :aria-label="label"
     >
-      <div ref="scrollRef" class="sheet__scroll" @scroll.passive="onScroll">
+      <div class="sheet__body" data-lenis-prevent>
         <slot />
       </div>
       <svg
@@ -45,35 +45,25 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
-  overlay?: boolean
-  closeTo?: string
-  label?: string
-}>()
+withDefaults(
+  defineProps<{
+    overlay?: boolean
+    closeTo?: string
+    label?: string
+    progress?: number
+  }>(),
+  { progress: 0 },
+)
 
 const emit = defineEmits<{ close: [] }>()
 
-const scrollRef = ref<HTMLElement | null>(null)
 const frameRef = ref<HTMLElement | null>(null)
 const closeRef = ref<HTMLElement | null>(null)
-const progress = ref(0)
-let raf = 0
-
-const onScroll = (): void => {
-  if (raf !== 0) return
-  raf = requestAnimationFrame(() => {
-    raf = 0
-    const el = scrollRef.value
-    if (!el) return
-    const max = el.scrollHeight - el.clientHeight
-    progress.value = max > 0 ? Math.min(1, Math.max(0, el.scrollTop / max)) : 0
-  })
-}
 
 /** Foco no próprio dialog (sem anel no botão); Tab leva ao close. */
 const focusSelf = (): void => {
   requestAnimationFrame(() => frameRef.value?.focus({ preventScroll: true }))
 }
 
-defineExpose({ focusSelf, scrollEl: scrollRef })
+defineExpose({ focusSelf })
 </script>

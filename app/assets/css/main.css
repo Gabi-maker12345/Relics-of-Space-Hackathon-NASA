@@ -81,31 +81,32 @@ a {
 }
 
 /* ── Sheet de projeto (modal e rota) — frame + close compartilhados ── */
-/* moldura do sheet: altura fixa + scroll interno (X e anel ficam fixos) */
+/* moldura do sheet: sem scroll interno; a mídia anda em passos */
 .sheet {
   position: relative;
   display: flex;
   flex-direction: column;
   margin: 2rem auto;
-  width: calc(100% - 4rem);
-  height: calc(100dvh - 4rem);
+  width: min(118rem, calc(100% - 4rem));
+  height: min(70rem, calc(100dvh - 4rem));
   max-height: calc(100dvh - 4rem);
   overflow: hidden;
   border-radius: var(--radius-20);
   background: var(--color-paper);
   color: var(--color-ink);
+  box-shadow: 0 6rem 14rem rgb(0 0 0 / 0.55);
 }
-.sheet__scroll {
+.sheet__body {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: hidden;
   padding: 3rem 2.5rem;
 }
 .sheet__close {
   position: absolute;
   top: 2.6rem;
   right: 2.6rem;
+  z-index: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -141,6 +142,7 @@ a {
   position: absolute;
   left: 3rem;
   bottom: 3rem;
+  z-index: 3;
   width: 2.8rem;
   height: 2.8rem;
   padding: 0.2rem;
@@ -162,24 +164,281 @@ a {
   stroke-dashoffset: calc(81.68 - var(--progress, 0) * 81.68);
   transform: rotate(-90deg);
   transform-origin: 50% 50%;
-  transition: stroke-dashoffset 0.1s linear;
+  transition: stroke-dashoffset 0.75s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ── Visualizador em passos (ProjectSheet) ── */
+.psheet {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 2.4rem;
+  height: 100%;
+  min-height: 0;
+}
+.psheet__info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  padding-right: 4rem;
+}
+.psheet__eyebrow {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(0 0 0 / 0.45);
+}
+.psheet__desc {
+  max-width: 38rem;
+  font-size: 1.4rem;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: rgb(0 0 0 / 0.72);
+}
+.psheet__chips {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.psheet__stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.6rem;
+  min-height: 0;
+  outline: none;
+}
+.psheet__stage:focus-visible .psheet__frame {
+  outline: 2px solid #0a0a0a;
+  outline-offset: 4px;
+}
+.psheet__frame {
+  position: relative;
+  width: 100%;
+  max-height: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 1.4rem;
+  background: #111;
+  box-shadow: 0 2.4rem 6rem rgb(0 0 0 / 0.28);
+}
+.psheet__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.06);
+  filter: blur(10px);
+  transition:
+    opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.psheet__media.is-active {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  pointer-events: auto;
+}
+.psheet__grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.55), transparent 45%);
+}
+.psheet__expand {
+  position: absolute;
+  top: 1.4rem;
+  right: 1.4rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 9999px;
+  background: rgb(0 0 0 / 0.45);
+  color: #fff;
+  backdrop-filter: blur(6px);
+  transition: background-color 0.4s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.psheet__expand:hover {
+  background: rgb(0 0 0 / 0.72);
+  transform: scale(1.06);
+}
+.psheet__caption {
+  position: absolute;
+  left: 1.8rem;
+  right: 1.8rem;
+  bottom: 1.4rem;
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  gap: 1.2rem;
+  color: #fff;
+  text-shadow: 0 0.2rem 1rem rgb(0 0 0 / 0.5);
+  pointer-events: none;
+}
+.psheet__kind {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.psheet__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.3rem;
+  letter-spacing: -0.01em;
+}
+.psheet__count {
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+.psheet__dots {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.psheet__dots span {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 9999px;
+  background: rgb(0 0 0 / 0.18);
+  transition: background-color 0.5s ease, width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.psheet__dots span.is-on {
+  width: 2rem;
+  background: #0a0a0a;
+}
+.psheet__hint {
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(0 0 0 / 0.38);
+}
+
 @media (min-width: 650px) {
   .sheet {
     margin-block: 2rem;
-    width: calc(100% - 8rem);
-    height: calc(100dvh - 4rem);
-    max-height: calc(100dvh - 4rem);
+    width: min(118rem, calc(100% - 8rem));
+    height: min(68rem, calc(100dvh - 6rem));
   }
-  .sheet__scroll { padding: 5rem 6rem; }
-  .sheet__close { top: 2.6rem; right: 2.6rem; width: 3.7rem; height: 3.7rem; }
-  .sheet__progress { left: 4rem; bottom: 4rem; }
-  /* gutter à direita da mídia: o close nunca cruza a coluna de imagens */
-  .sheet__media { padding-right: 6.4rem; }
+  .sheet__body { padding: 5rem 6rem; }
+  .sheet__close { top: 3rem; right: 3rem; width: 4.2rem; height: 4.2rem; }
+  .sheet__progress { left: 6rem; bottom: 5rem; }
   .sheet__title { font-size: var(--text-42); }
+  .psheet {
+    grid-template-columns: minmax(20rem, 0.62fr) minmax(0, 1.55fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 5rem;
+    align-items: center;
+  }
+  .psheet__info { align-self: center; }
+  .psheet__stage { height: 100%; justify-content: center; }
+  .psheet__frame { max-height: 100%; }
+}
+
+/* ── Lightbox de mídia ── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 2.4rem;
+}
+.lightbox__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgb(4 4 6 / 0.92);
+  backdrop-filter: blur(18px);
+  border: 0;
+  cursor: zoom-out;
+}
+.lightbox__stage {
+  position: relative;
+  width: min(96vw, 160rem);
+  height: min(88vh, 92rem);
+  display: grid;
+  place-items: center;
+}
+.lightbox__media {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 1.2rem;
+  box-shadow: 0 4rem 12rem rgb(0 0 0 / 0.6);
+  animation: lb-pop 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes lb-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+    filter: blur(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+.lightbox__bar {
+  position: absolute;
+  left: 50%;
+  bottom: 2.4rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  padding: 1rem 1.2rem 1rem 1.8rem;
+  border-radius: 9999px;
+  background: rgb(10 10 10 / 0.72);
+  color: #fff;
+  backdrop-filter: blur(10px);
+}
+.lightbox__label {
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.lightbox__close {
+  display: grid;
+  place-items: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.12);
+  color: #fff;
+  transition: background-color 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lightbox__close:hover {
+  background: rgb(255 255 255 / 0.22);
+  transform: scale(1.06);
 }
 @media (prefers-reduced-motion: reduce) {
-  .sheet__close { transition: none; }
+  .psheet__media,
+  .sheet__close {
+    transition: none;
+  }
+  .lightbox__media {
+    animation: none;
+  }
 }
 
 /* ── Chips do sheet (arrow + tags) — animações do pill do original ── */

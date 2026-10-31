@@ -1,4 +1,15 @@
 // Mock equivalente ao What Nuxt payload entrega (CLONE_SPEC.md §3/§4). Textos verbatim §§8/4.
+export type MediaKind = 'image' | 'video'
+
+export interface Media {
+  id: string
+  kind: MediaKind
+  src: string
+  poster?: string
+  ratio: string
+  label: string
+}
+
 export type Project = {
   id: string
   slug: string
@@ -8,6 +19,24 @@ export type Project = {
   meta: string[] // chips do painel de projeto (casa: UNSEEN/2024 observados; demais [NÃO DETERMINADO] → vazio)
   ratio: string // aspect-ratio inline, ex: "2048 / 1172"
   texture: string // placeholder público (sem assets originais)
+  media: Media[] // 4 passos do visualizador; imagens reais de relíquias + vídeo gerado
+}
+
+const mediaLibrary = (offset: number): Media[] => {
+  const pool: Media[] = [
+    { id: 'apollo', kind: 'image', src: '/images/relics/apollo-lunar-module.jpg', ratio: '16 / 10', label: 'Módulo Lunar Apollo' },
+    { id: 'opportunity', kind: 'image', src: '/images/relics/opportunity.jpg', ratio: '16 / 10', label: 'Opportunity em Marte' },
+    {
+      id: 'loop',
+      kind: 'video',
+      src: '/media/relic-loop.mp4',
+      poster: '/images/relics/opportunity.jpg',
+      ratio: '16 / 9',
+      label: 'Vídeo — órbita de aproximação',
+    },
+    { id: 'viking', kind: 'image', src: '/images/relics/viking-1.jpg', ratio: '16 / 10', label: 'Viking 1' },
+  ]
+  return [...pool.slice(offset % pool.length), ...pool.slice(0, offset % pool.length)]
 }
 
 export const projects: Project[] = [
@@ -21,6 +50,7 @@ export const projects: Project[] = [
     meta: [],
     ratio: '2048 / 1172',
     texture: '/placeholders/card-nathan-riley.svg',
+    media: mediaLibrary(0),
   },
   {
     id: 'casa-di-solare',
@@ -32,6 +62,7 @@ export const projects: Project[] = [
     meta: ['UNSEEN', '2024'],
     ratio: '2048 / 1204',
     texture: '/placeholders/card-casa-di-solare.svg',
+    media: mediaLibrary(1),
   },
   {
     id: 'the-lookback',
@@ -43,6 +74,7 @@ export const projects: Project[] = [
     meta: [],
     ratio: '1250 / 720',
     texture: '/placeholders/card-the-lookback.svg',
+    media: mediaLibrary(2),
   },
   {
     id: 'book-of-happiness',
@@ -54,6 +86,7 @@ export const projects: Project[] = [
     meta: [],
     ratio: '2048 / 1114',
     texture: '/placeholders/card-book-of-happiness.svg',
+    media: mediaLibrary(3),
   },
   {
     id: 'dogelon-mars',
@@ -65,6 +98,7 @@ export const projects: Project[] = [
     meta: [],
     ratio: '3360 / 2200',
     texture: '/placeholders/card-dogelon-mars.svg',
+    media: mediaLibrary(4),
   },
   {
     id: 'gil-huybrecht',
@@ -76,6 +110,7 @@ export const projects: Project[] = [
     meta: [],
     ratio: '1196 / 720',
     texture: '/placeholders/card-gil-huybrecht.svg',
+    media: mediaLibrary(5),
   },
   {
     id: 'discoveryland',
@@ -87,6 +122,7 @@ export const projects: Project[] = [
     meta: [],
     ratio: '1372 / 1029',
     texture: '/placeholders/card-discoveryland.svg',
+    media: mediaLibrary(6),
   },
   {
     id: 'griflan',
@@ -98,6 +134,7 @@ export const projects: Project[] = [
     meta: [],
     ratio: '1162 / 720',
     texture: '/placeholders/card-griflan.svg',
+    media: mediaLibrary(7),
   },
 ]
 
