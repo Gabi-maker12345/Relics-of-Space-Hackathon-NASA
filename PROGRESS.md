@@ -228,3 +228,18 @@ Verificado: 01/04 → 02/04 → 03/04 (vídeo a tocar), anel 0,25 → 0,5 → 0,
 | Vídeos | `apollo-loop`, `relic-loop` (Opportunity) e `viking-loop`, 5 s / 720p |
 
 Verificado: 3 cartões; abrir → 2 cenas; scroll 0 → 746 px troca cena e anel 0,5 → 1,0; vídeo toca no palco e no lightbox; `Esc` fecha lightbox e depois o modal; consola limpa; build 15,4 s.
+
+## Iteração 5 — carrossel infinito e modal branco de duas colunas
+
+| Pedido | Implementação |
+|---|---|
+| Carrossel infinito | `data-infinite` + 3 cópias (9 cartões) no desktop; `carousel.max = copySpan`; `p` normalizado em [0,1) com salto de uma cópia (invisível); roda, arrasto e damp passam a envolver; sem "início", a roda nunca trava |
+| Sem buracos nas pontas | 9 cartões garantem sempre 3–4 cartões a cobrir o viewport; verificado em 12 gestos (p: 0,392…0,948 → 0,036…) |
+| Mobile | 1 cópia (3 cartões) e eixo vertical, como antes; `infinite` desligado no eixo y |
+| Texturas | planos criados antes das texturas ficavam sem mapa; `loadTextures` agora reatribui `uMap` aos cartões |
+| Modal | **volta ao branco** com duas colunas: identidade + texto da cena + ficha à esquerda, mídia à direita |
+| Scroll | mantém-se: snap por cena, barra escondida; a cada passo muda imagem **e** texto (transição `swap` 0,45 s out/in com blur/translate) |
+| Anel | 50 % / 100 % para duas cenas, sem colidir com a ficha (padding de 6,4 rem) |
+| Expansão | clique na mídia → lightbox (ícone de expandir só aparece no hover) |
+
+Verificado: 9 planos de cartão com textura; p envolve nos dois sentidos; modal branco (`rgb(246,244,239)`), cena 2 com "Transmissão" e vídeo a tocar; ring 0,5 → 1,0; lightbox e `Esc` em camadas; mobile 3 cartões + modal empilhado; build 6,5 s.

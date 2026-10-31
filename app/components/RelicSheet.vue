@@ -6,6 +6,7 @@ const emit = defineEmits<{ 'update:index': [index: number]; 'open-media': [scene
 
 const scroller = ref<HTMLElement | null>(null)
 const scenes = computed(() => props.relic.scenes)
+const current = computed(() => scenes.value[props.index] ?? scenes.value[0])
 
 const onScroll = (): void => {
   const el = scroller.value
@@ -20,8 +21,8 @@ watch(
   () => props.index,
   async () => {
     await nextTick()
-    const scenes = scroller.value?.querySelectorAll<HTMLElement>('.rsheet__scene') ?? []
-    scenes.forEach((scene, i) => {
+    const els = scroller.value?.querySelectorAll<HTMLElement>('.rsheet__scene') ?? []
+    els.forEach((scene, i) => {
       const video = scene.querySelector('video')
       if (!video) return
       if (i === props.index) void video.play().catch(() => {})
@@ -42,67 +43,101 @@ defineExpose({ goTo })
 
 <template>
   <div class="rsheet">
-    <div ref="scroller" class="rsheet__scroll" data-lenis-prevent @scroll.passive="onScroll">
-      <section
-        v-for="(scene, i) in scenes"
-        :key="`${relic.id}-${i}`"
-        class="rsheet__scene"
-        :class="{ 'is-active': i === index }"
-        :aria-label="`${relic.name} — ${scene.kicker}`"
-      >
-        <button
-          type="button"
-          class="rsheet__hit"
-          :aria-label="`Ver ${scene.kicker} em ecrã inteiro`"
-          @click="emit('open-media', scene)"
-        >
-          <img
-            v-if="scene.kind === 'image'"
-            class="rsheet__media"
-            :src="scene.src"
-            :alt="relic.alt"
-            decoding="async"
-          />
-          <video
-            v-else
-            class="rsheet__media"
-            :src="i === index ? scene.src : undefined"
-            :poster="scene.poster"
-            muted
-            loop
-            playsinline
-            autoplay
-            tabindex="-1"
-          />
-        </button>
+    <aside class="rsheet__info">
+      <p class="rsheet__eyebrow" data-sheet-item>{{ relic.mission }}</p>
+      <h2 class="sheet__title" data-sheet-item>{{ relic.name }}</h2>
 
-        <div class="rsheet__veil" />
+      <div class="rsheet__copy" data-sheet-item>
+        <Transition name="swap" mode="out-in">
+          <div :key="index">
+            <p class="rsheet__kicker">{{ current.kicker }}</p>
+            <p class="rsheet__body">{{ current.body }}</p>
+          </div>
+        </Transition>
+      </div>
 
-        <div class="rsheet__copy">
-          <p class="rsheet__kicker">{{ scene.kicker }}</p>
-          <h3 class="rsheet__title">{{ relic.name }}</h3>
-          <p class="rsheet__mission">{{ relic.mission }}</p>
-          <p class="rsheet__body">{{ scene.body }}</p>
-          <dl v-if="i === 0" class="rsheet__facts">
-            <div v-for="fact in relic.facts" :key="fact.label">
-              <dt>{{ fact.label }}</dt>
-              <dd>{{ fact.value }}</dd>
-            </div>
-          </dl>
+      <dl class="rsheet__facts" data-sheet-item>
+        <div v-for="fact in relic.facts" :key="fact.label">
+          <dt>{{ fact.label }}</dt>
+          <dd>{{ fact.value }}</dd>
         </div>
-      </section>
-    </div>
+      </dl>
+    </aside>
 
-    <div class="rsheet__rail" aria-hidden="true">
-      <button
-        v-for="(scene, i) in scenes"
-        :key="`dot-${i}`"
-        type="button"
-        class="rsheet__dot"
-        :class="{ 'is-on': i === index }"
-        tabindex="-1"
-        @click="goTo(i)"
-      />
+    <div class="rsheet__stage">
+      <div ref="scroller" class="rsheet__scroll" data-lenis-prevent @scroll.passive="onScroll">
+        <section
+          v-for="(scene, i) in scenes"
+          :key="`${relic.id}-${i}`"
+          class="rsheet__scene"
+          :class="{ 'is-active': i === index }"
+        >
+          <button
+            type="button"
+            class="rsheet__hit"
+            :aria-label="`Ver ${scene.kicker} em ecrã inteiro`"
+            @click="emit('open-media', scene)"
+          >
+            <img
+              v-if="scene.kind === 'image'"
+              class="rsheet__media"
+              :src="scene.src"
+              :alt="relic.alt"
+              decoding="async"
+            />
+            <video
+              v-else
+              class="rsheet__media"
+              :src="i === index ? scene.src : undefined"
+              :poster="scene.poster"
+              muted
+              loop
+              playsinline
+              autoplay
+              tabindex="-1"
+            />
+            <span class="rsheet__hint" aria-hidden="true">
+              <svg viewBox="0 0 16 16" width="13" height="13">
+                <path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+              </svg>
+            </span>
+          </button>
+        </section>
+      </div>
+
+      <div class="rsheet__rail" aria-hidden="true">
+        <button
+          v-for="(scene, i) in scenes"
+          :key="`dot-${i}`"
+          type="button"
+          class="rsheet__dot"
+          :class="{ 'is-on': i === index }"
+          tabindex="-1"
+          @click="goTo(i)"
+        />
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.swap-enter-active,
+.swap-leave-active {
+  transition:
+    opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.swap-enter-from {
+  opacity: 0;
+  transform: translateY(14px);
+  filter: blur(5px);
+}
+
+.swap-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+  filter: blur(5px);
+}
+</style>

@@ -238,7 +238,7 @@ export class GlEngine {
   private bootDone = false
   trackEl: HTMLElement | null = null
   private hasCenteredInitial = false
-  private readonly carousel = { p: 0, target: 0, max: 1, axis: 'x' as 'x' | 'y' }
+  private readonly carousel = { p: 0, target: 0, max: 1, axis: 'x' as 'x' | 'y', infinite: false, copySpan: 0, perCopy: 0 }
   private mobileRange = { start: 0, end: 0 }
   private readonly pointer = { down: false, id: -1, x: 0, y: 0 }
   private carouselDriven = false
@@ -583,6 +583,17 @@ export class GlEngine {
         }),
     )
     await Promise.all(jobs)
+
+    // Planos de cartão criados antes das texturas ficam com um Texture vazio;
+    // aqui devolvemos-lhes o mapa certo (acontece quando o track ganha cópias).
+    for (const plane of this.planes) {
+      if (plane.kind !== 'card') continue
+      const texture = this.textureForCard(plane.el)
+      const material = plane.mesh.material as THREE.ShaderMaterial
+      if (material.uniforms.uMap) material.uniforms.uMap.value = texture
+      plane.mappedTexture = texture
+      plane.dirty = true
+    }
   }
 
   private queueScan(): void {
@@ -829,7 +840,8 @@ export class GlEngine {
     if (this.carousel.max < 10 || el.scrollHeight < 10) return
     this.hasCenteredInitial = true
     if (this.carousel.axis === 'x') {
-      this.centerCardIndex(1)
+      if (this.carousel.infinite) this.centerInfinite()
+      else this.centerCardIndex(1)
     } else {
       // mobile: measureTrack já posiciona o card índice 1 centrado em p=0
       this.carousel.p = 0
@@ -847,6 +859,7 @@ export class GlEngine {
     const last = cards.length > 0 ? cards[cards.length - 1] : null
     if (last !== null) {
       if (mobile) {
+        this.carousel.infinite = false
         const anchor = cards[1] ?? cards[0]
         const vh = window.innerHeight
         const start = vh / 2 - (anchor.offsetTop + anchor.offsetHeight / 2)
@@ -856,6 +869,19 @@ export class GlEngine {
         this.mobileRange.end = Math.min(end, start)
         this.carousel.max = Math.max(1, start - this.mobileRange.end)
       } else {
+        const copies = Number(el.getAttribute('data-copies') ?? 1) || 1
+        if (el.hasAttribute('data-infinite') && copies > 1) {
+          const perCopy = Math.floor(cards.length / copies)
+          const span = cards[perCopy] ? cards[perCopy].offsetLeft - cards[0].offsetLeft : 0
+          if (span > 10) {
+            this.carousel.infinite = true
+            this.carousel.perCopy = perCopy
+            this.carousel.copySpan = span
+            this.carousel.max = span
+            return
+          }
+        }
+        this.carousel.infinite = false
         this.carousel.max = Math.max(1, last.offsetLeft + last.offsetWidth - window.innerWidth)
       }
       return
@@ -938,7 +964,7 @@ export class GlEngine {
     const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
     const delta = e.deltaMode === 1 ? raw * 16 : raw
     // No início da faixa, devolver a roda à página (a cena liberta o Lenis).
-    if (delta < 0 && this.carousel.target <= 0.0005) {
+    if (!this.carousel.infinite && delta < 0 && this.carousel.target <= 0.0005) {
       document.documentElement.dataset.scene = ''
       requestAnimationFrame(() => {
         setSmoothScrollEnabled(true)
@@ -959,7 +985,14 @@ export class GlEngine {
     // clamp suave a 1 viewport de distância do ponto atual (tanh)
     const away = (next - this.carousel.p) * this.carousel.max
     const limited = this.carousel.p + (Math.tanh(away / ww) * ww) / this.carousel.max
-    this.carousel.target = THREE.MathUtils.clamp(limited, 0, 1)
+    if (this.carousel.infinite) {
+      const wrapped = this.wrapP(limited)
+      // o salto de uma cópia é invisível: conteúdo idêntico um período à frente
+      this.carousel.p += wrapped - limited
+      this.carousel.target = wrapped
+    } else {
+      this.carousel.target = THREE.MathUtils.clamp(limited, 0, 1)
+    }
     this.stopCarouselTween()
   }
 
@@ -1012,8 +1045,15 @@ export class GlEngine {
     this.lastDragPx += Math.abs(dx) + Math.abs(dy)
     const delta = this.carousel.axis === 'x' ? -dx : -dy
     const scaled = this.carousel.target + (delta / this.carousel.max) * 1.6
-    this.carousel.target = THREE.MathUtils.clamp(scaled, 0, 1)
-    this.carousel.p = this.carousel.target
+    if (this.carousel.infinite) {
+      const wrapped = this.wrapP(scaled)
+      this.carousel.p += wrapped - scaled
+      this.carousel.target = wrapped
+      this.carousel.p = this.carousel.target
+    } else {
+      this.carousel.target = THREE.MathUtils.clamp(scaled, 0, 1)
+      this.carousel.p = this.carousel.target
+    }
     this.lastAdvanceAt = 0
   }
 
@@ -1110,6 +1150,15 @@ export class GlEngine {
       this.lastAdvanceAt = now
       const p = 1 - Math.pow(1 - FOLLOW_LERP, dt * 60)
       this.carousel.p += delta * p
+      if (this.carousel.infinite) {
+        // mantém p num período: o conteúdo repete-se a cada cópia
+        const wrapped = this.wrapP(this.carousel.p)
+        const shift = wrapped - this.carousel.p
+        if (shift !== 0) {
+          this.carousel.p = wrapped
+          this.carousel.target += shift
+        }
+      }
       this.applyTrack()
     } else {
       this.lastAdvanceAt = this.lastTickAt
@@ -1124,8 +1173,38 @@ export class GlEngine {
       const t = start + this.carousel.p * (end - start)
       el.style.translate = `0px ${t}px`
     } else {
-      el.style.translate = `${-this.carousel.p * this.carousel.max}px ${-el.offsetHeight / 2}px`
+      const offset = this.carousel.infinite ? this.carousel.copySpan : 0
+      el.style.translate = `${-this.carousel.p * this.carousel.max - offset}px ${-el.offsetHeight / 2}px`
     }
+  }
+
+  /** Re-mede e recentra (usado quando o track passa a ter cópias). */
+  resetCarousel(): void {
+    this.hasCenteredInitial = false
+    this.measureTrack()
+    this.centerInitial()
+    this.applyTrack()
+  }
+
+  /** p normalizado em [0,1); no modo infinito nunca satura nas pontas. */
+  private wrapP(value: number): number {
+    if (!this.carousel.infinite) return THREE.MathUtils.clamp(value, 0, 1)
+    const wrapped = value - Math.floor(value)
+    return wrapped === 1 ? 0 : wrapped
+  }
+
+  /** Coloca a cópia central em cena, com o cartão do meio centrado. */
+  private centerInfinite(): void {
+    const el = this.trackEl
+    if (!el) return
+    const cards = Array.from(el.querySelectorAll<HTMLElement>('[data-gl="card"]'))
+    const target = cards[this.carousel.perCopy + 1] ?? cards[0]
+    if (!target) return
+    const mid = window.innerWidth / 2 - (target.offsetLeft + target.offsetWidth / 2)
+    const value = this.wrapP((-mid - this.carousel.copySpan) / this.carousel.max)
+    this.carousel.p = value
+    this.carousel.target = value
+    this.applyTrack()
   }
 
   private inTrackCache = new WeakMap<HTMLElement, boolean>()
