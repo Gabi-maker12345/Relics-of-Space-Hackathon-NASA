@@ -1,6 +1,6 @@
 # PROGRESS.md — execução do clone
 
-Base: `CLONE_SPEC.md` (valores exatos) + `CLONE_PLAN.md` (ordem).
+Base: `CLONE.md` — Parte 1 (extração, valores exatos) + Parte 2 (ordem).
 
 ## Assunções sobre itens [NÃO DETERMINADO] da SPEC
 
@@ -129,7 +129,7 @@ Base: `CLONE_SPEC.md` (valores exatos) + `CLONE_PLAN.md` (ordem).
 
 # Space Relics — integração com a base visual do forgeautomotive.co.uk (2026-10-31)
 
-Fonte: `CLONE_SPEC.md` (valores exatos, extraídos ao vivo) + `CLONE_PLAN.md`.
+Fonte: `CLONE.md` Parte 1 (extração ao vivo) + Parte 2 (plano).
 Restrição do pedido: a integração acontece **no projeto Nuxt existente** (não num app Next novo), porque o portfólio 3D tem de sobreviver como 6.ª secção.
 
 ## Desvios assumidos (e porquê)

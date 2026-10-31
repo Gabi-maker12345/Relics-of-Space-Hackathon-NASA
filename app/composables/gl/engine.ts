@@ -1,6 +1,6 @@
 /**
  * GlEngine — orquestra os planos GL.
- * Valores extraídos do bundle original (ver DIFF_REPORT / CLONE_SPEC):
+ * Valores extraídos do bundle original (ver CLONE.md, Partes 3–5):
  * - entrada: cards .1s/1.25s expo stagger .05 (from .5), stack rise .5 stagger .1,
  *   title .25s/1.25s expo stagger .075, text .35s/1.1s stagger .075, pills .5s/.85s expo
  * - hover do card: dente (u_dent=.1 da altura), .5s expo (in/out)

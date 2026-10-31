@@ -70,7 +70,7 @@ build falha em ambientes que bloqueiam scripts de dependências.
 
 | Dependência externa | Situação |
 |---|---|
-| Fonte **ABC Diatype Plus Variable** (original) | **não incluída** (licença paga) → Inter Variable + compensação de peso/tracking (ver `DIFF_REPORT.md`) |
+| Fonte **ABC Diatype Plus Variable** (original) | **não incluída** (licença paga) → Inter Variable + compensação de peso/tracking (ver `CLONE.md` Parte 5) |
 | Texturas dos 8 projetos (KTX2/DatoCMS) | **não incluídas** (assets do original) → `public/placeholders/*.svg` + `public/textures/manifest.json` |
 | Esculturas 3D do portal | **não incluídas** (assets do original) |
 | `POST /api/subscribe` | **stub local** (`server/api/subscribe.post.ts`): valida e-mail, honeypot e latência simulada; não chama serviço externo |

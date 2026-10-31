@@ -1,6 +1,6 @@
 import tailwindcss from '@tailwindcss/vite'
 
-// Space Relics — base visual na especificação de forgeautomotive.co.uk (CLONE_SPEC.md) e no portfólio existente
+// Space Relics — base visual na especificação de forgeautomotive.co.uk (CLONE.md, Parte 1) e no portfólio existente
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-01',
   devtools: { enabled: false },

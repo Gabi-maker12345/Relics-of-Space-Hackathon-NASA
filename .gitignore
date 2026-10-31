@@ -27,3 +27,7 @@ Thumbs.db
 # misc
 *.tsbuildinfo
 coverage/
+
+# projeto abandonado (Space Relics standalone) — fora do repo
+space-relics/
+SPACE_RELICS.md

@@ -1,4 +1,28 @@
-# CLONE_SPEC.md — forgeautomotive.co.uk (homepage)
+# CLONE.md — caderno de clones
+
+> **Regra:** um alvo de clone = uma **Parte** deste ficheiro. Não criar
+> `CLONE_SPEC*.md` / `CLONE_PLAN*.md` soltos; um alvo novo entra como nova parte,
+> pelo modelo da Parte 6.
+
+| Parte | Alvo | Tipo | Estado |
+|---|---|---|---|
+| 1 | forgeautomotive.co.uk | extração ao vivo (CDP) | atual — base visual do Space Relics |
+| 2 | forgeautomotive.co.uk | plano de implementação | executado (desvios em `PROGRESS.md`) |
+| 3 | jesperlandberg.com | extração (REA + SSR) | concluído |
+| 4 | jesperlandberg.com | plano de implementação | concluído |
+| 5 | jesperlandberg.com | auditoria original↔clone | concluída (0 críticas) |
+| 6 | — | modelo para um novo alvo | — |
+
+O registo de execução (o que foi feito, quando, com que evidência) vive em
+`PROGRESS.md`; aqui ficam a especificação e o plano.
+
+---
+
+# Parte 1 — forgeautomotive.co.uk · extração
+
+Fonte de verdade do clone que hoje serve de base ao Space Relics. Medido ao vivo
+(Chrome 156 via CDP, 1600×900 + 390/700/1024/1440). `[NÃO DETERMINADO]` = não
+observável passivamente.
 
 Extração feita em 2026-10-31 com Chrome 156.0.8078.47 via CDP (`--remote-debugging-port`), viewport principal **1600×900** (DPR 1), mais 390/700/1024/1440 para breakpoints. Fontes: DOM ao vivo, CSSOM completo (1.568 regras), folhas externas, chunks JS (23 ficheiros, 1,1 MB), `/ActiveFrame.js`, manifests `.af`, `performance.getEntriesByType('resource')` e HTML SSR. Valores marcados como `px` são medidos; valores em `rem` são os declarados no CSS (root = 10px abaixo de 1600px, 11px a partir de 1600px).
 
@@ -6,7 +30,7 @@ Extração feita em 2026-10-31 com Chrome 156.0.8078.47 via CDP (`--remote-debug
 
 ---
 
-## 1. Stack e tecnologias
+#### 1. Stack e tecnologias
 
 | Camada | Valor | Evidência |
 |---|---|---|
@@ -29,9 +53,9 @@ Extração feita em 2026-10-31 com Chrome 156.0.8078.47 via CDP (`--remote-debug
 
 ---
 
-## 2. Design system
+#### 2. Design system
 
-### 2.1 Tokens (`:root`, 61 custom properties — valores exatos)
+##### 2.1 Tokens (`:root`, 61 custom properties — valores exatos)
 
 | Token | Valor | Uso |
 |---|---|---|
@@ -70,7 +94,7 @@ Extração feita em 2026-10-31 com Chrome 156.0.8078.47 via CDP (`--remote-debug
 
 > Nota de escala: `html{font-size:62.5%}` ⇒ **1rem = 10px**; `@media (min-width:1600px){68.75%}` ⇒ **11px**; `@media (min-width:1920px){75%}` ⇒ **12px**. Todos os `rem` do site escalam com isto (efeito “zoom de layout” em ecrãs grandes).
 
-### 2.2 Tipografia
+##### 2.2 Tipografia
 
 | Papel | Família | Peso | Tamanho / line-height | Letter-spacing | Outros |
 |---|---|---|---|---|---|
@@ -92,13 +116,13 @@ Ficheiros de fonte (self-hosted, `/_next/static/media/`):
 
 Fallbacks com métricas ajustadas: `GeistSans Fallback` (Arial, ascent 94.56%, size-adjust 106.28%) e `editorial Fallback` (Arial, ascent 101.14%, descent 34.48%, line-gap 11.49%, size-adjust 87.01%).
 
-### 2.3 Grelha
+##### 2.3 Grelha
 
 - 12 colunas; a 1600px: coluna **98.14px**, gap **35.2px** (2rem), padding **123.2px 17.6px 0** (topo 11.2rem, laterais 1.6rem).
 - Posições verificadas: cartão quadrado do painel = **colunas 3–6** (x 284, w 498); coluna de texto = **colunas 8–10** (x 951, w 365); H1 do hero = **colunas 4–10** (≥1024px), `grid-column: 1/5` <700px, `2/6` ≥700px.
 - `.waffl-grid` aplica `grid-column: 1/-1` a filhos sem regra explícita.
 
-### 2.4 Breakpoints (todos `min-width` exceto indicado)
+##### 2.4 Breakpoints (todos `min-width` exceto indicado)
 
 `320 · 420 · 700 · 1024 · 1200 · 1400 · 1600 · 1920` + `(hover:hover) and (pointer:fine)` + `(hover:none)` + `(any-pointer:coarse)` + `(prefers-reduced-motion:reduce)` + `(min-height:800px)` + `(max-height:500px) and (orientation:landscape)`.
 
@@ -116,7 +140,7 @@ Mudanças observadas:
 | Padding do botão menu | 24px | 32px | 40px | 40px | 44px |
 | Scroll height | 13.922 | 15.316 | 16.718 | 17.498 | 17.862 |
 
-### 2.5 z-index
+##### 2.5 z-index
 
 | Camada | z |
 |---|---|
@@ -131,9 +155,9 @@ Mudanças observadas:
 
 ---
 
-## 3. Estrutura e layout
+#### 3. Estrutura e layout
 
-### 3.1 Árvore de secções (desktop 1600×900; `y` = offset no documento, `h` = altura)
+##### 3.1 Árvore de secções (desktop 1600×900; `y` = offset no documento, `h` = altura)
 
 | # | y | h | Classe | Papel | Conteúdo |
 |---|---|---|---|---|---|
@@ -150,7 +174,7 @@ Mudanças observadas:
 
 Total do documento a 1600×900: **17.862px**. Nenhuma secção usa `scroll-snap`; o ritmo vem de blocos de `100dvh` com `position: sticky`.
 
-### 3.2 Mecânica dos painéis (`section.iZWByV`, repetida em `gXDxwn`)
+##### 3.2 Mecânica dos painéis (`section.iZWByV`, repetida em `gXDxwn`)
 
 ```
 section.iZWByV            h 2700, overflow clip, z 5
@@ -174,7 +198,7 @@ section.iZWByV            h 2700, overflow clip, z 5
 - Cartão nítido: 498×498, sticky, **sem blur**, uma imagem por passo.
 - Abaixo de 1024px o cartão (`aside.cstPqq`) desaparece; o texto ocupa a largura útil.
 
-### 3.3 Header / chrome fixo
+##### 3.3 Header / chrome fixo
 
 | Elemento | Geometria (1600) | Estilo |
 |---|---|---|
@@ -184,14 +208,14 @@ section.iZWByV            h 2700, overflow clip, z 5
 | `button[aria-label="Navigate"]` | 203×110, x 1398 | padding `4rem` (gap-xl), `gap:.8rem`, label + 3 barras |
 | Barra de progresso | `inset:auto 1.6rem 1.6rem`, h **2px**, z 997 | track `color-mix(#fff 10%)`; fill `#F2F1ED` com `scaleX()` por scroll |
 
-### 3.4 Menu
+##### 3.4 Menu
 
 - Botão: `aria-expanded` `false|true`, `aria-controls="site-menu"`, label alterna **Navigate ⇄ Close menu**; visual: texto + hambúrguer com `span:nth-child(2){scale:.5 1}` no hover.
 - Overlay: `nav[aria-label="Menu"]` com **BUILDS / STOCK / CONTACT / LEGAL**, ícones sociais, **POWERED BY → thevehiclewrappingcentre.com**, **MADE BY 12 STUDIO → 12.studio**.
 - Transição de labels: `span[data-menu="closed"]{translateY(0) skewY(0)}` ⇄ `span[data-menu="open"]{position:absolute; translateY(-100%) skewY(3deg)}`, `transition: transform 1s var(--easing-bezzy3)`.
 - Existe também `nav[aria-label="Site"]` (skip-link “Home/Builds/Stock/Contact/Legal/Sitemap”) que só aparece em `:focus-within`.
 
-### 3.5 Fundo do hero / approach (ActiveFrame)
+##### 3.5 Fundo do hero / approach (ActiveFrame)
 
 - Não há `<video>` no DOM. O fundo é uma **sequência de frames HEVC** servida em contentores `.af` e decodificada por WebCodecs.
 - Formato `.af`: `[chunks…][manifest JSON][uint32 LE = offset do manifest]`.
@@ -199,7 +223,7 @@ section.iZWByV            h 2700, overflow clip, z 5
 - Dois ficheiros medidos: `0b86a50f…af` = **674.566 B**, 120 frames, GOP 5; `6405b827…af` = **291.072 B**, 96 frames, GOP 10. Duração do stream ≈ 4–5 s a 24 fps.
 - Decoder: `hardwareAcceleration:"prefer-hardware"`, `optimizeForLatency:true`, fallback em cascata de 4 configs; `FLUSH_IDLE_MS=250`; `MAX_DECODER_RECOVERIES=3`; seek por timestamp (`framesByTimestamp`), com `_needsKeyFrame` após flush.
 
-### 3.6 Rodapé
+##### 3.6 Rodapé
 
 - `footer` 900 de altura, `padding:186.128px 0 0` (16.92rem × 11px), fundo `#000`.
 - Texto: “Are you ready to” (micro-label) / **“Refuse Ordinary”** (serif) / CTA “Start Your Project” / “Back to Top” (botão com `aria-label="Back to Top"`).
@@ -208,7 +232,7 @@ section.iZWByV            h 2700, overflow clip, z 5
 
 ---
 
-## 4. Componentes
+#### 4. Componentes
 
 | Componente | Classe | Estrutura | Default | Hover | Focus-visible | Disabled | Outros |
 |---|---|---|---|---|---|---|---|
@@ -226,7 +250,7 @@ section.iZWByV            h 2700, overflow clip, z 5
 
 ---
 
-## 5. Comportamento e interação
+#### 5. Comportamento e interação
 
 | Efeito | Gatilho | Detalhe medido |
 |---|---|---|
@@ -246,7 +270,7 @@ section.iZWByV            h 2700, overflow clip, z 5
 
 ---
 
-## 6. Assets
+#### 6. Assets
 
 | Tipo | Ficheiros / padrão | Dimensões | Função |
 |---|---|---|---|
@@ -264,7 +288,7 @@ Alt texts observados: “Matte black Lamborghini”, “Forge Lambo Interior”,
 
 ---
 
-## 7. Dados e rede
+#### 7. Dados e rede
 
 | Pedido | Tipo | Observação |
 |---|---|---|
@@ -278,7 +302,7 @@ Conteúdo vem do Sanity **no servidor** — nenhum request a `api.sanity.io` no 
 
 Estrutura de conteúdo inferida do DOM: `relic`-like `{ slug, title (H2/H3), intro (p), media[] (imagem + alt), cta{label,href}, counter{index,total} }` por secção/ passo; marcas como lista `{ name, logo }`.
 
-### 7.1 Conteúdo textual
+##### 7.1 Conteúdo textual
 
 **Hero (H1):** “For Those Who Refuse Ordinary”
 **Deck:** “A luxury automotive atelier for bespoke styling, performance and craftsmanship.”
@@ -302,7 +326,7 @@ Estrutura de conteúdo inferida do DOM: `relic`-like `{ slug, title (H2/H3), int
 
 ---
 
-## 8. Acessibilidade e SEO
+#### 8. Acessibilidade e SEO
 
 | Item | Valor |
 |---|---|
@@ -323,7 +347,7 @@ Estrutura de conteúdo inferida do DOM: `relic`-like `{ slug, title (H2/H3), int
 
 ---
 
-## 9. Lacunas (`[NÃO DETERMINADO]`)
+#### 9. Lacunas (`[NÃO DETERMINADO]`)
 
 1. Valores exatos das tweens GSAP (duração/ease por reveal e por SplitText) — não há `window.gsap` exposto; só o registo dos plugins é observável.
 2. Configuração do `SplitText` (por linha, palavra ou letra) e o markup resultante.
@@ -334,3 +358,325 @@ Estrutura de conteúdo inferida do DOM: `relic`-like `{ slug, title (H2/H3), int
 7. Lista completa de `.af` por secção (só 2 pedidos capturados; restantes dependem do viewport/estado).
 8. Contraste efetivo do corpo sobre cada fotografia.
 9. Versão exata do GSAP (bundle minificado sem string de versão legível).
+
+---
+
+# Parte 2 — forgeautomotive.co.uk · plano e estado
+
+Plano original de implementação. O que foi executado — e os desvios (Nuxt em vez
+de Next, Newsreader em vez da PP Editorial New, canvas de estrelas em vez do
+scrub HEVC) — está em `PROGRESS.md`, iterações 1–8.
+
+Base factual: Parte 1 deste ficheiro. Tudo o que lá está `[NÃO DETERMINADO]` é tratado aqui como decisão de engenharia, não como facto do original — cada uma está marcada com ⚠ e justificada.
+
+---
+
+#### 1. Stack recomendada
+
+| Camada | Escolha | Porquê |
+|---|---|---|
+| Framework | **Next.js 16.3.5 (App Router, Turbopack) + React 19 + TypeScript** | É a stack do original (Next 16.3.5, React 19.3 canary). O App Router dá RSC/prefetch (`?_rsc=`), que o site usa para pré-carregar `/builds`, `/stock`, `/contact`, `/legal`. |
+| Estilo | **styled-components** (runtime, SSR registry) | O original injeta 799 regras em `<style data-styled>` e usa classes `sc-<hash>-<n>`. Manter a tecnologia evita reescrever a folha de estilos e preserva a mecânica de overrides por componente. ⚠ Alternativa mais barata de manter: CSS Modules + variáveis; perde-se a paridade de classes mas ganha-se build mais simples — só recomendo se o clone for evoluir muito. |
+| Scroll | **Lenis 1.3.26** | Igual ao original; o scroller é a `div.lenis` (não a window) — crítico para sticky, progresso e o scrub. |
+| Animação | **GSAP + ScrollTrigger + SplitText + @gsap/react** | O original registra exatamente estes três plugins. `useGSAP` para limpeza automática em React. |
+| Fundo “vídeo” | **ActiveFrame próprio sobre WebCodecs** (`VideoDecoder`, HEVC) | O original não usa `<video>`: usa contentores `.af` (chunks + manifest JSON + offset uint32) com scrub por timestamp. Reimplementar é ~250 linhas (ver §7). |
+| CMS | **Sanity** (`ed72g2cx`/`production`) | Conteúdo e pipeline de imagem (`?auto=format&fit=max&w=`) vêm daí. Para o clone,Schema próprio (ver §5). |
+| Deploy | **Netlify** | Igual ao original (cache headers `Netlify Durable`), sem custo de infraestrutura. |
+| Tipografia | **Geist** (OFL, via `geist` ou `next/font`) + serifada alternativa licenciada | GeistSans é livre. ⚠ “editorial” = PP Editorial New, **comercial**: licenciar ou substituir por serifada de peso 200 com métricas próximas (ex.: `Instrument Serif`, `Newsreader 200`) e ajustar `letter-spacing`. |
+
+---
+
+#### 2. Estrutura de pastas
+
+```
+forge-clone/
+├─ app/
+│  ├─ layout.tsx                # providers (Lenis, GSAP, StyledRegistry), fontes, metadata
+│  ├─ page.tsx                  # home (composição das secções)
+│  ├─ globals.css               # reset + tokens + @property + view-transitions
+│  ├─ builds/page.tsx           # destino do CTA (stub)
+│  ├─ stock/page.tsx
+│  ├─ contact/page.tsx
+│  └─ legal/page.tsx
+├─ components/
+│  ├─ chrome/SiteHeader.tsx     # header fixo: social, logo, menu button
+│  ├─ chrome/ScrollProgress.tsx # barra 2px + scaleX
+│  ├─ chrome/SiteMenu.tsx       # overlay NAVIGATE/CLOSE
+│  ├─ chrome/SkipLink.tsx
+│  ├─ sections/Hero.tsx
+│  ├─ sections/Manifesto.tsx
+│  ├─ sections/Approach.tsx     # H2 + p + CTA + LogoMarquee
+│  ├─ sections/StickyPanels.tsx # 3 ou N passos: media sticky + coluna de texto
+│  ├─ sections/ServicesIntro.tsx
+│  ├─ sections/Services.tsx     # 6 passos
+│  ├─ sections/BuildsTeaser.tsx
+│  ├─ sections/StockTeaser.tsx
+│  ├─ sections/EndsHere.tsx     # bloco + canvas WebGL
+│  ├─ sections/SiteFooter.tsx
+│  └─ ui/{Button,LogoMarquee,MediaLayer,PanelCard}.tsx
+├─ lib/
+│  ├─ lenis.tsx                 # provider + rAF loop
+│  ├─ gsap.ts                   # registro de plugins (client-only)
+│  ├─ active-frame.ts           # decoder WebCodecs
+│  ├─ scroll-progress.ts        # store simples (subscribe) para a barra
+│  └─ sanity/{client.ts,queries.ts,types.ts}
+├─ sanity/schema/               # relic|service|marquee|siteSettings
+├─ public/
+│  ├─ active-frame/*.af         # (ou CDN)
+│  └─ icons/*
+└─ styles/ (se CSS Modules)
+```
+
+---
+
+#### 3. Dependências
+
+```bash
+### base (versão do original)
+npx create-next-app@16.3.5 forge-clone --ts --app --eslint --src-dir=false --import-alias "@/*"
+
+cd forge-clone
+npm i styled-components lenis@1.3.26 gsap @gsap/react
+npm i @sanity/client next-sanity @sanity/image-url
+npm i -D @types/styled-components eslint-plugin-react-hooks
+```
+
+Sem Tailwind (o original não usa). Sem `three` (o canvas é shader próprio; §7.4).
+
+---
+
+#### 4. Ordem de implementação
+
+| # | Objetivo | Ficheiros | Critério de conclusão verificável |
+|---|---|---|---|
+| 1 | **Setup** Next 16 + TS + styled-components com SSR registry | `app/layout.tsx`, `lib/styled-registry.tsx` | `next build` sem warning de hydration de classes; `view-source` contém as `<style data-styled>` do SSR |
+| 2 | **Tokens** e reset fiéis | `app/globals.css` | `getComputedStyle(document.documentElement)` devolve os 61 tokens; `html{font-size:62.5%}` e 11px a ≥1600px |
+| 3 | **Lenis** como scroller interno | `lib/lenis.tsx`, `layout.tsx` | `html,body{overflow:hidden}`; `div.lenis` com `scrollHeight` ≈ soma das secções; `window.scrollY` fica 0 |
+| 4 | **Chrome fixo** (header, logo, social, menu button, progresso) | `components/chrome/*` | header 110px a 1600; logo centrado a 44px do topo; barra 2px a 16px da base; `scaleX` acompanha o scroll |
+| 5 | **Hero** com tipografia exata | `sections/Hero.tsx` | H1 a 64/72/90px em 390/700/1600, `editorial 200`, ls −2.2px, largura = colunas 4–10 |
+| 6 | **Manifesto** | `sections/Manifesto.tsx` | segundo ecrã com H2 em 2 linhas, sem imagens de chrome |
+| 7 | **Approach + marquee** | `sections/Approach.tsx`, `ui/LogoMarquee` | 14 logótipos, `li` 4rem→6rem, animação 20s linear infinita, máscara 30% nas bordas |
+| 8 | **StickyPanels** (trio) | `sections/StickyPanels.tsx`, `ui/PanelCard`, `ui/MediaLayer` | wrapper 2700px; cartão 498×498 em col 3–6; texto em col 8–10; fundo com 3 camadas `inset:-1.6rem`, `opacity .4`, `blur .8rem`; cartão escondido <1024 |
+| 9 | **Serviços** (6 passos) | `sections/Services.tsx` | wrapper 5400px; 6 blocos `100dvh`; contador por passo |
+| 10 | **CTA + micro-interações** | `ui/Button` | hover: border 10→40%, label .6, letras sobem 4em com stagger .02s; foco tracejado; conic-gradient 4.5s |
+| 11 | **Menu overlay** | `chrome/SiteMenu.tsx` | `aria-expanded`/`aria-controls`; labels sobem/descem em 1s `bezzy3`; links BUILDS/STOCK/CONTACT/LEGAL |
+| 12 | **Ends Here / Builds / Stock / Footer** | `sections/*` | offsets do documento a ±8px dos valores do spec; footer 900px |
+| 13 | **View transitions** | `app/globals.css`, links | navegação dispara `next-build` (1.2s, rise/dim) e o progresso sobrevive |
+| 14 | **ActiveFrame** (scrub) | `lib/active-frame.ts`, `MediaLayer` | com um `.af` de teste: seek por scroll pinta o frame do timestamp; sem WebCodecs cai para poster estático |
+| 15 | **Responsivo** | todos | tabela de breakpoints do spec reproduzida (H1, H3, cartão, coluna de texto, paddings) |
+| 16 | **A11y + polimento** | vários | skip-link em `:focus-within`; `prefers-reduced-motion` desliga transições; outline 1px/4px; alt em todas as imagens; Lighthouse a11y ≥ 95 |
+
+---
+
+#### 5. Conteúdo e dados
+
+- Schema Sanity mínimo: `relic`/`step` (`title`, `body`, `media { image, alt }`, `index`, `total`), `brand` (`name`, `logo`), `section` (`eyebrow`, `heading`, `body`, `cta { label, href }`), `siteSettings` (menu, socials, footer, cookie copy).
+- Imagens via `@sanity/image-url` com `auto=format&fit=max&w=` (igual ao original: 390/640/3840).
+- Enquanto o CMS não existe, `lib/content.mock.ts` com o texto de §7.1 do spec (é conteúdo real do site, útil para validar layout).
+
+---
+
+#### 6. Riscos e como contornar
+
+| Risco | Impacto | Mitigação |
+|---|---|---|
+| **Assets proprietários** (fotografia, logótipos de marcas) | Legal + fidelidade | Usar placeholders com as mesmas dimensões e proporções; nunca hotlinkar `cdn.forgeautomotive.media` (Cloudflare bloqueia e é conteúdo de terceiros) |
+| **Fonte PP Editorial New** (comercial) | Fidelidade tipográfica | Licenciar; ou substituir por serifada 200 com `size-adjust` semelhante e reajustar `letter-spacing` (−0.2rem) |
+| **HEVC + WebCodecs** | Chrome só descodifica HEVC com suporte de hardware; Firefox não tem `VideoDecoder` HEVC | Estratégia em 3 níveis: `.af` → `<video muted playsinline>` com MP4/H.264 → poster estático. O próprio original já tem fallback em cascata de configs |
+| **Scrub com 96–120 frames** | Jank em scroll rápido | Manter o desenho do original: `framesByTimestamp`, `_needsKeyFrame`, flush só em idle (250ms), `hardwareAcceleration:'prefer-hardware'`, limite de recuperações 3 |
+| **styled-components + RSC** | Estilos “a saltar” | Registry de SSR + `useServerInsertedHTML`; marcar componentes com `'use client'` apenas onde há animação |
+| **Lenis + sticky** | Secções não fixam | O sticky é CSS dentro do wrapper que faz scroll; nunca aplicar `transform` ao `.lenis` (quebra o `position:sticky`) |
+| **View Transitions** | Safari/Firefox parciais | `@supports` + fallback de fade com `#page:after` |
+| **Cloudflare em automação** | Screenshots sem imagens (aconteceu) | Para QA visual, UA de browser real (`--user-agent` sem “HeadlessChrome”) ou mocks locais |
+| **GSAP timings `[NÃO DETERMINADO]`** | Reveals “quase” iguais | Medir no original com `performance.now()` em torno do primeiro paint do H1 e calibrar por comparação de vídeo (60fps), documentando os valores escolhidos |
+| **Shaders do canvas do rodapé** | Efeito em falta | Tratar como opcional (P2): ruído/gradiente animado até haver referência |
+
+---
+
+#### 7. Decisões técnicas para o que o spec não fecha
+
+1. **Reveal de texto**: `SplitText` por linhas (`type:"lines"`), `y:110%` → `0`, `duration:.9`, `ease:"expo.out"`, `stagger:.06`, disparado no `load` do hero e em `ScrollTrigger` (`start:"top 80%"`) nas restantes. ⚠ valores a calibrar.
+2. **Troca de passos**: um `ScrollTrigger` por painel (`start:"top top"`, `end:"bottom bottom"`, `scrub:true`) que publica `progress` num store; o componente escolhe `index = clamp(floor(progress * n))` e anima z-index/opacity das camadas. ⚠ o original pode usar tween contínuo em vez de degraus discretos.
+3. **Progresso**: `scaleX(0.0005 + p * 0.9995)` — o original arranca em `0.0005` (nunca 0) para evitar divisão por zero em transições.
+4. **Canvas do rodapé**: começar com um shader de ruído/gradiente lento (1 plano, `gl_FragColor` com `snoise`), apenas se sobrar tempo; caso contrário, omitir e anotar no checklist.
+5. **Menu**: overlay full-screen com `nav[aria-label="Menu"]`; o original não expõe `role="dialog"`, portanto replicar como `<nav>` + `aria-expanded` (não inventar diálogo).
+
+---
+
+#### 8. Checklist de fidelidade
+
+Medir com o clone e o original lado a lado, a **1600×900** e a **390×844**.
+
+**Estrutura**
+- [ ] `div.lenis` é o scroller; `document.scrollingElement.scrollTop` fica 0
+- [ ] Altura total do documento ≈ **17.862px** @1600×900 (±1%)
+- [ ] Offsets das secções: 1170 (approach), 3160 (painéis), 5860 (intro serviços), 6461 (serviços), 12311 (ends here), 15162 (builds), 16062 (stock)
+- [ ] Wrappers de 2700px (3 passos) e 5400px (6 passos)
+
+**Grelha e tipografia**
+- [ ] 12 colunas: 98.14px + gap 35.2px @1600; padding 123.2px / 17.6px
+- [ ] H1 90px/108px, ls −2.2px, capitalize, colunas 4–10
+- [ ] H3 105.6px/126.72px @1600; 58px @≤1024
+- [ ] Corpo 19.8px/27.72px, ls −0.55px, `rgba(242,241,237,.8)`
+- [ ] Micro-label 11px/600, ls 3.3px, uppercase
+- [ ] `html` font-size 10px / 11px / 12px por breakpoint
+
+**Componentes**
+- [ ] CTA: 254×59 @1600, border 1px 10%, bg 10% preto, blur 4px, hover border 40% + letras a subir 4em com 0.02s de stagger
+- [ ] Progresso: 2px, 16px das margens, fill `#F2F1ED`
+- [ ] Header: 110px, logo a 44px do topo, botão menu com padding 44px
+- [ ] Marquee: 20s linear, `li` 6rem @≥1024, máscara 30%
+- [ ] Cartão de fase 498×498, sticky; fundo `inset:-1.6rem`, `opacity .4`, `blur .8rem`
+
+**Responsivo**
+- [ ] 390: cartão oculto, social oculto, H1 64px, coluna x 24 w 342
+- [ ] 1024: cartão visível (395px), social visível, coluna x 613 w 309
+- [ ] 1440: H3 96px, cartão 448px
+- [ ] 1600: tokens a 11px
+
+**Interação**
+- [ ] Roda do rato faz scroll suave; ancoragens e `scrollTo` funcionam
+- [ ] Passos trocam de imagem e texto na mesma posição de scroll (±40px)
+- [ ] Menu: label “Navigate” → “Close menu”, `aria-expanded=true`, links corretos
+- [ ] Focus-visible 1px offset 4px em todos os interativos; skip-link aparece no primeiro Tab
+- [ ] `prefers-reduced-motion: reduce` remove transições de página e liberta o scroll
+
+**Performance**
+- [ ] Nenhum layout shift ao trocar de painel (CLS < 0.02 no trecho hero→serviços)
+- [ ] Scrub sem quedas abaixo de 50fps num portátil integrado (gravar com DevTools Performance)
+- [ ] Imagens servidas nos tamanhos 390/640/1280/3840 e em AVIF/WebP
+
+**Acessibilidade/SEO**
+- [ ] Hierarquia H1→H2→H3 sem saltos
+- [ ] Todos os `<img>` com alt não vazio (exceto decorativos)
+- [ ] `title`, `description`, OG e `theme-color #0c0c0c` idênticos
+- [ ] `lang="en-GB"`
+
+---
+
+# Parte 3 — jesperlandberg.com · extração
+
+### 3.1 Metadados
+
+`https://jesperlandberg.com/` · 2026-10-29 · REA (CDP passivo, Chrome 156, 921×948) + HTML SSR + chunks `/_nuxt/*`. Todos os valores abaixo foram medidos; o resto ficou `[NÃO DETERMINADO]`.
+
+**Modelo mental (auto-revelado no console):** *"every pixel you can see is WebGL. the DOM is real — it does the layout and catches your clicks — but it paints nothing."* O DOM só faz layout e hit-testing; o canvas GL pinta planos que seguem os `getBoundingClientRect` dos elementos.
+
+### 3.2 Stack
+
+| Camada | Valor | Evidência |
+|---|---|---|
+| Framework | Nuxt 4.x (SSR + `__NUXT__` payload) | `data-nuxt-data="nuxt-app"` |
+| Build | Vite/Nitro (chunks `/_nuxt/*.js`) | padrão de build |
+| CSS | **Tailwind v4** (variantes `has-`, arbitrary properties) | reset compilado |
+| Escala | utilitários `--spacing: 0.1rem` (`px-20` = 2rem) | valores compilados |
+| 3D | **three.js r185** | `data-engine` no `<canvas>` |
+| Animação | GSAP | `_gsap` nos chunks |
+| CMS | **DatoCMS** (GraphQL + assets `datocms-assets.com`) | `__NUXT__.config` |
+| Texto GL | atlas de glifos próprio (`/glyphs/<id>.json` + `.bin`, SDF) | fetch no entry chunk |
+| Imagens | `/textures/manifest.json` → `.ktx2` (basis transcoder) | manifest + loader |
+| Form | `POST /api/subscribe` | chunk próprio |
+
+### 3.3 Design system
+
+| Token | Valor |
+|---|---|
+| Cores | `#000` (fundo), `#fff` (texto), `#fff3` (selection), opacidades `.4/.5/.6` para estados, `#eee` e dourado `#d9a441` sem uso visual confirmado |
+| Fonte | **ABC Diatype Plus Variable** (paga), `font-weight: 200–1000`, `body{font-family:sans}` |
+| Raiz fluida | `font-size: clamp(5px, 20px, 10 * 100vw / var(--size))`; `--size: 390` → `1500` a partir de 650px (1rem ≈ vw/150, teto 20px) |
+| Corpo | `1.4rem / 1.4` |
+| `.label` | `1rem`, 500, uppercase |
+| Escala de texto | `.8 / 1.4 / 1.6 / 1.8 / 3.5rem` (`text-8…text-35`) |
+| Tracking | `-0.02em` (corpo), `-0.035em`, `-0.05em` (títulos de card) |
+| Espaço | múltiplos de `0.1rem` (`px-40` = 4rem, `py-25` = 2.5rem, `gap-x-20` = 2rem, `size-25` = 2.5rem) |
+| Raios | `1.5rem` (mobile), `2rem` (desktop), `9999px` (pills) |
+| z-index | `40` chrome/painéis, `99` loader |
+| Breakpoints | `650` (única mudança de layout: `s:`), container `1100/1300/1400` |
+
+### 3.4 Estrutura e comportamento
+
+- Ecrã fixo, sem scroll de página: canvas GL em `z 0`; chrome fixo em `z 40`; loader em `z 99`.
+- Carrossel horizontal de cards com efeito de túnel; roda/arrasto movem a faixa (`p` 0–1 com damping `.1/frame`); no mobile a faixa é vertical.
+- Chrome: nome à esquerda, `Profile` à direita, `Featured / Full` e `Newsletter` em baixo.
+- Painéis `Profile`/`Newsletter` abrem um “portal” (hole) escuro com anel; texto GL revelado por linha com efeito de slot-machine.
+- Loader: 3 barras centrais; saída do overlay `0.35s` + barras `0.42s`.
+- Estados de hover: pill `0.7s` in / `0.5s` out; labels mudam de opacidade em `.3s`; cards inclinam/“dentam” no hover (`.5s`).
+
+### 3.5 Assets e dados
+
+Imagens em DatoCMS convertidas para `.ktx2` (basis), atlas SDF por glifo, sem ícones/sliders vídeo. Rotas: `/` (home), `/full` (índice), `/newsletter`, `/projects/<slug>`, `/api/subscribe`, `/llms.txt`, `/textures/manifest.json`.
+
+### 3.6 Acessibilidade e SEO
+
+Um único `h1`/`h2` em `.sr-only` (a hierarquia visual é texto GL), `.label` uppercase, `aria-expanded` nos painéis, `Escape` fecha, foco visível por outline do browser, sem `prefers-reduced-motion` implementado no original.
+
+### 3.7 Lacunas
+
+Versão exata do Nuxt/bundle, token público do DatoCMS já visto mas schema real, uso visual de `#eee`/dourado, resposta real do `/api/subscribe` e timings do portal (aproximados por captura).
+
+---
+
+# Parte 4 — jesperlandberg.com · plano
+
+### 4.1 Stack escolhida
+
+Nuxt 4.6.3 + Vue 3.5 + TypeScript, Tailwind v4, **three.js r185**, **GSAP**, `@fontsource-variable/inter` como substituto da ABC Diatype Plus (paga, com compensação de peso/tracking). Dados mockados (`app/data/projects.ts`) e `/api/subscribe` simulado.
+
+### 4.2 Estrutura
+
+```
+app/
+├─ app.vue            # shell: GlCanvas + main fixo + painéis + chrome + loader
+├─ components/        # FeaturedCarousel, GlCanvas, SiteChrome, ProfilePanel,
+│                     # NewsletterPanel, ProjectModal/Sheet, BootLoader
+├─ composables/       # useGl (singleton), usePanels, useProjectModal, gl/{engine,shaders,textCanvas,choreo}
+├─ data/projects.ts   # 8 projetos (título, descrição, rácio, textura)
+└─ assets/css/main.css# tokens @theme + reset do original
+```
+
+### 4.3 Ordem executada (12 etapas)
+
+1. Scaffold Nuxt → 2. tokens exatos → 3. chrome (`SiteChrome` + sr-only) → 4. mock de dados e API →
+5. cards no DOM (rácios, `data-gl`) → 6. núcleo GL (câmara 1px = 1 unidade, follow de rects) →
+7. texto GL (canvas 2D por linha + slot-machine) → 8. cards GL (texturas + máscara arredondada) →
+9. carrossel (roda/arrasto, túnel) → 10. painéis + loader → 11. rotas `/full`, `/newsletter`, catch-all →
+12. responsivo + a11y.
+
+### 4.4 Riscos tratados
+
+Fonte paga → Inter com compensação; assets do CMS → placeholders com a mesma proporção; GL + DOM a dessincronizar → follow por rects com `FOLLOW_LERP = 0.1`; portal do original sem like-for-like → aproximação por shader; `prefers-reduced-motion` inexistente no original → mantido igual.
+
+---
+
+# Parte 5 — jesperlandberg.com · auditoria original↔clone
+
+Duas rondas lado a lado (375/768/1280/1920, zoom 100%), `getBoundingClientRect` e
+computeds dos dois lados. Relatório completo (529 linhas) no histórico do git.
+
+| Ronda | Críticas | Altas | Médias | Baixas | Resultado |
+|---|---|---|---|---|---|
+| 1 (manhã) | 4 | 6 | 9 | 7 | críticas/altas/médias corrigidas |
+| 2 (tarde) | 0 | 5 | 11 | 9 | correções aplicadas e re-medidas |
+
+**Diferenças aceites por design:** texturas placeholders (licença), Inter em vez
+da ABC Diatype Plus, `/api/subscribe` mockado, painéis sem o portal de
+iluminação. O pixel-diff global (32–85%) vem das texturas e da fonte — as caixas
+medidas batem ao pixel.
+
+**Corrigido na 2.ª ronda:** `CARD_VISUAL_SCALE` (cards “colados”), texto a
+flutuar sobre a superfície curva, cursor sempre visível, pílulas com três
+iconografias distintas.
+
+---
+
+# Parte 6 — modelo para um novo alvo
+
+Ao clonar outra página, acrescentar `Parte N` com: metadados da extração ·
+stack com evidência · design system (tokens exatos, tipografia, grelha,
+breakpoints) · estrutura e layout com offsets · componentes e estados ·
+comportamento (gatilhos, durações, easings) · assets · dados e rede ·
+a11y/SEO · lacunas `[NÃO DETERMINADO]` · plano (stack, pastas, dependências,
+ordem com critério verificável, riscos, checklist de fidelidade).
+
+Regra de ouro: **um valor só entra depois de medido**; sem medição, fica
+`[NÃO DETERMINADO]` com justificação — nunca um número inventado.
