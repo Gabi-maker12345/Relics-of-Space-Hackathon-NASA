@@ -446,8 +446,8 @@
   opacity: 0;
   transform: scale(1.08);
   transition:
-    opacity 1.15s var(--fr-ease-2),
-    transform 1.9s var(--fr-ease-2);
+    opacity 1.8s var(--fr-ease-2),
+    transform 2.6s var(--fr-ease-2);
   will-change: opacity, transform;
 }
 
@@ -508,20 +508,8 @@
   aspect-ratio: 1;
   overflow: clip;
   background: var(--fr-ink);
-  opacity: 0;
-  transform: scale(0.94);
-  filter: blur(12px);
-  transition:
-    opacity 1s var(--fr-ease-2),
-    transform 1.5s var(--fr-ease-2),
-    filter 1s var(--fr-ease-2);
-  will-change: opacity, transform, filter;
-}
-
-.fr-panels__card.is-active {
   opacity: 1;
-  transform: scale(1);
-  filter: blur(0);
+  will-change: clip-path;
 }
 
 .fr-panels__card img {
@@ -546,7 +534,7 @@
   align-content: center;
   gap: var(--fr-space-m);
   opacity: 0.4;
-  transition: opacity 0.9s var(--fr-ease-2);
+  transition: opacity 1.4s var(--fr-ease-2);
 }
 
 .fr-step.is-active {
@@ -562,9 +550,9 @@
   transform: translateY(22px);
   filter: blur(6px);
   transition:
-    opacity 0.9s var(--fr-ease-2),
-    transform 1.1s var(--fr-ease-2),
-    filter 0.9s var(--fr-ease-2);
+    opacity 1.3s var(--fr-ease-2),
+    transform 1.6s var(--fr-ease-2),
+    filter 1.3s var(--fr-ease-2);
 }
 
 .fr-step.is-active .fr-step__counter,
@@ -578,23 +566,23 @@
 }
 
 .fr-step.is-active .fr-step__counter {
-  transition-delay: 0.04s;
+  transition-delay: 0.06s;
 }
 
 .fr-step.is-active .fr-step__title {
-  transition-delay: 0.1s;
+  transition-delay: 0.16s;
 }
 
 .fr-step.is-active .fr-step__mission {
-  transition-delay: 0.18s;
+  transition-delay: 0.28s;
 }
 
 .fr-step.is-active .fr-step__body {
-  transition-delay: 0.24s;
+  transition-delay: 0.38s;
 }
 
 .fr-step.is-active .fr-step__facts {
-  transition-delay: 0.32s;
+  transition-delay: 0.5s;
 }
 
 .fr-step__counter {
@@ -791,7 +779,7 @@
   inset: 0;
   opacity: 0;
   transform: scale(0.985);
-  transition: opacity 1s var(--fr-ease-2), transform 1.2s var(--fr-ease-2);
+  transition: opacity 1.4s var(--fr-ease-2), transform 1.7s var(--fr-ease-2);
 }
 
 .fr-portfolio.is-live .fr-portfolio__stage {
@@ -822,9 +810,9 @@
   transform: translateY(26px);
   filter: blur(7px);
   transition:
-    opacity 0.95s var(--fr-ease-2),
-    transform 1.15s var(--fr-ease-2),
-    filter 0.95s var(--fr-ease-2);
+    opacity 1.3s var(--fr-ease-2),
+    transform 1.7s var(--fr-ease-2),
+    filter 1.3s var(--fr-ease-2);
   will-change: opacity, transform, filter;
 }
 
@@ -848,11 +836,11 @@
 }
 
 .fr-hero__title {
-  animation: fr-rise 1.3s var(--fr-ease-2) both 0.18s;
+  animation: fr-rise 1.7s var(--fr-ease-2) both 0.2s;
 }
 
 .fr-hero__deck {
-  animation: fr-rise 1.1s var(--fr-ease-2) both 0.38s;
+  animation: fr-rise 1.5s var(--fr-ease-2) both 0.45s;
 }
 
 .fr-portfolio__stage {

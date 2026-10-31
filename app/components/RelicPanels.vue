@@ -4,6 +4,8 @@ import { relics } from '~/data/relics'
 const wrap = ref<HTMLElement | null>(null)
 const progress = ref(0)
 const active = ref(0)
+const scrolled = ref(0)
+const viewportH = ref(900)
 
 let frame = 0
 
@@ -17,11 +19,12 @@ onMounted(() => {
     if (!el) return
     const rect = el.getBoundingClientRect()
     const span = rect.height - window.innerHeight
-    const scrolled = Math.max(0, -rect.top)
-    const p = span > 0 ? Math.min(1, Math.max(0, scrolled / span)) : 0
+    scrolled.value = Math.max(0, -rect.top)
+    viewportH.value = window.innerHeight
+    const p = span > 0 ? Math.min(1, Math.max(0, scrolled.value / span)) : 0
     progress.value = p
     // o passo ativo é o que está mais próximo do centro do viewport
-    const next = Math.min(total - 1, Math.max(0, Math.floor((scrolled + window.innerHeight / 2) / window.innerHeight)))
+    const next = Math.min(total - 1, Math.max(0, Math.floor((scrolled.value + window.innerHeight / 2) / window.innerHeight)))
     if (next !== active.value) active.value = next
   }
   const onScroll = () => {
@@ -40,6 +43,17 @@ onMounted(() => {
 const mediaStyle = computed(() => ({
   transform: `scale(${(1.015 + progress.value * 0.05).toFixed(4)})`,
 }))
+
+/**
+ * Quadrado a abrir (como no original): o cartão do passo seguinte nasce
+ * fechado (`inset(50%)`) e abre até `inset(0)` ao longo do passo anterior.
+ * O valor é scrubado pelo scroll — nada de transição de duração fixa.
+ */
+const cardInset = (index: number) => {
+  if (index === 0) return 0
+  const local = (scrolled.value - (index - 1) * viewportH.value) / viewportH.value
+  return Math.max(0, Math.min(50, 50 * (1 - local)))
+}
 </script>
 
 <template>
@@ -65,7 +79,7 @@ const mediaStyle = computed(() => ({
             v-for="(relic, index) in relics"
             :key="`card-${relic.id}`"
             class="fr-panels__card"
-            :class="{ 'is-active': index === active }"
+            :style="{ zIndex: index + 1, clipPath: `inset(${cardInset(index).toFixed(2)}%)` }"
           >
             <img :src="relic.image" alt="" width="1376" height="768" />
           </figure>

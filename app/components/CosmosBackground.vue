@@ -9,6 +9,7 @@ interface Star {
   phase: number
   speed: number
   tint: string
+  glow: boolean
 }
 
 let frame = 0
@@ -48,6 +49,7 @@ onMounted(() => {
         phase: Math.random() * Math.PI * 2,
         speed: 0.4 + Math.random() * 1.6,
         tint: palette[Math.floor(Math.random() * palette.length)],
+        glow: Math.random() > 0.86,
       }
     })
   }
@@ -55,19 +57,27 @@ onMounted(() => {
   const draw = (time: number) => {
     frame = requestAnimationFrame(draw)
     context.clearRect(0, 0, width, height)
-    const drift = reduced ? 0 : time / 42000
+    // deriva lenta mas percetível: ~1,2 px/s no plano mais profundo
+    const drift = reduced ? 0 : time / 11000
+    const sway = reduced ? 0 : time / 13000
     for (const star of stars) {
       const parallax = (scrollY * 0.28 * star.depth) % (height * 1.5)
-      let y = star.y - parallax
+      let y = star.y - parallax + Math.sin(sway + star.phase) * 7 * star.depth
       if (y < -20) y += height * 1.5
       if (y > height + 20) y -= height * 1.5
-      const x = (star.x + drift * star.depth * 26) % width
-      const twinkle = reduced ? 1 : 0.62 + 0.38 * Math.sin(time / (700 + star.speed * 420) + star.phase)
-      context.globalAlpha = (0.18 + 0.72 * star.depth) * twinkle
+      const x = (star.x + drift * star.depth * 42 + sway * 0) % width
+      const twinkle = reduced ? 1 : 0.55 + 0.45 * Math.sin(time / (620 + star.speed * 380) + star.phase)
+      const alpha = (0.16 + 0.74 * star.depth) * twinkle
+      context.globalAlpha = alpha
       context.fillStyle = star.tint
+      if (star.glow && !reduced) {
+        context.shadowBlur = 10 * star.depth * twinkle
+        context.shadowColor = star.tint
+      }
       context.beginPath()
       context.arc(x, y, star.r, 0, Math.PI * 2)
       context.fill()
+      if (star.glow && !reduced) context.shadowBlur = 0
     }
     context.globalAlpha = 1
   }
@@ -122,5 +132,23 @@ onMounted(() => {
     radial-gradient(30% 22% at 62% 18%, rgba(197, 160, 100, 0.08), transparent 70%);
   filter: blur(6px);
   opacity: 0.9;
+  animation: cosmos-breathe 26s ease-in-out infinite alternate;
+}
+
+@keyframes cosmos-breathe {
+  from {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0.95;
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cosmos__nebula {
+    animation: none;
+  }
 }
 </style>

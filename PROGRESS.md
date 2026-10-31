@@ -174,3 +174,23 @@ Restrição do pedido: a integração acontece **no projeto Nuxt existente** (n�
 - Copy do painel Profile ainda é a do portfólio (bio "Jesper Landberg…"), por pedido de "manter o profile".
 - Rotas `/full`, `/projects/*` continuam no padrão antigo (conteúdo GL fixo) — funcionam, mas não foram redesenhadas.
 - `pages/[...all].vue` (404) mantém o texto antigo.
+
+## Iteração 2 — transição em quadrado, starfield vivo, ritmo cinematográfico
+
+Auditoria ao original (CDP, 9225, UA de browser): o cartão nítido troca com
+`clip-path: inset(X%)` — X vai de **50% → 0%** ao longo do passo (medido:
+3300→4200 px: 50 → 19 → 15 → 11 → 7 → 3 → 0). O fundo apenas faz crossfade por
+`opacity` (0,17 → 0,38 → 1) com `z-index` 0/−1/−2, que já era o comportamento.
+
+| Ajuste | Antes | Agora |
+|---|---|---|
+| Troca do cartão | fade + escala | **quadrado a abrir**, scrubado pelo scroll (`clip-path: inset()` inline por passo) |
+| Crossfade do fundo | 1,15 s | 1,8 s (transform 2,6 s) |
+| Entrada do texto no passo | 0,9–1,1 s, delays 40–320 ms | 1,3–1,6 s, delays 60–500 ms |
+| Reveals de secção | 0,95 s | 1,3 s (transform 1,7 s) |
+| Entrada do hero | 1,3 s | 1,7 s |
+| Cena do portfólio | 1,0/1,2 s | 1,4/1,7 s |
+| Lenis | lerp 0,085 | lerp 0,072 |
+| Starfield | deriva 26 px/42 s | 42 px/11 s + oscilação vertical 7 px + glow nas estrelas brilhantes + névoa a respirar (26 s) |
+
+Verificado: insets `["0%","49.98%","50%"]` no início → `["0%","22.21%","50%"]` a meio do passo → `["0%","0%","24.98%"]` no passo seguinte; canvas com pixels diferentes entre frames (390→284 amostras acesas).

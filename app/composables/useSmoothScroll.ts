@@ -13,7 +13,7 @@ export function initSmoothScroll(): void {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   instance = new Lenis({
-    lerp: 0.085,
+    lerp: 0.072,
     wheelMultiplier: 1,
     touchMultiplier: 1.4,
     smoothWheel: true,
