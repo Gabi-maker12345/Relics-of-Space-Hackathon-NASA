@@ -242,8 +242,8 @@ export class GlEngine {
   private mobileRange = { start: 0, end: 0 }
   private readonly pointer = { down: false, id: -1, x: 0, y: 0 }
   private carouselDriven = false
-  private phaseFloor = 0
-  private snapTrack = false
+  private trackJump = 0
+  private trackX = 0
   private lastDragPx = 0
   private ball = { x: 0, y: 0, tx: 0, ty: 0, alpha: 0, targetAlpha: 0, seen: false }
   private pointerTarget: HTMLElement | null = null
@@ -1089,7 +1089,7 @@ export class GlEngine {
       }
       this.syncPlane(plane)
     }
-    this.snapTrack = false
+    this.trackJump = 0
     this.syncHole()
     this.syncFloor()
     this.updateBall()
@@ -1159,20 +1159,22 @@ export class GlEngine {
     } else {
       const offset = this.carousel.infinite ? this.carousel.copySpan : 0
       // p pode crescer sem limite; o que se desenha é o módulo (1 cópia)
-      const floor = Math.floor(this.carousel.p)
-      const phase = this.carousel.infinite ? this.carousel.p - floor : this.carousel.p
-      if (this.carousel.infinite && floor !== this.phaseFloor) {
-        // saltámos uma cópia: só neste frame os planos colam (sem interpolar)
-        this.phaseFloor = floor
-        this.snapTrack = true
-      }
-      el.style.translate = `${-phase * this.carousel.max - offset}px ${-el.offsetHeight / 2}px`
+      const phase = this.carousel.infinite
+        ? this.carousel.p - Math.floor(this.carousel.p)
+        : this.carousel.p
+      const px = -phase * this.carousel.max - offset
+      // deslocamento aplicado ao track neste frame (o wrap entra aqui)
+      this.trackJump += px - this.trackX
+      this.trackX = px
+      el.style.translate = `${px}px ${-el.offsetHeight / 2}px`
     }
   }
 
   /** Re-mede e recentra (usado quando o track passa a ter cópias). */
   resetCarousel(): void {
     this.hasCenteredInitial = false
+    this.trackX = 0
+    this.trackJump = 0
     this.measureTrack()
     this.centerInitial()
     this.applyTrack()
@@ -1245,11 +1247,15 @@ export class GlEngine {
     // No carrossel infinito o track salta uma cópia inteira de uma vez; o damp
     // não pode interpolar esse salto (parecia um recuo). Acima de meia tela,
     // cola direto na posição — o conteúdo é idêntico, o salto é invisível.
+    // Num wrap o track salta uma cópia inteira: os planos sofrem o mesmo salto,
+    // preservando o atraso do damping (sem "pop" nem interpolação de 2153px).
+    if (this.trackJump !== 0 && this.isInTrack(plane.el)) {
+      plane.mesh.position.x += this.trackJump
+    }
     const dx = worldX - plane.mesh.position.x
     const dy = worldY - plane.mesh.position.y
-    const snap = this.snapTrack && this.isInTrack(plane.el)
-    plane.mesh.position.x = snap ? worldX : plane.mesh.position.x + dx * FOLLOW_LERP
-    plane.mesh.position.y = snap ? worldY : plane.mesh.position.y + dy * FOLLOW_LERP
+    plane.mesh.position.x += dx * FOLLOW_LERP
+    plane.mesh.position.y += dy * FOLLOW_LERP
     uniforms.uRes.value.set(anchor.w, anchor.h)
     uniforms.uRadiusPx.value = Math.min(
       plane.text.fontSpec.radiusPx,

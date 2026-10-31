@@ -263,3 +263,19 @@ plane.mesh.position.x += (worldX - plane.mesh.position.x) * FOLLOW_LERP
 No wrap, o track salta uma cópia inteira (`+copySpan` ≈ 2153 px) num frame. O DOM salta, mas cada mesh WebGL *interpolava* esses 2153 px ao longo de ~0,4 s — daí o "avança um pouco e recua bruscamente", nos dois sentidos.
 
 Correção: saltos maiores que meia viewport, em elementos do track, colam direto na posição (`snap`), sem interpolar. Medições: 106 frames com roda contínua → lag máximo 402 px (é o damping normal) e nenhum frame com salto de 2153 px; o seam (p 0,997 → 1,003) mostra os mesmos cartões com 13 px de deslocamento.
+
+## Iteração 8 — loop sem "pop" (atraso preservado no wrap)
+
+O snap anterior colava cada plano na posição do DOM no frame do wrap. Isso
+apagava o atraso do damping de uma vez: se os cartões estavam 200 px atrás, o
+salto somava 2153 + 200 px num único frame — o "pulo" sentido ao voltar à
+primeira relíquia.
+
+Agora `applyTrack` mede o deslocamento aplicado ao track (`trackJump`) e cada
+plano sofre **o mesmo** deslocamento, mantendo o atraso e só depois aplicando o
+damping normal.
+
+Teste com atraso artificial de 200 px: antes do wrap 200 px, depois 162 px
+(apenas um passo de damping de 10%) — antes ia direto a 0, num salto de 200 px.
+Sessão de 123 frames com 2 wraps: deslocamento do track +2139/+2056 px e lag
+máximo de 8 px, sem saltos extra.
