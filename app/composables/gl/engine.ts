@@ -242,6 +242,8 @@ export class GlEngine {
   private mobileRange = { start: 0, end: 0 }
   private readonly pointer = { down: false, id: -1, x: 0, y: 0 }
   private carouselDriven = false
+  private phaseFloor = 0
+  private snapTrack = false
   private lastDragPx = 0
   private ball = { x: 0, y: 0, tx: 0, ty: 0, alpha: 0, targetAlpha: 0, seen: false }
   private pointerTarget: HTMLElement | null = null
@@ -1087,6 +1089,7 @@ export class GlEngine {
       }
       this.syncPlane(plane)
     }
+    this.snapTrack = false
     this.syncHole()
     this.syncFloor()
     this.updateBall()
@@ -1156,9 +1159,13 @@ export class GlEngine {
     } else {
       const offset = this.carousel.infinite ? this.carousel.copySpan : 0
       // p pode crescer sem limite; o que se desenha é o módulo (1 cópia)
-      const phase = this.carousel.infinite
-        ? this.carousel.p - Math.floor(this.carousel.p)
-        : this.carousel.p
+      const floor = Math.floor(this.carousel.p)
+      const phase = this.carousel.infinite ? this.carousel.p - floor : this.carousel.p
+      if (this.carousel.infinite && floor !== this.phaseFloor) {
+        // saltámos uma cópia: só neste frame os planos colam (sem interpolar)
+        this.phaseFloor = floor
+        this.snapTrack = true
+      }
       el.style.translate = `${-phase * this.carousel.max - offset}px ${-el.offsetHeight / 2}px`
     }
   }
@@ -1240,7 +1247,7 @@ export class GlEngine {
     // cola direto na posição — o conteúdo é idêntico, o salto é invisível.
     const dx = worldX - plane.mesh.position.x
     const dy = worldY - plane.mesh.position.y
-    const snap = this.isInTrack(plane.el) && (Math.abs(dx) > this.viewport.w * 0.5 || Math.abs(dy) > this.viewport.w * 0.5)
+    const snap = this.snapTrack && this.isInTrack(plane.el)
     plane.mesh.position.x = snap ? worldX : plane.mesh.position.x + dx * FOLLOW_LERP
     plane.mesh.position.y = snap ? worldY : plane.mesh.position.y + dy * FOLLOW_LERP
     uniforms.uRes.value.set(anchor.w, anchor.h)
