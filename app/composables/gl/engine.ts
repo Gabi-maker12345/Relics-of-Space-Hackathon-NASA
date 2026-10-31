@@ -985,14 +985,9 @@ export class GlEngine {
     // clamp suave a 1 viewport de distância do ponto atual (tanh)
     const away = (next - this.carousel.p) * this.carousel.max
     const limited = this.carousel.p + (Math.tanh(away / ww) * ww) / this.carousel.max
-    if (this.carousel.infinite) {
-      const wrapped = this.wrapP(limited)
-      // o salto de uma cópia é invisível: conteúdo idêntico um período à frente
-      this.carousel.p += wrapped - limited
-      this.carousel.target = wrapped
-    } else {
-      this.carousel.target = THREE.MathUtils.clamp(limited, 0, 1)
-    }
+    this.carousel.target = this.carousel.infinite
+      ? limited
+      : THREE.MathUtils.clamp(limited, 0, 1)
     this.stopCarouselTween()
   }
 
@@ -1045,15 +1040,10 @@ export class GlEngine {
     this.lastDragPx += Math.abs(dx) + Math.abs(dy)
     const delta = this.carousel.axis === 'x' ? -dx : -dy
     const scaled = this.carousel.target + (delta / this.carousel.max) * 1.6
-    if (this.carousel.infinite) {
-      const wrapped = this.wrapP(scaled)
-      this.carousel.p += wrapped - scaled
-      this.carousel.target = wrapped
-      this.carousel.p = this.carousel.target
-    } else {
-      this.carousel.target = THREE.MathUtils.clamp(scaled, 0, 1)
-      this.carousel.p = this.carousel.target
-    }
+    this.carousel.target = this.carousel.infinite
+      ? scaled
+      : THREE.MathUtils.clamp(scaled, 0, 1)
+    this.carousel.p = this.carousel.target
     this.lastAdvanceAt = 0
   }
 
@@ -1150,15 +1140,6 @@ export class GlEngine {
       this.lastAdvanceAt = now
       const p = 1 - Math.pow(1 - FOLLOW_LERP, dt * 60)
       this.carousel.p += delta * p
-      if (this.carousel.infinite) {
-        // mantém p num período: o conteúdo repete-se a cada cópia
-        const wrapped = this.wrapP(this.carousel.p)
-        const shift = wrapped - this.carousel.p
-        if (shift !== 0) {
-          this.carousel.p = wrapped
-          this.carousel.target += shift
-        }
-      }
       this.applyTrack()
     } else {
       this.lastAdvanceAt = this.lastTickAt
@@ -1174,7 +1155,11 @@ export class GlEngine {
       el.style.translate = `0px ${t}px`
     } else {
       const offset = this.carousel.infinite ? this.carousel.copySpan : 0
-      el.style.translate = `${-this.carousel.p * this.carousel.max - offset}px ${-el.offsetHeight / 2}px`
+      // p pode crescer sem limite; o que se desenha é o módulo (1 cópia)
+      const phase = this.carousel.infinite
+        ? this.carousel.p - Math.floor(this.carousel.p)
+        : this.carousel.p
+      el.style.translate = `${-phase * this.carousel.max - offset}px ${-el.offsetHeight / 2}px`
     }
   }
 

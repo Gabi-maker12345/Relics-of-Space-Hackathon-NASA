@@ -243,3 +243,11 @@ Verificado: 3 cartões; abrir → 2 cenas; scroll 0 → 746 px troca cena e anel
 | Expansão | clique na mídia → lightbox (ícone de expandir só aparece no hover) |
 
 Verificado: 9 planos de cartão com textura; p envolve nos dois sentidos; modal branco (`rgb(246,244,239)`), cena 2 com "Transmissão" e vídeo a tocar; ring 0,5 → 1,0; lightbox e `Esc` em camadas; mobile 3 cartões + modal empilhado; build 6,5 s.
+
+## Iteração 6 — carrossel contínuo e respiro do fecho
+
+| Bug | Causa | Correção |
+|---|---|---|
+| Carrossel "arrastava para trás" | o wrap somava −1 a `p` no meio do damping, então a interpolação voltava a percorrer o caminho todo | `p`/`target` passam a ser **ilimitados** e só a fase desenhada (`p - floor(p)`) é usada em `applyTrack`; roda, arrasto e damping não reescrevem mais o valor |
+| Salto no loop | — | verificado no seam: p=0,985 vs 1,015 → mesmos cartões deslocados 64 px |
+| Botão X colado à imagem | as regras desktop do `.sheet__body/.sheet__close` perderam-se na reescrita anterior | `padding: 7,4rem 8,6rem 5rem 6rem` e fecho a 1,6rem; folga medida: **64 px** à direita e **17 px** acima da mídia |

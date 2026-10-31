@@ -100,12 +100,12 @@ a {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  padding: 3rem 2.5rem;
+  padding: 6.2rem 2.5rem 3rem;
 }
 .sheet__close {
   position: absolute;
-  top: 2.6rem;
-  right: 2.6rem;
+  top: 1.2rem;
+  right: 1.2rem;
   z-index: 3;
   display: inline-flex;
   align-items: center;
@@ -318,6 +318,10 @@ a {
 }
 
 @media (min-width: 650px) {
+  .sheet__body { padding: 7.4rem 8.6rem 5rem 6rem; }
+  .sheet__close { top: 1.6rem; right: 1.6rem; width: 4.2rem; height: 4.2rem; }
+  .sheet__progress { left: 6rem; bottom: 5rem; }
+  .sheet__title { font-size: var(--text-42); }
   .rsheet {
     grid-template-columns: minmax(20rem, 0.62fr) minmax(0, 1.5fr);
     grid-template-rows: minmax(0, 1fr);
