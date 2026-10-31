@@ -124,3 +124,53 @@ Base: `CLONE_SPEC.md` (valores exatos) + `CLONE_PLAN.md` (ordem).
 - Pill "mark" ↗; hover da pill do card destravado (hit span).
 - Sheet do projeto virou moldura com scroll interno; X e anel de progresso fixos; chips com animações; SheetFrame compartilhado (modal + rota).
 - Placeholders com grade/gradiente para a curvatura ler como superfície.
+
+---
+
+# Space Relics — integração com a base visual do forgeautomotive.co.uk (2026-10-31)
+
+Fonte: `CLONE_SPEC.md` (valores exatos, extraídos ao vivo) + `CLONE_PLAN.md`.
+Restrição do pedido: a integração acontece **no projeto Nuxt existente** (não num app Next novo), porque o portfólio 3D tem de sobreviver como 6.ª secção.
+
+## Desvios assumidos (e porquê)
+
+| Item | Spec/Plano | Execução | Motivo |
+|---|---|---|---|
+| Stack | Next 16.3.5 + React 19 | **Nuxt 4.6.3 + Vue 3.5** | O portfólio (three.js + engine próprio, painéis GL, modais) já vive aqui; um app Next obrigaria a reescrever tudo o que devia ser preservado |
+| Fonte de display | `editorial` (PP Editorial New, comercial) | **Newsreader Variable** (`@fontsource-variable/newsreader`, OFL) | Licença; é a substituição sugerida no próprio plano (§6) |
+| Fonte de corpo | GeistSans | **Inter Variable** (já no projeto) | Evitar mais uma dependência; peso e métrica próximos |
+| Fundo animado | ActiveFrame/HEVC scrubbed | **Canvas 2D de estrelas** (`CosmosBackground.vue`) | Assets `.af` não são licenciáveis e o pedido foi "animação de fundo escuro e estrelado" |
+| Marquee | logótipos de marcas | **nomes de missões** (Apollo 11–17, Opportunity, Spirit, Viking 1, Sojourner, Ingenuity, Lunokhod 1) | Marcas de terceiros fora do escopo do Space Relics |
+| Secções | hero, manifesto, approach, painéis, serviços intro, serviços ×6, ends here, builds, stock, footer | **hero (2 fases), approach, 3 painéis, arquivo, ends, portfólio** | O pedido define 6 secções e nomeia a apresentação de 3 relíquias |
+| Navegação | NAVIGATE + menu | removida (pedido) | Mantido apenas o botão Profile |
+| Newsletter | painel + form + rota + API | **removidos** (pedido) | `NewsletterPanel.vue`, `NewsletterForm.vue`, `pages/newsletter.vue`, `server/api/subscribe.post.ts` |
+| Chrome antigo | "Jesper Landberg", "Featured / Full" | removidos; logo central = **NASA** | Pedido: trocar a logo e retirar nome/featured |
+
+## Passos executados (com verificação)
+
+| # | Passo | Ficheiros | Verificação |
+|---|---|---|---|
+| 1 | Dependências | `package.json` (+`gsap`, `lenis@1.3.26`, `@fontsource-variable/newsreader`) | `npm i` ok; build 10,0 s |
+| 2 | Tokens e camada forge | `app/assets/css/forge.css` | `getComputedStyle` devolve `--fr-*`; grelha 12 col com gap 35,2 px a 1600 |
+| 3 | Fundo cósmico | `app/components/CosmosBackground.vue` | canvas 2D com ~520 estrelas, parallax por `scrollY`, `prefers-reduced-motion` sem cintilação |
+| 4 | Header | `app/components/ForgeHeader.vue`, `ScrollProgress.vue` | logo NASA 120×35 px a 1600, social só ≥1024, Profile à direita em mobile, barra de progresso 2 px |
+| 5 | Hero (2 fases) | `app/components/RelicHero.vue` | H1 "Space Relics" → H2 "Abandonados, mas não esquecidos." com crossfade por scroll (200vh sticky) |
+| 6 | Approach | `app/components/RelicApproach.vue` | H2 105,6 px + marquee 20 s linear + máscara 30 % |
+| 7 | Painéis das 3 relíquias | `app/components/RelicPanels.vue` | 3 × 100vh sticky, fundo `blur(8,8px)` `opacity .4`, cartão nítido cols 3–6 (498 px), texto cols 8–10, contador 01/03 |
+| 8 | Arquivo + fecho | `RelicArchive.vue`, `RelicEnds.vue`, `ForgeCta.vue` | CTA com troca de letras no hover (stagger 0,02 s) |
+| 9 | Portfólio como 6.ª secção | `PortfolioScene.vue`, `page/index.vue` | `FeaturedCarousel` reencapsulado; `data-scene="portfolio"` só com ratio > 0,99 |
+| 10 | Roda do engine condicionada | `composables/gl/engine.ts` | carrossel só captura `wheel` na cena do portfólio; subir no início devolve o scroll à página |
+| 11 | Painel Profile visível sobre as secções | `GlCanvas.vue`, `main.css`, `usePanels.ts` | `html[data-panel="profile"]` sobe o canvas para `z-index: 20` (o "hole" cobre o conteúdo) |
+| 12 | Metadados | `nuxt.config.ts` | título/descrição/OG Space Relics, `lang="pt-BR"`, favicon NASA |
+
+## Assets
+
+- `public/images/relics/{apollo-lunar-module,opportunity,viking-1}.jpg` — 1376×768 (Viking 1408×768), copiados de `public/images/*.jpeg` para nomes sem acentos.
+- `public/images/nasa-logo.png` — 2625×765, usado no header (h 26/30/35 px) e como favicon.
+- `public/images/cosmos_cintilante.gif` — **não usado** (o fundo é canvas 2D, mais leve que 1,5 MB de GIF).
+
+## Dívida conhecida
+
+- Copy do painel Profile ainda é a do portfólio (bio "Jesper Landberg…"), por pedido de "manter o profile".
+- Rotas `/full`, `/projects/*` continuam no padrão antigo (conteúdo GL fixo) — funcionam, mas não foram redesenhadas.
+- `pages/[...all].vue` (404) mantém o texto antigo.

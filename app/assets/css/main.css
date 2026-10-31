@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
+@import "@fontsource-variable/newsreader";
+@import "./forge.css";
 
 /* Tokens — valores exatos de CLONE_SPEC.md §2 */
 @theme {
@@ -39,13 +41,12 @@ html {
 }
 body,
 html {
-  height: 100%;
-  max-height: 100%;
   min-height: 100%;
-  overflow: hidden;
-  position: fixed;
-  touch-action: none;
   width: 100%;
+  overflow-x: clip;
+}
+html[data-panel="profile"] {
+  --gl-z: 20;
 }
 body {
   background: #000;

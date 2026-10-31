@@ -106,6 +106,3 @@ export const about: { bio: string; awards: string; awardsNum: string } = {
   awards: '77 awards — 30× Awwwards, 40× FWA, 3× Webby, 2× Lovie.',
   awardsNum: '77',
 }
-
-export const descriptionText =
-  'An occasional newsletter with insights and thoughts from a design engineer, drawn from over a decade of freelancing.'

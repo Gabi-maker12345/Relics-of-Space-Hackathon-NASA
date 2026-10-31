@@ -1,6 +1,6 @@
 import tailwindcss from '@tailwindcss/vite'
 
-// Clone do jesperlandberg.com — valores de head extraídos em CLONE_SPEC.md §1/§8
+// Space Relics — base visual na especificação de forgeautomotive.co.uk (CLONE_SPEC.md) e no portfólio existente
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-01',
   devtools: { enabled: false },
@@ -8,29 +8,33 @@ export default defineNuxtConfig({
   vite: { plugins: [tailwindcss()] },
   app: {
     head: {
-      htmlAttrs: { lang: 'en' },
-      title: 'Jesper Landberg',
+      htmlAttrs: { lang: 'pt-BR' },
+      title: 'Space Relics — abandonados, mas não esquecidos',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Swedish design engineer building visually rich, motion-driven websites. Two-time Awwwards Independent of the Year (2022 & 2024).' },
+        {
+          name: 'description',
+          content:
+            'Um arquivo vivo das máquinas que a humanidade deixou na Lua e em Marte: Módulo Lunar Apollo, Opportunity e Viking 1 — e o portfólio que continua o arquivo.',
+        },
         { property: 'og:type', content: 'website' },
-        { property: 'og:title', content: 'Jesper Landberg' },
-        { property: 'og:description', content: 'Swedish design engineer building visually rich, motion-driven websites. Two-time Awwwards Independent of the Year (2022 & 2024).' },
-        { property: 'og:url', content: 'https://jesperlandberg.com/' },
-        { property: 'og:site_name', content: 'Jesper Landberg' },
-        { property: 'og:image', content: '/placeholders/share.svg' },
-        { property: 'og:image:width', content: '1200' },
-        { property: 'og:image:height', content: '630' },
-        { property: 'og:image:alt', content: 'Jesper Landberg' },
+        { property: 'og:title', content: 'Space Relics' },
+        { property: 'og:description', content: 'Um arquivo vivo das máquinas que a humanidade deixou na Lua e em Marte — e o portfólio que continua o arquivo.' },
+        { property: 'og:url', content: 'https://spacerelics.space/' },
+        { property: 'og:site_name', content: 'Space Relics' },
+        { property: 'og:image', content: '/images/relics/opportunity.jpg' },
+        { property: 'og:image:width', content: '1376' },
+        { property: 'og:image:height', content: '768' },
+        { property: 'og:image:alt', content: 'Space Relics' },
         { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: 'Jesper Landberg' },
-        { name: 'twitter:description', content: 'Swedish design engineer building visually rich, motion-driven websites. Two-time Awwwards Independent of the Year (2022 & 2024).' },
-        { name: 'twitter:image', content: '/placeholders/share.svg' },
+        { name: 'twitter:title', content: 'Space Relics' },
+        { name: 'twitter:description', content: 'Um arquivo vivo das máquinas que a humanidade deixou na Lua e em Marte — e o portfólio que continua o arquivo.' },
+        { name: 'twitter:image', content: '/images/relics/opportunity.jpg' },
       ],
       link: [
-        { rel: 'icon', type: 'image/svg+xml', href: '/placeholders/face.svg' },
-        { rel: 'canonical', href: 'https://jesperlandberg.com/' },
+        { rel: 'icon', type: 'image/png', href: '/images/nasa-logo.png' },
+        { rel: 'canonical', href: 'https://spacerelics.space/' },
       ],
     },
   },

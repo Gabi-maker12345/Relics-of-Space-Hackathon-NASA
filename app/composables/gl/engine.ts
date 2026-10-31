@@ -9,6 +9,7 @@
  * - labels de links: alpha * .6 em .3s power2.out
  */
 import * as THREE from 'three'
+import { setSmoothScrollEnabled } from '../useSmoothScroll'
 import { glslCardVertex, glslCardFragment, glslGridVertex, glslGridFragment, glslHoleVertex, glslHoleFragment } from './shaders'
 import { buildLines, drawTextPlane, collectDigitTargets, type FontSpec, type DigitEntry, type TextLine } from './textCanvas'
 import { CHOREO } from './choreo'
@@ -928,12 +929,24 @@ export class GlEngine {
   }
 
   private onWheel = (e: WheelEvent): void => {
+    // A página clonada faz scroll nativo; o carrossel só captura a roda quando
+    // a cena do portfólio está alinhada com o viewport (data-scene = portfolio).
+    if (document.documentElement.dataset.scene !== 'portfolio') return
     if (this.pointer.down) return
     const target = e.target
     if (target instanceof Element && target.closest('[data-modal]')) return
-    e.preventDefault()
     const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
     const delta = e.deltaMode === 1 ? raw * 16 : raw
+    // No início da faixa, devolver a roda à página (a cena liberta o Lenis).
+    if (delta < 0 && this.carousel.target <= 0.0005) {
+      document.documentElement.dataset.scene = ''
+      requestAnimationFrame(() => {
+        setSmoothScrollEnabled(true)
+        window.scrollBy(0, delta)
+      })
+      return
+    }
+    e.preventDefault()
     this.nudge(delta)
   }
 

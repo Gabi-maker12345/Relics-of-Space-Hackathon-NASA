@@ -40,7 +40,7 @@ onBeforeUnmount(() => useGlEngine().dispose())
 .gl {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: var(--gl-z, 0);
   pointer-events: none;
 }
 </style>

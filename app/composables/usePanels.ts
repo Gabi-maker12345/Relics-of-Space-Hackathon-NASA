@@ -1,13 +1,12 @@
 let wiredClient = false
 
 /**
- * Estado dos painéis (Profile/Newsletter) e sincronização com o engine:
+ * Estado do painel Profile e sincronização com o engine:
  * - abrir/fechar o "hole" (portal) com os tempos do original
- * - rota /newsletter abre o painel news (e fechar volta para "/")
  * - Escape e clique fora fecham
- * A fiação (watchers/listeners) é registada uma única vez no client.
+ * A fiação (listeners) é registada uma única vez no client.
  */
-export type PanelName = 'profile' | 'news' | null
+export type PanelName = 'profile' | null
 
 function shieldEl(name: Exclude<PanelName, null>): HTMLElement | null {
   return document.querySelector<HTMLElement>(`[data-gl-shield][data-shield="${name}"]`)
@@ -15,16 +14,15 @@ function shieldEl(name: Exclude<PanelName, null>): HTMLElement | null {
 
 export function usePanels() {
   const active = useState<PanelName>('panel', () => null)
-  const route = useRoute()
-  const router = useRouter()
 
   const applyEngine = (next: PanelName): void => {
     if (typeof window === 'undefined') return
     const engine = useGlEngine()
-    for (const name of ['profile', 'news'] as const) {
+    for (const name of ['profile'] as const) {
       const el = shieldEl(name)
       if (el) engine.setShieldOpen(el, next === name)
     }
+    document.documentElement.dataset.panel = next ?? ''
     engine.openHole(next !== null)
     if (next !== null) {
       engine.defer(200, () => {
@@ -38,19 +36,12 @@ export function usePanels() {
     if (active.value === name) return
     active.value = name
     applyEngine(name)
-    if (name === 'news' && route.path !== '/newsletter') {
-      void router.push('/newsletter')
-    }
   }
 
   const close = (): void => {
-    const was = active.value
-    if (was === null) return
+    if (active.value === null) return
     active.value = null
     applyEngine(null)
-    if (was === 'news' && route.path === '/newsletter') {
-      void router.push('/')
-    }
   }
 
   const toggle = (name: Exclude<PanelName, null>): void => {
@@ -60,22 +51,6 @@ export function usePanels() {
 
   if (import.meta.client && !wiredClient) {
     wiredClient = true
-
-    watch(
-      () => route.path,
-      (path) => {
-        if (path === '/newsletter') {
-          if (active.value !== 'news') {
-            active.value = 'news'
-            applyEngine('news')
-          }
-        } else if (active.value === 'news') {
-          active.value = null
-          applyEngine(null)
-        }
-      },
-      { immediate: true },
-    )
 
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === 'Escape' && active.value !== null) close()
