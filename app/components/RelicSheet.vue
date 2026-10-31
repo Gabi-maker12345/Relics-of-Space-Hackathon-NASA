@@ -15,6 +15,22 @@ const onScroll = (): void => {
   if (clamped !== props.index) emit('update:index', clamped)
 }
 
+// o vídeo só recebe `src` quando a cena fica ativa; aqui garantimos o play
+watch(
+  () => props.index,
+  async () => {
+    await nextTick()
+    const scenes = scroller.value?.querySelectorAll<HTMLElement>('.rsheet__scene') ?? []
+    scenes.forEach((scene, i) => {
+      const video = scene.querySelector('video')
+      if (!video) return
+      if (i === props.index) void video.play().catch(() => {})
+      else video.pause()
+    })
+  },
+  { immediate: true },
+)
+
 const goTo = (index: number): void => {
   const el = scroller.value
   if (!el) return
