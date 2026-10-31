@@ -251,3 +251,15 @@ Verificado: 9 planos de cartão com textura; p envolve nos dois sentidos; modal 
 | Carrossel "arrastava para trás" | o wrap somava −1 a `p` no meio do damping, então a interpolação voltava a percorrer o caminho todo | `p`/`target` passam a ser **ilimitados** e só a fase desenhada (`p - floor(p)`) é usada em `applyTrack`; roda, arrasto e damping não reescrevem mais o valor |
 | Salto no loop | — | verificado no seam: p=0,985 vs 1,015 → mesmos cartões deslocados 64 px |
 | Botão X colado à imagem | as regras desktop do `.sheet__body/.sheet__close` perderam-se na reescrita anterior | `padding: 7,4rem 8,6rem 5rem 6rem` e fecho a 1,6rem; folga medida: **64 px** à direita e **17 px** acima da mídia |
+
+## Iteração 7 — causa raiz do "recuo" no carrossel
+
+O problema não estava no damping do `p` (esse é monotónico). Estava no **damp dos planos GL**:
+
+```
+plane.mesh.position.x += (worldX - plane.mesh.position.x) * FOLLOW_LERP
+```
+
+No wrap, o track salta uma cópia inteira (`+copySpan` ≈ 2153 px) num frame. O DOM salta, mas cada mesh WebGL *interpolava* esses 2153 px ao longo de ~0,4 s — daí o "avança um pouco e recua bruscamente", nos dois sentidos.
+
+Correção: saltos maiores que meia viewport, em elementos do track, colam direto na posição (`snap`), sem interpolar. Medições: 106 frames com roda contínua → lag máximo 402 px (é o damping normal) e nenhum frame com salto de 2153 px; o seam (p 0,997 → 1,003) mostra os mesmos cartões com 13 px de deslocamento.

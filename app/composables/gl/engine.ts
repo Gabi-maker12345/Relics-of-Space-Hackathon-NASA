@@ -1235,8 +1235,14 @@ export class GlEngine {
     plane.mesh.scale.set(anchor.w * plane.scaleBridge.x, anchor.h * plane.scaleBridge.y, 1)
     const worldX = rect.left + rect.width / 2 - this.viewport.w / 2
     const worldY = -(rect.top + rect.height / 2 - this.viewport.h / 2) + plane.lift
-    plane.mesh.position.x += (worldX - plane.mesh.position.x) * FOLLOW_LERP
-    plane.mesh.position.y += (worldY - plane.mesh.position.y) * FOLLOW_LERP
+    // No carrossel infinito o track salta uma cópia inteira de uma vez; o damp
+    // não pode interpolar esse salto (parecia um recuo). Acima de meia tela,
+    // cola direto na posição — o conteúdo é idêntico, o salto é invisível.
+    const dx = worldX - plane.mesh.position.x
+    const dy = worldY - plane.mesh.position.y
+    const snap = this.isInTrack(plane.el) && (Math.abs(dx) > this.viewport.w * 0.5 || Math.abs(dy) > this.viewport.w * 0.5)
+    plane.mesh.position.x = snap ? worldX : plane.mesh.position.x + dx * FOLLOW_LERP
+    plane.mesh.position.y = snap ? worldY : plane.mesh.position.y + dy * FOLLOW_LERP
     uniforms.uRes.value.set(anchor.w, anchor.h)
     uniforms.uRadiusPx.value = Math.min(
       plane.text.fontSpec.radiusPx,
