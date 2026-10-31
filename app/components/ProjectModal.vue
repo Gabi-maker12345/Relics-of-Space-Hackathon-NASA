@@ -1,33 +1,64 @@
 <script setup lang="ts">
-import { projects } from '~/data/projects'
-import type { Media } from '~/data/projects'
+import gsap from 'gsap'
+import { relics } from '~/data/relics'
+import type { RelicScene } from '~/data/relics'
 
 const { activeSlug, close } = useProjectModal()
 const frame = ref<{ focusSelf: () => void } | null>(null)
+const sheet = ref<{ goTo: (index: number) => void } | null>(null)
 let lastFocus: HTMLElement | null = null
 
-const project = computed(() => projects.find(p => p.id === activeSlug.value) ?? null)
+const relic = computed(() => relics.find(r => r.id === activeSlug.value) ?? null)
 const index = ref(0)
-const lightbox = ref<Media | null>(null)
+const lightbox = ref<RelicScene | null>(null)
 
-const mediaCount = computed(() => project.value?.media.length ?? 1)
-const progress = computed(() => (index.value + 1) / mediaCount.value)
+const sceneCount = computed(() => relic.value?.scenes.length ?? 1)
+const progress = computed(() => (index.value + 1) / sceneCount.value)
 
 const step = (direction: number): void => {
-  const count = mediaCount.value
-  index.value = (index.value + direction + count) % count
+  const next = Math.min(sceneCount.value - 1, Math.max(0, index.value + direction))
+  sheet.value?.goTo(next)
 }
 
-watch(project, (value) => {
+/** Entrada: scrim, moldura com blur/scale e conteúdo em stagger. */
+const onEnter = (el: Element, done: () => void): void => {
+  const sheetEl = el.querySelector('.sheet')
+  const scrim = el.querySelector('[data-scrim]')
+  const timeline = gsap.timeline({ onComplete: done })
+
+  if (scrim) timeline.fromTo(scrim, { opacity: 0 }, { opacity: 1, duration: 0.62, ease: 'power2.out' }, 0)
+  if (sheetEl) {
+    timeline.fromTo(
+      sheetEl,
+      { opacity: 0, y: 76, scale: 0.92, filter: 'blur(22px)' },
+      { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 1.1, ease: 'power4.out' },
+      0.04,
+    )
+  }
+}
+
+const onLeave = (el: Element, done: () => void): void => {
+  const sheetEl = el.querySelector('.sheet')
+  const scrim = el.querySelector('[data-scrim]')
+  const timeline = gsap.timeline({ onComplete: done })
+  if (scrim) timeline.to(scrim, { opacity: 0, duration: 0.35, ease: 'power2.in' }, 0)
+  if (sheetEl) {
+    timeline.to(
+      sheetEl,
+      { opacity: 0, y: 24, scale: 0.975, filter: 'blur(8px)', duration: 0.42, ease: 'power3.in' },
+      0,
+    )
+  }
+}
+
+watch(relic, (value) => {
   index.value = 0
   lightbox.value = null
   if (!import.meta.client) return
   if (value !== null) {
     lastFocus = (document.activeElement as HTMLElement | null) ?? null
-    window.addEventListener('keydown', onKey)
     void nextTick(() => frame.value?.focusSelf())
   } else {
-    window.removeEventListener('keydown', onKey)
     lastFocus?.focus?.()
     lastFocus = null
   }
@@ -42,8 +73,7 @@ const focusables = (): HTMLElement[] => {
 }
 
 function onKey(e: KeyboardEvent): void {
-  if (project.value === null) return
-  if (lightbox.value !== null) return
+  if (relic.value === null || lightbox.value !== null) return
   if (e.key === 'Escape') {
     close()
     return
@@ -76,24 +106,26 @@ function onKey(e: KeyboardEvent): void {
   }
 }
 
+onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>
 
 <template>
   <Teleport to="body">
-    <Transition name="pj" appear>
-      <div v-if="project" data-modal>
+    <Transition appear :css="false" @enter="onEnter" @leave="onLeave">
+      <div v-if="relic" data-modal>
         <SheetFrame
           ref="frame"
           overlay
-          :label="project.title"
+          :label="relic.name"
           :progress="progress"
           @close="close"
         >
-          <ProjectSheet
-            :project="project"
+          <RelicSheet
+            ref="sheet"
+            :relic="relic"
             :index="index"
-            @step="step"
+            @update:index="index = $event"
             @open-media="lightbox = $event"
           />
         </SheetFrame>
@@ -106,73 +138,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </template>
 
 <style scoped>
-.pj-enter-active {
-  transition: opacity 0.55s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.pj-leave-active {
-  transition: opacity 0.35s cubic-bezier(0.4, 0, 1, 1);
-}
-
-.pj-enter-from,
-.pj-leave-to {
-  opacity: 0;
-}
-
-.pj-enter-active :deep(.sheet) {
-  animation: sheet-in 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.pj-leave-active :deep(.sheet) {
-  animation: sheet-out 0.35s cubic-bezier(0.4, 0, 1, 1) both;
-}
-
-.pj-enter-active :deep(.psheet__info > *),
-.pj-enter-active :deep(.psheet__stage) {
-  animation: sheet-content-in 1s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.pj-enter-active :deep(.psheet__info > *:nth-child(1)) { animation-delay: 0.1s; }
-.pj-enter-active :deep(.psheet__info > *:nth-child(2)) { animation-delay: 0.16s; }
-.pj-enter-active :deep(.psheet__info > *:nth-child(3)) { animation-delay: 0.24s; }
-.pj-enter-active :deep(.psheet__info > *:nth-child(4)) { animation-delay: 0.32s; }
-.pj-enter-active :deep(.psheet__stage) { animation-delay: 0.2s; }
-
-@keyframes sheet-in {
-  from {
-    opacity: 0;
-    transform: translateY(38px) scale(0.94);
-    filter: blur(14px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
-}
-
-@keyframes sheet-out {
-  from {
-    opacity: 1;
-    transform: none;
-  }
-  to {
-    opacity: 0;
-    transform: translateY(16px) scale(0.985);
-  }
-}
-
-@keyframes sheet-content-in {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 .lb-enter-active,
 .lb-leave-active {
   transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -181,14 +146,5 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 .lb-enter-from,
 .lb-leave-to {
   opacity: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pj-enter-active :deep(.sheet),
-  .pj-leave-active :deep(.sheet),
-  .pj-enter-active :deep(.psheet__info > *),
-  .pj-enter-active :deep(.psheet__stage) {
-    animation: none;
-  }
 }
 </style>

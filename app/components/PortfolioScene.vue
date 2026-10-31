@@ -27,10 +27,10 @@ onBeforeUnmount(() => {
 
 <template>
   <section id="portfolio" ref="section" class="fr-portfolio" :class="{ 'is-live': live }" aria-labelledby="portfolio-title">
-    <h2 id="portfolio-title" class="sr-only">Arquivo do portfólio</h2>
+    <h2 id="portfolio-title" class="sr-only">Relíquias</h2>
     <div class="fr-portfolio__stage">
       <FeaturedCarousel />
     </div>
-    <p class="fr-label fr-portfolio__label">Arquivo do portfólio</p>
+    <p class="fr-label fr-portfolio__label">Relíquias</p>
   </section>
 </template>

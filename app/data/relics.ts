@@ -3,6 +3,16 @@ export interface RelicFact {
   value: string
 }
 
+export type SceneKind = 'image' | 'video'
+
+export interface RelicScene {
+  kind: SceneKind
+  src: string
+  poster?: string
+  kicker: string
+  body: string
+}
+
 export interface Relic {
   id: string
   name: string
@@ -12,6 +22,8 @@ export interface Relic {
   facts: RelicFact[]
   image: string
   alt: string
+  ratio: string
+  scenes: RelicScene[]
 }
 
 export const relics: Relic[] = [
@@ -29,6 +41,22 @@ export const relics: Relic[] = [
     ],
     image: '/images/relics/apollo-lunar-module.jpg',
     alt: 'Módulo lunar Apollo em exposição, com o estágio de descida dourado e as pernas de pouso',
+    ratio: '1376 / 768',
+    scenes: [
+      {
+        kind: 'image',
+        src: '/images/relics/apollo-lunar-module.jpg',
+        kicker: 'Fotografia',
+        body: 'O estágio de descida ficou na superfície depois de servir de plataforma de lançamento para o estágio de subida. Seis bases continuam onde pousaram, entre o Mar da Tranquilidade e Taurus-Littrow.',
+      },
+      {
+        kind: 'video',
+        src: '/media/apollo-loop.mp4',
+        poster: '/images/relics/apollo-lunar-module.jpg',
+        kicker: 'Transmissão',
+        body: 'O que sobrou são seis bases, seis bandeiras e instrumentos que ainda refletem lasers disparados da Terra — a única presença humana permanente fora do planeta.',
+      },
+    ],
   },
   {
     id: 'opportunity',
@@ -44,6 +72,22 @@ export const relics: Relic[] = [
     ],
     image: '/images/relics/opportunity.jpg',
     alt: 'Rover Opportunity em Marte, com painéis solares cobertos de poeira e o mastro da câmara erguido',
+    ratio: '1408 / 768',
+    scenes: [
+      {
+        kind: 'image',
+        src: '/images/relics/opportunity.jpg',
+        kicker: 'Fotografia',
+        body: 'Pousou em Meridiani Planum em janeiro de 2004, contratado para 90 dias. Encontrou provas de água líquida, percorreu 45,16 km e ficou em silêncio quando uma tempestade de poeira cobriu o Sol, em junho de 2018.',
+      },
+      {
+        kind: 'video',
+        src: '/media/relic-loop.mp4',
+        poster: '/images/relics/opportunity.jpg',
+        kicker: 'Transmissão',
+        body: 'A NASA tentou chamá-lo mais de mil vezes depois da tempestade. O veículo continua no vale Perseverance, na borda da cratera Endeavour, a 45 quilómetros do ponto onde tudo começou.',
+      },
+    ],
   },
   {
     id: 'viking-1',
@@ -59,6 +103,22 @@ export const relics: Relic[] = [
     ],
     image: '/images/relics/viking-1.jpg',
     alt: 'Lander Viking 1 com o corpo hexagonal, os três painéis solares e a antena de alto ganho',
+    ratio: '1376 / 768',
+    scenes: [
+      {
+        kind: 'image',
+        src: '/images/relics/viking-1.jpg',
+        kicker: 'Fotografia',
+        body: 'Pousou em Chryse Planitia a 20 de julho de 1976 e operou durante seis anos, enviando as primeiras imagens da superfície marciana e procurando sinais de vida.',
+      },
+      {
+        kind: 'video',
+        src: '/media/viking-loop.mp4',
+        poster: '/images/relics/viking-1.jpg',
+        kicker: 'Transmissão',
+        body: 'As suas imagens e dados abriram caminho a todas as missões que se seguiram. Continua em Marte, em silêncio desde 1982.',
+      },
+    ],
   },
 ]
 

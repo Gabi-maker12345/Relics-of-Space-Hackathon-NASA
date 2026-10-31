@@ -212,3 +212,19 @@ de progresso por media, suporte a vídeo e lightbox quase fullscreen.
 | Rota `/projects/:slug` | passou a `fixed` e ganhou o mesmo visualizador + lightbox |
 
 Verificado: 01/04 → 02/04 → 03/04 (vídeo a tocar), anel 0,25 → 0,5 → 0,75; lightbox abre em imagem e vídeo; `Esc` fecha em camadas; 0 erros de consola.
+
+## Iteração 4 — 3 painéis, modal por relíquia e scroll por cenas
+
+| Mudança | Detalhe |
+|---|---|
+| Painéis | a 6.ª secção passou de 8 projetos para **3 relíquias** (Apollo, Opportunity, Viking 1): textura = foto real, título = nome, legenda = frase de efeito. `projects.ts` e a rota `/projects/:slug` removidos |
+| Modal | conteúdo **só da relíquia** (nome, missão, texto e ficha); sem links/chips do portfólio |
+| Scroll | nativo na vertical **mantido**, com `scroll-snap-type: y mandatory` (um ecrã por gesto) e **barra escondida** (`scrollbar-width:none` + `::-webkit-scrollbar{display:none}`) |
+| Cenas | 2 por relíquia (fotografia + vídeo gerado); texto e imagem entram com fade/translate/blur escalonado (0,06→0,36 s) e a imagem faz scale 1,06→1 |
+| Anel | passa a contar cenas: 1/2 = 50 %, 2/2 = 100 % |
+| Entrada | animada em GSAP (sem CSS): scrim 0,62 s; moldura `y 76 → 0`, `scale .92 → 1`, `blur 22 → 0` em 1,1 s `power4.out`; saída 0,42 s |
+| Expansão | botão de maximizar removido — clicar na imagem/vídeo abre o lightbox |
+| Sheet | tema escuro (#08080a) com cópia sobre a mídia, dots laterais e fecho em vidro |
+| Vídeos | `apollo-loop`, `relic-loop` (Opportunity) e `viking-loop`, 5 s / 720p |
+
+Verificado: 3 cartões; abrir → 2 cenas; scroll 0 → 746 px troca cena e anel 0,5 → 1,0; vídeo toca no palco e no lightbox; `Esc` fecha lightbox e depois o modal; consola limpa; build 15,4 s.

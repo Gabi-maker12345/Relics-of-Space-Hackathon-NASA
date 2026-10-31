@@ -1,6 +1,6 @@
 <template>
   <div class="flex items-center justify-center overflow-hidden" :class="overlay ? 'fixed inset-0 z-[90]' : 'absolute inset-0'">
-    <div v-if="overlay" class="absolute inset-0 bg-black/95" aria-hidden="true" @click="emit('close')" />
+    <div v-if="overlay" data-scrim class="absolute inset-0 bg-black/95" aria-hidden="true" @click="emit('close')" />
     <div
       ref="frameRef"
       class="sheet outline-none"
