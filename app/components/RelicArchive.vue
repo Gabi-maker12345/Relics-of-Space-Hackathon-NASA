@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const section = ref<HTMLElement | null>(null)
 const elements = ref<HTMLElement[]>([])
-const flipping = ref(false)
+const { open } = useAct()
 
 const setEl = (el: Element | ComponentPublicInstance | null, index: number) => {
   if (el instanceof HTMLElement) elements.value[index] = el
@@ -44,20 +44,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => cancelAnimationFrame(raf))
 
-/** Flip 2D → 3D: a cena dobra-se para dentro e a viagem leva ao arquivo. */
-const startFlip = () => {
-  if (flipping.value) return
-  flipping.value = true
-  document.documentElement.dataset.archiveFlip = '1'
-
-  const target = document.getElementById('portfolio')
-  if (target) scrollToElement(target)
-
-  window.setTimeout(() => {
-    flipping.value = false
-    delete document.documentElement.dataset.archiveFlip
-  }, 1900)
-}
+/** Abre o segundo acto (cosmos → cena 3D). */
+const startFlip = () => open()
 </script>
 
 <template>

@@ -301,3 +301,16 @@ Tudo scrubado pelo scroll + rotação lenta (desacelera nas formas para ficar le
 | CTA "Ver o arquivo" | ao nascer dispara `fr-cta-born` (glow de 46px + brightness) e uma **passagem de luz** enviesada (`fr-cta-sheen`) uma única vez |
 | Flip para o 3D | clique põe `html[data-archive-flip]`: o plano do arquivo dobra `rotateX(-74deg)` com blur e desvanece em 1,25 s enquanto o cosmos dá um zoom de 22%; em paralelo o Lenis leva ao arquivo e a cena 3D entra de `rotateX(46deg) scale(.94)` para o lugar em 1,8 s |
 | Estados | verificado a 1600 e 390: sem scroll horizontal, flip termina com `data-scene=portfolio` e `is-live` |
+
+## Iteração 11 — segundo acto: cosmos → cena 3D (página termina no CTA)
+
+| Peça | Como ficou |
+|---|---|
+| Fim da página | `index.vue` tem só hero → approach → painéis das relíquias → arquivo. `RelicEnds` e `PortfolioScene` removidos; o documento acaba no botão "Ver o arquivo" |
+| Gate | `CosmosGate` fixo (z 60, cabeçalho a z 70): véu radial escurece em 1,6 s, **"O cosmos" entra da esquerda e "continua." da direita** (2 s `expo`, blur 16 → 0), glow radial a expandir, 26 estrelas a cintilar, "Desça para atravessar" |
+| Entrada na cena | roda para baixo (> 24 px) no cosmos → cena 3D sobe de `rotateX(46°) translateY(60px)` para o lugar; `data-act="scene"` sobe o canvas GL a `z 62` e o `enterAll()` dispara a coreografia dos 9 cartões |
+| Sem sair pelo scroll | página travada (`body overflow hidden` + Lenis stop) durante o acto; o motor só captura a roda na cena |
+| Voltar | botão discreto (teleportado, z 80 para não ser coberto pelo canvas) e `Esc`; fecha com fade, para a trilha e devolve o scroll ao arquivo |
+| Trilha | `useSoundtrack`: prime em silêncio no clique (gesto que autoriza autoplay), fade até 0,34 em 2,6 s ao entrar na cena, fade-out ao voltar. `public/media/infinity.mp3` é o slot da mix — hoje com uma cama ambiente sintética de 80 s como placeholder |
+
+Verificado a 1600 e 390: gate abre/fecha, cena entra com cartões e trilha (`data-sound=on`), `Voltar` restaura `act=page` e o scroll; consola limpa; build 13,5 s.

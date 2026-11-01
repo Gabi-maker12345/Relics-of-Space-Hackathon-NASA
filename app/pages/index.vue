@@ -4,7 +4,5 @@
     <RelicApproach />
     <RelicPanels />
     <RelicArchive />
-    <RelicEnds />
-    <PortfolioScene />
   </div>
 </template>

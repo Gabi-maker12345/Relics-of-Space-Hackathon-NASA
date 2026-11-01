@@ -373,7 +373,11 @@ export class GlEngine {
       if (!found || edge < bottom) bottom = edge
       found = true
     }
-    if (!found) bottom = -H * 0.45
+    if (!found) {
+      // sem cartões em cena não há piso (a cena 3D vive no gate)
+      mesh.visible = false
+      return
+    }
     const nearY = bottom - H * FLOOR_DROP
     const run = H * FLOOR_RUN
     const width = W * 2 * FLOOR_WIDE

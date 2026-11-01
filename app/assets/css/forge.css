@@ -108,7 +108,7 @@
 .fr-header {
   position: fixed;
   inset: 0 0 auto;
-  z-index: 50;
+  z-index: 70;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1121,4 +1121,292 @@ html[data-archive-flip] .cosmos {
   stroke-linejoin: round;
   opacity: 0.1;
   transition: opacity 0.4s linear;
+}
+
+/* Segundo acto — cosmos → cena 3D ------------------------------------------ */
+
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s var(--fr-ease-2);
+}
+
+.gate.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gate__veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 35%, rgb(6 9 18 / 0.55) 0%, rgb(2 3 6 / 0.94) 70%, #000 100%);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity 1.6s var(--fr-ease-2);
+}
+
+.gate.is-open .gate__veil {
+  opacity: 1;
+}
+
+.gate__stars {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.gate__stars span {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  box-shadow: 0 0 8px rgb(200 220 255 / 0.8);
+}
+
+.gate.is-open .gate__stars span {
+  animation-name: gate-twinkle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes gate-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+}
+
+.gate__stage {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: clamp(12px, 2vh, 22px);
+  padding-inline: 24px;
+  text-align: center;
+  transition:
+    opacity 0.8s var(--fr-ease-2),
+    transform 1.2s var(--fr-ease-2),
+    filter 0.8s var(--fr-ease-2);
+}
+
+.gate.is-scene .gate__stage {
+  opacity: 0;
+  transform: translateY(-40px) scale(1.06);
+  filter: blur(12px);
+}
+
+.gate__eyebrow {
+  color: color-mix(in srgb, var(--fr-paper) 55%, transparent);
+  letter-spacing: 0.22em;
+}
+
+.gate__title {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.24em;
+  margin: 0;
+  font-family: var(--fr-serif);
+  font-weight: 200;
+  font-size: clamp(38px, 6.4vw, 96px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-shadow: 0 0 46px rgb(190 215 255 / 0.35);
+}
+
+.gate__word {
+  display: block;
+  opacity: 0;
+  filter: blur(16px);
+}
+
+.gate__word--l {
+  transform: translateX(-16vw) scale(0.97);
+}
+
+.gate__word--r {
+  transform: translateX(16vw) scale(0.97);
+}
+
+.gate.is-open .gate__word--l {
+  animation: gate-in-l 2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+.gate.is-open .gate__word--r {
+  animation: gate-in-r 2s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+}
+
+@keyframes gate-in-l {
+  from {
+    opacity: 0;
+    transform: translateX(-16vw) scale(0.97);
+    filter: blur(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes gate-in-r {
+  from {
+    opacity: 0;
+    transform: translateX(16vw) scale(0.97);
+    filter: blur(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+.gate__hint {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--fr-paper) 45%, transparent);
+  animation: gate-breathe 2.6s ease-in-out infinite;
+}
+
+@keyframes gate-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.gate.is-scene .gate__hint {
+  opacity: 0;
+  animation: none;
+}
+
+.gate__scene {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transform: translateY(60px) rotateX(46deg) scale(0.92);
+  transform-origin: 50% 100%;
+  transition:
+    opacity 1.3s var(--fr-ease-2),
+    transform 1.9s cubic-bezier(0.16, 1, 0.3, 1);
+  perspective: 1400px;
+}
+
+.gate.is-scene .gate__scene {
+  opacity: 1;
+  transform: none;
+}
+
+.gate__label {
+  position: absolute;
+  left: clamp(16px, 2vw, 28px);
+  bottom: 22px;
+  z-index: 3;
+  color: color-mix(in srgb, var(--fr-paper) 55%, transparent);
+  pointer-events: none;
+}
+
+.gate-chrome {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+}
+
+.gate-chrome .gate__label,
+.gate-chrome .gate__back {
+  pointer-events: auto;
+}
+
+.gate__back {
+  position: absolute;
+  left: clamp(16px, 2vw, 28px);
+  bottom: clamp(52px, 7vh, 72px);
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 999px;
+  background: rgb(8 10 16 / 0.55);
+  color: var(--fr-paper);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+  transition: background-color 0.4s ease, opacity 0.4s ease;
+}
+
+.gate__back:hover {
+  background: rgb(20 26 40 / 0.8);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gate__word--l,
+  .gate__word--r {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    animation: none;
+  }
+
+  .gate__stars span {
+    animation: none;
+  }
+}
+
+html[data-act='scene'] .gl {
+  --gl-z: 62;
+}
+
+.gate__glow {
+  position: absolute;
+  width: min(72vw, 90rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(150 185 255 / 0.22) 0%, rgb(90 120 255 / 0.08) 40%, transparent 68%);
+  filter: blur(6px);
+  z-index: -1;
+  opacity: 0;
+  transform: scale(0.4);
+}
+
+.gate.is-open .gate__glow {
+  animation: gate-glow 2.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+@keyframes gate-glow {
+  0% {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+  45% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.55;
+    transform: scale(1.25);
+  }
 }

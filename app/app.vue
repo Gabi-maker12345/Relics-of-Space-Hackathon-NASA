@@ -6,6 +6,7 @@
       <NuxtPage />
     </main>
     <ForgeHeader />
+    <CosmosGate />
     <ScrollProgress />
     <ProfilePanel />
     <ProjectModal />
