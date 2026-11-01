@@ -314,3 +314,13 @@ Tudo scrubado pelo scroll + rotação lenta (desacelera nas formas para ficar le
 | Trilha | `useSoundtrack`: prime em silêncio no clique (gesto que autoriza autoplay), fade até 0,34 em 2,6 s ao entrar na cena, fade-out ao voltar. `public/media/infinity.mp3` é o slot da mix — hoje com uma cama ambiente sintética de 80 s como placeholder |
 
 Verificado a 1600 e 390: gate abre/fecha, cena entra com cartões e trilha (`data-sound=on`), `Voltar` restaura `act=page` e o scroll; consola limpa; build 13,5 s.
+
+## Iteração 12 — trilha real (videoplayback.webm)
+
+`useSoundtrack` passa a usar **`public/videoplayback.webm`** (Opus 48 kHz, 29:23) como
+trilha do arquivo; mantém `/media/cosmos-ambient.mp3` como fallback se o ficheiro
+faltar. `preload="metadata"` (não descarrega os 28 MB antes do play), prime em
+silêncio no clique e fade até **0,34** em 2,6 s quando a cena 3D chega.
+
+Medido no browser: `paused=false`, `volume=0.34`, `currentTime=5,23 s`,
+`duration=1763 s`, `readyState=4`, sem erro de media.

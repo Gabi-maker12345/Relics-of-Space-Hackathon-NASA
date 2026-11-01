@@ -2,7 +2,7 @@ let audio: HTMLAudioElement | null = null
 let fallbackTried = false
 let fadeFrame = 0
 
-const PRIMARY = '/media/infinity.mp3'
+const PRIMARY = '/videoplayback.webm'
 const FALLBACK = '/media/cosmos-ambient.mp3'
 export const SOUNDTRACK_VOLUME = 0.34
 
@@ -21,7 +21,7 @@ function fadeTo(target: number, duration: number, done?: () => void): void {
   fadeFrame = requestAnimationFrame(step)
 }
 
-/** Trilha do arquivo: usa /media/infinity.mp3 e, se faltar, a cama ambiente. */
+/** Trilha do arquivo: /videoplayback.webm (a mix) e, se faltar, a cama ambiente. */
 export function useSoundtrack() {
   const playing = useState('soundtrack-playing', () => false)
 
@@ -29,9 +29,12 @@ export function useSoundtrack() {
     if (audio) return audio
     audio = new Audio()
     audio.loop = true
-    audio.preload = 'auto'
+    audio.preload = 'metadata'
     audio.volume = 0
     audio.src = PRIMARY
+    if (import.meta.dev) {
+      ;(window as unknown as Record<string, unknown>).__soundtrack = audio
+    }
     audio.addEventListener('error', () => {
       if (!audio || fallbackTried) return
       fallbackTried = true
