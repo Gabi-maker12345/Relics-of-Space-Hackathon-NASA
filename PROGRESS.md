@@ -279,3 +279,16 @@ Teste com atraso artificial de 200 px: antes do wrap 200 px, depois 162 px
 (apenas um passo de damping de 10%) — antes ia direto a 0, num salto de 200 px.
 Sessão de 123 frames com 2 wraps: deslocamento do track +2139/+2056 px e lag
 máximo de 8 px, sem saltos extra.
+
+## Iteração 9 — "As relíquias" vira órbita
+
+O marquee estático saiu. A secção passou a ter 260vh com palco sticky:
+
+| Fase (scroll) | O que acontece |
+|---|---|
+| 0 – 0.30 | só o título "As relíquias" (sai com blur/escala entre 0.30 e 0.50) |
+| 0.14 – 0.50 | os 12 nomes entram um a um (opacidade/escala/blur) e cada um dispara um **brilho ✦** no canto (`fr-spark` + flash no texto) |
+| 0.66 – 0.80 | o anel (linha tracejada de constelação) dobra-se numa **estrela** de 6 pontas, com os raios alternados e alinhamento a um passo da grelha |
+| 0.82 – 0.95 | a estrela desfaz-se e o anel estica numa **elipse** que continua a rodar |
+
+Tudo scrubado pelo scroll + rotação lenta (desacelera nas formas para ficar legível). `prefers-reduced-motion` mostra o círculo estático, sem rotação nem brilhos. Zero sobreposições de rótulos a 1600 e a 390 (verificado por interseção de rects).
