@@ -113,6 +113,8 @@ onMounted(() => {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  transition: transform 1.9s cubic-bezier(0.5, 0, 0.2, 1), filter 1.9s cubic-bezier(0.5, 0, 0.2, 1);
+  will-change: transform, filter;
   background:
     radial-gradient(120% 90% at 50% 0%, #0a0f1e 0%, #05060b 55%, #020306 100%);
 }

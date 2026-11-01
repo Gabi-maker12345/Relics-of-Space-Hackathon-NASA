@@ -292,3 +292,12 @@ O marquee estático saiu. A secção passou a ter 260vh com palco sticky:
 | 0.82 – 0.95 | a estrela desfaz-se e o anel estica numa **elipse** que continua a rodar |
 
 Tudo scrubado pelo scroll + rotação lenta (desacelera nas formas para ficar legível). `prefers-reduced-motion` mostra o círculo estático, sem rotação nem brilhos. Zero sobreposições de rótulos a 1600 e a 390 (verificado por interseção de rects).
+
+## Iteração 10 — arquivo em profundidade e flip 2D → 3D
+
+| Peça | Como ficou |
+|---|---|
+| "O que ficou para trás" | secção de 175vh com palco sticky em `perspective: 1400px`; eyebrow, título, texto e CTA surgem de `translateZ(-1100px)` com `scale .55 → 1` e `blur 16 → 0`, escalonados por 0,09 de progresso |
+| CTA "Ver o arquivo" | ao nascer dispara `fr-cta-born` (glow de 46px + brightness) e uma **passagem de luz** enviesada (`fr-cta-sheen`) uma única vez |
+| Flip para o 3D | clique põe `html[data-archive-flip]`: o plano do arquivo dobra `rotateX(-74deg)` com blur e desvanece em 1,25 s enquanto o cosmos dá um zoom de 22%; em paralelo o Lenis leva ao arquivo e a cena 3D entra de `rotateX(46deg) scale(.94)` para o lugar em 1,8 s |
+| Estados | verificado a 1600 e 390: sem scroll horizontal, flip termina com `data-scene=portfolio` e `is-live` |
