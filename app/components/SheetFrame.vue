@@ -4,6 +4,7 @@
     <div
       ref="frameRef"
       class="sheet outline-none"
+      :class="{ 'is-glitch': glitch }"
       role="dialog"
       tabindex="-1"
       :aria-modal="overlay ? 'true' : undefined"
@@ -51,8 +52,9 @@ withDefaults(
     closeTo?: string
     label?: string
     progress?: number
+    glitch?: boolean
   }>(),
-  { progress: 0 },
+  { progress: 0, glitch: false },
 )
 
 const emit = defineEmits<{ close: [] }>()

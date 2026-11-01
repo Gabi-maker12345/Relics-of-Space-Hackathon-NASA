@@ -11,6 +11,44 @@ let lastFocus: HTMLElement | null = null
 const relic = computed(() => relics.find(r => r.id === activeSlug.value) ?? null)
 const index = ref(0)
 const lightbox = ref<RelicScene | null>(null)
+const glitching = ref(false)
+
+const { act } = useAct()
+const soundtrack = useSoundtrack()
+
+let glitchTimers: number[] = []
+let glitchVoice: HTMLAudioElement | null = null
+
+/** O "diário perdido" pisca 3 vezes, cada uma com o seu som. */
+function runGlitch(): void {
+  const voice = (): HTMLAudioElement => {
+    if (!glitchVoice) {
+      glitchVoice = new Audio('/media/glitch.mp3')
+      glitchVoice.preload = 'auto'
+    }
+    return glitchVoice
+  }
+  const burst = (delay: number, rate: number): void => {
+    glitchTimers.push(window.setTimeout(() => {
+      const el = voice().cloneNode() as HTMLAudioElement
+      el.volume = 0.22
+      el.playbackRate = rate
+      void el.play().catch(() => {})
+    }, delay))
+  }
+
+  glitchTimers.push(window.setTimeout(() => { glitching.value = true }, 360))
+  burst(360 + 80, 1)
+  burst(360 + 600, 0.82)
+  burst(360 + 1130, 1.18)
+  glitchTimers.push(window.setTimeout(() => { glitching.value = false }, 360 + 1650))
+}
+
+function clearGlitch(): void {
+  glitchTimers.forEach(clearTimeout)
+  glitchTimers = []
+  glitching.value = false
+}
 
 const sceneCount = computed(() => relic.value?.scenes.length ?? 1)
 const progress = computed(() => (index.value + 1) / sceneCount.value)
@@ -57,8 +95,14 @@ watch(relic, (value) => {
   if (!import.meta.client) return
   if (value !== null) {
     lastFocus = (document.activeElement as HTMLElement | null) ?? null
+    // a trilha do arquivo cala-se enquanto o diário está aberto
+    soundtrack.stop()
+    clearGlitch()
+    runGlitch()
     void nextTick(() => frame.value?.focusSelf())
   } else {
+    clearGlitch()
+    if (act.value === 'scene') void soundtrack.play()
     lastFocus?.focus?.()
     lastFocus = null
   }
@@ -107,7 +151,10 @@ function onKey(e: KeyboardEvent): void {
 }
 
 onMounted(() => window.addEventListener('keydown', onKey))
-onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKey)
+  clearGlitch()
+})
 </script>
 
 <template>
@@ -119,6 +166,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           overlay
           :label="relic.name"
           :progress="progress"
+          :glitch="glitching"
           @close="close"
         >
           <RelicSheet

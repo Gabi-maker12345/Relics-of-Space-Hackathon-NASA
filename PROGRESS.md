@@ -337,3 +337,13 @@ passam a `pointer-events: none`.
 
 Verificação: amostragem 5×3 pontos sobre o cartão inteiramente visível → 15/15
 acertam no cartão; clique a 95%/8% da área abre o modal da relíquia.
+
+## Iteração 14 — diário "bugado": glitch e música a calar
+
+- Ao abrir um modal, a trilha pára em fade (`soundtrack.stop()`); ao fechar volta em fade se ainda estivermos na cena (`act === 'scene'`).
+- `.sheet.is-glitch` (1,6 s, 3 pulsos com efeitos diferentes): o corpo do sheet faz shake/skew/brightness/hue/invert em 3%, 38% e 73%; `::before` pisca scanlines; `::after` faz o split RGB deslocado.
+- Som do glitch: `public/media/glitch.mp3` (3,5 KB, ruído rosa filtrado + blip 1,2 kHz), disparado 3× com `playbackRate` 1 / 0,82 / 1,18 alinhado com os pulsos.
+- Corrigido: `Escape` com um diário aberto fecha só o modal (o gate ignora quando existe `[data-modal]`).
+- `prefers-reduced-motion` desliga o glitch visual.
+
+Nota: pausar a trilha durante o streaming provoca `net::ERR_ABORTED` na range request do webm (não é erro de JS).

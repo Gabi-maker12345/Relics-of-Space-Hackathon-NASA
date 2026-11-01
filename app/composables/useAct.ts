@@ -80,7 +80,10 @@ export function useAct() {
       { passive: false },
     )
     window.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && act.value !== 'page') back()
+      if (event.key !== 'Escape' || act.value === 'page') return
+      // com um diário aberto, o Escape pertence ao modal (fecha-o primeiro)
+      if (document.querySelector('[data-modal]')) return
+      back()
     })
   }
 
