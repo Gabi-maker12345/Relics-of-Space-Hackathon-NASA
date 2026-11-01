@@ -31,17 +31,17 @@ function runGlitch(): void {
   const burst = (delay: number, rate: number): void => {
     glitchTimers.push(window.setTimeout(() => {
       const el = voice().cloneNode() as HTMLAudioElement
-      el.volume = 0.22
+      el.volume = 0.3
       el.playbackRate = rate
       void el.play().catch(() => {})
     }, delay))
   }
 
   glitchTimers.push(window.setTimeout(() => { glitching.value = true }, 360))
-  burst(360 + 80, 1)
-  burst(360 + 600, 0.82)
-  burst(360 + 1130, 1.18)
-  glitchTimers.push(window.setTimeout(() => { glitching.value = false }, 360 + 1650))
+  burst(360 + 70, 1)
+  burst(360 + 690, 0.8)
+  burst(360 + 1330, 1.22)
+  glitchTimers.push(window.setTimeout(() => { glitching.value = false }, 360 + 2280))
 }
 
 function clearGlitch(): void {

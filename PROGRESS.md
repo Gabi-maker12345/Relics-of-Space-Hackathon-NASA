@@ -347,3 +347,18 @@ acertam no cartão; clique a 95%/8% da área abre o modal da relíquia.
 - `prefers-reduced-motion` desliga o glitch visual.
 
 Nota: pausar a trilha durante o streaming provoca `net::ERR_ABORTED` na range request do webm (não é erro de JS).
+
+## Iteração 15 — glitch mais evidente (RGB clássico)
+
+Pulsos reforçados (2,2 s, 3 piscas) com aberração cromática real via
+`drop-shadow` colorido, em vez de só sobreposições:
+
+| Pisca | Transform | Filtro |
+|---|---|---|
+| 1 (~3%) | `translate(-11px, 2px) skewX(-3.2°)` | `drop-shadow(8px 0 rgb(255,0,72))` + `drop-shadow(-8px 0 rgb(0,226,255))`, saturate 1,7 |
+| 2 (~31%) | `translate(7px,0) skewX(1.8°)` → `-13px` | `invert(.12) hue-rotate(-28°) saturate(2.4)` + magenta/azul 10-12 px |
+| 3 (~60%) | `translate(-9px,4px) skewX(-3.6°)` | `contrast(2) brightness(.82)` + rosa 14 px / azul 14 px |
+
+Scanlines com bandas vermelho/ciano a deslizar (2 animações) e um véu RGB
+(`screen`) — tudo em `.sheet__body`/pseudo-elementos, porque o `.sheet` é animado
+pelo GSAP na entrada. Sons alinhados (70/690/1330 ms) a volume 0,3.
