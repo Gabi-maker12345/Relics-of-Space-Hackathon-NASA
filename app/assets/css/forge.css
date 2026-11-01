@@ -1144,6 +1144,7 @@ html[data-archive-flip] .cosmos {
 .gate__veil {
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background:
     radial-gradient(120% 90% at 50% 35%, rgb(6 9 18 / 0.55) 0%, rgb(2 3 6 / 0.94) 70%, #000 100%);
   backdrop-filter: blur(3px);
@@ -1159,6 +1160,7 @@ html[data-archive-flip] .cosmos {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  pointer-events: none;
 }
 
 .gate__stars span {
@@ -1205,6 +1207,14 @@ html[data-archive-flip] .cosmos {
   opacity: 0;
   transform: translateY(-40px) scale(1.06);
   filter: blur(12px);
+  /* o palco do título sai de cena: não pode tapar os cartões */
+  pointer-events: none;
+  visibility: hidden;
+  transition:
+    opacity 0.8s var(--fr-ease-2),
+    transform 1.2s var(--fr-ease-2),
+    filter 0.8s var(--fr-ease-2),
+    visibility 0s linear 0.8s;
 }
 
 .gate__eyebrow {

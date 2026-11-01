@@ -324,3 +324,16 @@ silêncio no clique e fade até **0,34** em 2,6 s quando a cena 3D chega.
 
 Medido no browser: `paused=false`, `volume=0.34`, `currentTime=5,23 s`,
 `duration=1763 s`, `readyState=4`, sem erro de media.
+
+## Iteração 13 — superfície de clique dos painéis
+
+O palco do título do gate (`.gate__stage`, `z 2`) continuava por cima da cena
+(`.gate__scene`, `z 1`) depois de ficar transparente — invisível, mas a capturar
+cliques. Resultado: só algumas zonas dos cartões respondiam.
+
+Corrigido: em `is-scene` o palco ganha `pointer-events: none` e `visibility:
+hidden` (com atraso de 0,8 s para não cortar o fade); véu e estrelas também
+passam a `pointer-events: none`.
+
+Verificação: amostragem 5×3 pontos sobre o cartão inteiramente visível → 15/15
+acertam no cartão; clique a 95%/8% da área abre o modal da relíquia.
