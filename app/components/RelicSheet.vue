@@ -2,11 +2,53 @@
 import type { Relic, RelicScene } from '~/data/relics'
 
 const props = defineProps<{ relic: Relic; index: number }>()
-const emit = defineEmits<{ 'update:index': [index: number]; 'open-media': [scene: RelicScene] }>()
+const emit = defineEmits<{ 'update:index': [index: number]; 'open-media': [scene: RelicScene]; typing: [active: boolean] }>()
 
 const scroller = ref<HTMLElement | null>(null)
+const typed = ref('')
+const typing = ref(false)
+let typeTimer = 0
+
+const clearTyping = () => {
+  window.clearTimeout(typeTimer)
+  typeTimer = 0
+}
+
+/** O diário escreve-se à frente do leitor (ritmo com pausas na pontuação). */
+const typeScene = () => {
+  clearTyping()
+  const text = current.value.body
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  typed.value = ''
+  if (reduced) {
+    typed.value = text
+    typing.value = false
+    emit('typing', false)
+    return
+  }
+  typing.value = true
+  emit('typing', true)
+  let i = 0
+  const tick = () => {
+    i += 1
+    typed.value = text.slice(0, i)
+    if (i >= text.length) {
+      typing.value = false
+      emit('typing', false)
+      typeTimer = 0
+      return
+    }
+    const ch = text[i - 1] ?? ''
+    const pause = /[.,;:!?—–]/.test(ch) ? 140 : ch === ' ' ? 24 : 9 + Math.random() * 15
+    typeTimer = window.setTimeout(tick, pause)
+  }
+  typeTimer = window.setTimeout(tick, 380)
+}
+
 const scenes = computed(() => props.relic.scenes)
 const current = computed(() => scenes.value[props.index] ?? scenes.value[0])
+
+watch(() => props.index, typeScene, { immediate: true })
 
 const onScroll = (): void => {
   const el = scroller.value
@@ -38,6 +80,8 @@ const goTo = (index: number): void => {
   el.scrollTo({ top: index * el.clientHeight, behavior: 'smooth' })
 }
 
+onBeforeUnmount(() => clearTyping())
+
 defineExpose({ goTo })
 </script>
 
@@ -51,7 +95,9 @@ defineExpose({ goTo })
         <Transition name="swap" mode="out-in">
           <div :key="index">
             <p class="rsheet__kicker">{{ current.kicker }}</p>
-            <p class="rsheet__body">{{ current.body }}</p>
+            <p class="rsheet__body" :aria-label="current.body">
+              {{ typed }}<span v-if="typing" class="rsheet__caret" aria-hidden="true" />
+            </p>
           </div>
         </Transition>
       </div>
@@ -141,3 +187,4 @@ defineExpose({ goTo })
   filter: blur(5px);
 }
 </style>
+

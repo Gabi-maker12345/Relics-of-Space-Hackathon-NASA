@@ -362,3 +362,20 @@ Pulsos reforçados (2,2 s, 3 piscas) com aberração cromática real via
 Scanlines com bandas vermelho/ciano a deslizar (2 animações) e um véu RGB
 (`screen`) — tudo em `.sheet__body`/pseudo-elementos, porque o `.sheet` é animado
 pelo GSAP na entrada. Sons alinhados (70/690/1330 ms) a volume 0,3.
+
+## Iteração 16 — o robô conta o diário
+
+- `RelicSheet`: o texto do passo escreve-se à frente do leitor (9–24 ms por
+  letra, 24 ms nos espaços, 140 ms na pontuação, arranque 380 ms) com caret a
+  piscar; `aria-label` guarda a frase completa para leitores de ecrã.
+- Reinicia a cada mudança de cena e mostra tudo de imediato com
+  `prefers-reduced-motion`.
+- `BotNarrator` (fora do sheet, `z 95`): enquanto escreve mostra
+  `rover-talking.webp` (balão de fala) com um bob cartunesco de 1,15 s; ao
+  terminar troca para `rover-static.webp` com um idle suave de 3,6 s.
+- Assets otimizados: 7,2 MB GIF + 3,5 MB PNG → **167 KB** (WebP animado) e
+  **48 KB** (WebP estático), a 340/460 px de largura.
+
+Verificado: modal abre com `is-talking`, texto cresce, muda de cena e volta a
+escrever; com reduced-motion o texto aparece completo e o bot fica `is-idle`
+com a imagem estática.

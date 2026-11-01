@@ -624,3 +624,84 @@ a {
     animation: none;
   }
 }
+
+.rsheet__caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.12em;
+  background: currentColor;
+  animation: caret-blink 0.9s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rsheet__caret { animation: none; }
+}
+
+/* ── Bot narrador (fora do modal, no canto inferior direito) ── */
+.bot {
+  position: fixed;
+  right: clamp(10px, 2vw, 28px);
+  bottom: clamp(4px, 1.2vh, 16px);
+  z-index: 95;
+  width: clamp(92px, 12vw, 188px);
+  pointer-events: none;
+}
+
+.bot__inner {
+  display: grid;
+  justify-items: center;
+  transform-origin: 50% 100%;
+  will-change: transform;
+  filter: drop-shadow(0 16px 26px rgb(0 0 0 / 0.45));
+}
+
+.bot.is-talking .bot__inner {
+  animation: bot-bob 1.15s ease-in-out infinite;
+}
+
+.bot.is-idle .bot__inner {
+  animation: bot-idle 3.6s ease-in-out infinite;
+}
+
+.bot__img {
+  grid-area: 1 / 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+.bot__img--idle {
+  align-self: end;
+}
+
+.bot__img.is-on {
+  opacity: 1;
+}
+
+@keyframes bot-bob {
+  0%, 100% { transform: translateY(0) rotate(-1.4deg); }
+  25% { transform: translateY(-7px) rotate(0.9deg); }
+  50% { transform: translateY(-12px) rotate(1.8deg); }
+  75% { transform: translateY(-5px) rotate(-0.7deg); }
+}
+
+@keyframes bot-idle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bot.is-talking .bot__inner,
+  .bot.is-idle .bot__inner {
+    animation: none;
+  }
+}

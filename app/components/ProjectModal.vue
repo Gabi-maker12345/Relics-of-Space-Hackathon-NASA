@@ -12,6 +12,7 @@ const relic = computed(() => relics.find(r => r.id === activeSlug.value) ?? null
 const index = ref(0)
 const lightbox = ref<RelicScene | null>(null)
 const glitching = ref(false)
+const typing = ref(false)
 
 const { act } = useAct()
 const soundtrack = useSoundtrack()
@@ -175,8 +176,12 @@ onBeforeUnmount(() => {
             :index="index"
             @update:index="index = $event"
             @open-media="lightbox = $event"
+            @typing="typing = $event"
           />
         </SheetFrame>
+        <Transition name="bot">
+          <BotNarrator v-if="relic" :talking="typing" />
+        </Transition>
         <Transition name="lb">
           <MediaLightbox v-if="lightbox" :media="lightbox" @close="lightbox = null" />
         </Transition>
@@ -186,6 +191,25 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.bot-enter-active {
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bot-enter-from {
+  opacity: 0;
+  transform: translateY(34px) scale(0.9);
+}
+
+.bot-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.bot-leave-to {
+  opacity: 0;
+}
+
 .lb-enter-active,
 .lb-leave-active {
   transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
