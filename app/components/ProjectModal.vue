@@ -13,6 +13,7 @@ const index = ref(0)
 const lightbox = ref<RelicScene | null>(null)
 const glitching = ref(false)
 const typing = ref(false)
+const armed = ref(false)
 
 const { act } = useAct()
 const soundtrack = useSoundtrack()
@@ -43,6 +44,8 @@ function runGlitch(): void {
   burst(360 + 690, 0.8)
   burst(360 + 1330, 1.22)
   glitchTimers.push(window.setTimeout(() => { glitching.value = false }, 360 + 2280))
+  // só depois do glitch o robô sobe (com balão) e o diário começa a escrever
+  glitchTimers.push(window.setTimeout(() => { armed.value = true }, 360 + 2380))
 }
 
 function clearGlitch(): void {
@@ -98,11 +101,14 @@ watch(relic, (value) => {
     lastFocus = (document.activeElement as HTMLElement | null) ?? null
     // a trilha do arquivo cala-se enquanto o diário está aberto
     soundtrack.stop()
+    armed.value = false
+    typing.value = false
     clearGlitch()
     runGlitch()
     void nextTick(() => frame.value?.focusSelf())
   } else {
     clearGlitch()
+    armed.value = false
     if (act.value === 'scene') void soundtrack.play()
     lastFocus?.focus?.()
     lastFocus = null
@@ -174,13 +180,14 @@ onBeforeUnmount(() => {
             ref="sheet"
             :relic="relic"
             :index="index"
+            :armed="armed"
             @update:index="index = $event"
             @open-media="lightbox = $event"
             @typing="typing = $event"
           />
         </SheetFrame>
         <Transition name="bot">
-          <BotNarrator v-if="relic" :talking="typing" />
+          <BotNarrator v-if="relic && armed" :talking="typing" />
         </Transition>
         <Transition name="lb">
           <MediaLightbox v-if="lightbox" :media="lightbox" @close="lightbox = null" />

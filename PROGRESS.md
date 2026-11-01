@@ -379,3 +379,15 @@ pelo GSAP na entrada. Sons alinhados (70/690/1330 ms) a volume 0,3.
 Verificado: modal abre com `is-talking`, texto cresce, muda de cena e volta a
 escrever; com reduced-motion o texto aparece completo e o bot fica `is-idle`
 com a imagem estática.
+
+## Iteração 17 — ordem do acto: glitch → robô → diário
+
+Antes o texto começava a escrever por baixo do glitch e o robô subia sem balão.
+
+Agora o `ProjectModal` guarda um `armed`:
+- abrir → `armed=false`: texto vazio, bot desmontado, glitch a correr (2,64 s);
+- fim do glitch → `armed=true`: o **robô sobe já com o balão** (`rover-talking`) e, 220 ms depois, o texto começa a escrever;
+- fim da escrita → troca para `rover-static` em idle;
+- mudar de cena volta a escrever e a pôr o balão.
+
+Verificado por amostragem: t=1,35 s e 2,91 s → glitch sem bot e texto a 0; t=4,33 s → bot com `talk=true`. Com reduced-motion: texto completo e bot estático.

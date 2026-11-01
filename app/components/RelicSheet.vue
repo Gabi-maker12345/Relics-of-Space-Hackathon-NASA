@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Relic, RelicScene } from '~/data/relics'
 
-const props = defineProps<{ relic: Relic; index: number }>()
+const props = defineProps<{ relic: Relic; index: number; armed?: boolean }>()
 const emit = defineEmits<{ 'update:index': [index: number]; 'open-media': [scene: RelicScene]; typing: [active: boolean] }>()
 
 const scroller = ref<HTMLElement | null>(null)
@@ -15,7 +15,7 @@ const clearTyping = () => {
 }
 
 /** O diário escreve-se à frente do leitor (ritmo com pausas na pontuação). */
-const typeScene = () => {
+const typeScene = (delay = 220) => {
   clearTyping()
   const text = current.value.body
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -42,13 +42,28 @@ const typeScene = () => {
     const pause = /[.,;:!?—–]/.test(ch) ? 140 : ch === ' ' ? 24 : 9 + Math.random() * 15
     typeTimer = window.setTimeout(tick, pause)
   }
-  typeTimer = window.setTimeout(tick, 380)
+  typeTimer = window.setTimeout(tick, delay)
 }
 
 const scenes = computed(() => props.relic.scenes)
 const current = computed(() => scenes.value[props.index] ?? scenes.value[0])
 
-watch(() => props.index, typeScene, { immediate: true })
+const resetTyping = () => {
+  clearTyping()
+  typed.value = ''
+  typing.value = false
+  emit('typing', false)
+}
+
+// o texto só começa quando o glitch termina (o pai "arma" o diário)
+watch(() => props.armed, (armed) => {
+  if (armed) typeScene()
+  else resetTyping()
+})
+
+watch(() => props.index, () => {
+  if (props.armed) typeScene()
+}, { immediate: true })
 
 const onScroll = (): void => {
   const el = scroller.value
