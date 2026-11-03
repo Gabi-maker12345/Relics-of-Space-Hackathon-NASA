@@ -19,6 +19,8 @@
 usePanels()
 
 onMounted(() => {
+  useRelics().load()
+  useAuth().restore()
   initSmoothScroll()
   const route = useRoute()
   if (route.path !== '/') window.scrollTo({ top: 0 })

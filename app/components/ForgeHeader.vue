@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { active, toggle } = usePanels()
+const { user } = useAuth()
 
 const socials = [
   {
@@ -50,12 +51,14 @@ const socials = [
       <img src="/images/nasa-logo.png" alt="NASA" width="2625" height="765" />
     </NuxtLink>
 
+    <NuxtLink v-if="user" to="/admin" class="fr-profile fr-label">Painel</NuxtLink>
     <button
+      v-else
       type="button"
       class="fr-profile fr-label"
       :aria-expanded="active === 'profile'"
       aria-controls="profile-panel"
       @click="toggle('profile')"
-    >{{ active === 'profile' ? 'Close' : 'Profile' }}</button>
+    >Entrar</button>
   </header>
 </template>

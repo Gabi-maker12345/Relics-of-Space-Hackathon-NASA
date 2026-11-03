@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import gsap from 'gsap'
-import { relics } from '~/data/relics'
 import type { RelicScene } from '~/data/relics'
 
+const { relics } = useRelics()
 const { activeSlug, close } = useProjectModal()
 const frame = ref<{ focusSelf: () => void } | null>(null)
 const sheet = ref<{ goTo: (index: number) => void } | null>(null)
 let lastFocus: HTMLElement | null = null
 
-const relic = computed(() => relics.find(r => r.id === activeSlug.value) ?? null)
+const relic = computed(() => relics.value.find(r => r.id === activeSlug.value) ?? null)
 const index = ref(0)
 const lightbox = ref<RelicScene | null>(null)
 const glitching = ref(false)

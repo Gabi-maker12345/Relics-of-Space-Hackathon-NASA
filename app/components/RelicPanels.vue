@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { relics } from '~/data/relics'
+const { relics } = useRelics()
 
 const wrap = ref<HTMLElement | null>(null)
 const progress = ref(0)
@@ -9,8 +9,8 @@ const viewportH = ref(900)
 
 let frame = 0
 
-const total = relics.length
-const counter = (index: number) => `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`
+const total = computed(() => relics.value.length)
+const counter = (index: number) => `${String(index + 1).padStart(2, '0')} / ${String(total.value).padStart(2, '0')}`
 
 onMounted(() => {
   const measure = () => {
@@ -24,7 +24,7 @@ onMounted(() => {
     const p = span > 0 ? Math.min(1, Math.max(0, scrolled.value / span)) : 0
     progress.value = p
     // o passo ativo é o que está mais próximo do centro do viewport
-    const next = Math.min(total - 1, Math.max(0, Math.floor((scrolled.value + window.innerHeight / 2) / window.innerHeight)))
+    const next = Math.min(total.value - 1, Math.max(0, Math.floor((scrolled.value + window.innerHeight / 2) / window.innerHeight)))
     if (next !== active.value) active.value = next
   }
   const onScroll = () => {

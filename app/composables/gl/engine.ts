@@ -765,10 +765,44 @@ export class GlEngine {
     el.addEventListener('pointerleave', leave)
   }
 
-  /** Textura por data-id a partir do textures/manifest.json (igual ao original). */
+  private pendingTextures = new Set<string>()
+  private emptyTexture = new THREE.Texture()
+
+  /**
+   * Textura por data-id a partir do textures/manifest.json (igual ao original).
+   * Relíquias criadas no admin trazem URLs fora do manifesto: carregam-se na
+   * primeira vez que um cartão as pede e ficam no mapa.
+   */
   private textureForCard(el: HTMLElement): THREE.Texture {
     const key = el.getAttribute('data-texture') ?? ''
-    return this.textures.get(key) ?? new THREE.Texture()
+    const found = this.textures.get(key)
+    if (found) return found
+
+    const loadable = /^(?:https?:|data:image\/|\/)/.test(key)
+    if (loadable && !this.pendingTextures.has(key)) {
+      this.pendingTextures.add(key)
+      new THREE.TextureLoader().load(
+        key.replace(/^\/\//, '/'),
+        (texture) => {
+          texture.colorSpace = THREE.SRGBColorSpace
+          texture.minFilter = THREE.LinearFilter
+          texture.generateMipmaps = false
+          this.textures.set(key, texture)
+          for (const plane of this.planes) {
+            if (plane.kind !== 'card') continue
+            if (plane.el.getAttribute('data-texture') !== key) continue
+            const material = plane.mesh.material as THREE.ShaderMaterial
+            if (material.uniforms.uMap) material.uniforms.uMap.value = texture
+            plane.mappedTexture = texture
+            plane.dirty = true
+          }
+        },
+        undefined,
+        () => this.pendingTextures.delete(key),
+      )
+    }
+
+    return this.emptyTexture
   }
 
   private buildTextCanvas(plane: Plane): void {

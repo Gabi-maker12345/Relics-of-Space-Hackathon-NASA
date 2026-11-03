@@ -31,3 +31,6 @@ coverage/
 # projeto abandonado (Space Relics standalone) — fora do repo
 space-relics/
 SPACE_RELICS.md
+
+# locks do LibreOffice
+.~lock.*

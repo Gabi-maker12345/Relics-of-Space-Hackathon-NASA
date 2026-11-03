@@ -391,3 +391,22 @@ Agora o `ProjectModal` guarda um `armed`:
 - mudar de cena volta a escrever e a pôr o balão.
 
 Verificado por amostragem: t=1,35 s e 2,91 s → glitch sem bot e texto a 0; t=4,33 s → bot com `talk=true`. Com reduced-motion: texto completo e bot estático.
+
+## Iteração 18 — acesso e painel de relíquias
+
+O "Profile" do cabeçalho deu lugar a **Entrar** (email + palavra-passe) e o antigo painel passou a
+formulário de login. Ao autenticar (`admin@spacerelics.space` / `relics2026`) entra-se em **/admin**.
+
+- `useAuth` guarda a sessão em localStorage e valida o email; `useRelics` é a fonte única das
+  relíquias (seed de `data/relics.ts`, editável em localStorage), usada pelo landing e pelo admin.
+- **/admin**: grelha de cartões estáticos (imagem, missão, nome, frase, contagem de factos/cenas),
+  acções `Editar`/`Remover` no hover e, no fim, o cartão tracejado com **+** que abre o formulário.
+- `RelicForm` (modal): identidade, cartão (URL ou upload com downscale para 1280 px, `alt`,
+  proporção automática), ficha técnica repetível e cenas repetíveis; validação por campo,
+  identificador derivado do nome na criação e **estável na edição**.
+- O engine GL carrega texturas fora do `manifest.json` à primeira utilização, para que as relíquias
+  novas apareçam também na cena 3D.
+
+Verificado no browser: login (erro e sucesso), criar, editar, remover, id duplicado, recarregar
+mantém sessão e dados, relic nova aparece no painel do landing, no carrossel 3D (com textura) e no
+diário aberto pelo cartão.

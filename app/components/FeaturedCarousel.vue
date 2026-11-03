@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { relics } from '~/data/relics'
+const { relics } = useRelics()
 
 const { open } = useProjectModal()
 const track = ref<HTMLElement | null>(null)
@@ -16,7 +16,7 @@ interface CardItem {
 
 const cards = computed<CardItem[]>(() =>
   Array.from({ length: copies.value }, (_, copy) =>
-    relics.map(relic => ({
+    relics.value.map(relic => ({
       id: relic.id,
       copy,
       name: relic.name,
