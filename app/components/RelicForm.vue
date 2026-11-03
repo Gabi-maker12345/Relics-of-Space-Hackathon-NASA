@@ -6,151 +6,182 @@
 
         <form class="rform__sheet" novalidate @submit.prevent="save">
           <header class="rform__head">
-            <div>
+            <div class="rform__headText">
               <p class="rform__kicker">{{ isEdit ? 'Registo existente' : 'Novo registo' }}</p>
               <h2 id="rform-title" class="rform__title">{{ isEdit ? 'Editar relíquia' : 'Nova relíquia' }}</h2>
             </div>
-            <button type="button" class="rform__x" aria-label="Fechar" @click="requestClose">✕</button>
+            <button type="button" class="rform__x" aria-label="Fechar" @click="requestClose">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" /></svg>
+            </button>
           </header>
 
-          <div class="rform__body">
+          <div class="rform__body" data-lenis-prevent>
             <section class="rform__group">
-              <h3 class="rform__legend">Identidade</h3>
-
-              <label class="rform__field">
-                <span class="rform__label">Nome da relíquia</span>
-                <input v-model="draft.name" class="rform__input" placeholder="Módulo Lunar Apollo" @input="onName">
-                <span v-if="errors.name" class="rform__err">{{ errors.name }}</span>
-              </label>
-
-              <label class="rform__field">
-                <span class="rform__label">Identificador <em>(usado no URL)</em></span>
-                <input v-model="draft.id" class="rform__input rform__input--mono" placeholder="apollo-lunar-module">
-                <span v-if="errors.id" class="rform__err">{{ errors.id }}</span>
-              </label>
-
-              <div class="rform__row">
-                <label class="rform__field">
-                  <span class="rform__label">Missão</span>
-                  <input v-model="draft.mission" class="rform__input" placeholder="Apollo 11–17 · 1969–1972">
-                  <span v-if="errors.mission" class="rform__err">{{ errors.mission }}</span>
-                </label>
-                <label class="rform__field">
-                  <span class="rform__label">Frase de efeito</span>
-                  <input v-model="draft.tagline" class="rform__input" placeholder="Seis pousos, seis módulos deixados para trás.">
-                  <span v-if="errors.tagline" class="rform__err">{{ errors.tagline }}</span>
-                </label>
+              <div class="rform__groupHead">
+                <span class="rform__num">01</span>
+                <h3 class="rform__legend">Identidade</h3>
               </div>
 
-              <label class="rform__field">
-                <span class="rform__label">História</span>
-                <textarea v-model="draft.body" class="rform__input rform__area" rows="4" placeholder="O que ficou para trás, contado em duas ou três frases." />
-                <span v-if="errors.body" class="rform__err">{{ errors.body }}</span>
-              </label>
-            </section>
-
-            <section class="rform__group">
-              <h3 class="rform__legend">Cartão</h3>
-
-              <div class="rform__media">
-                <div class="rform__thumb">
-                  <img v-if="draft.image" :src="draft.image" :alt="draft.alt || 'Pré-visualização'" @load="onImageLoad">
-                  <span v-else class="rform__thumbEmpty">sem imagem</span>
+              <div class="rform__groupBody">
+                <div class="rform__pairRow">
+                  <label class="rform__field rform__field--wide">
+                    <span class="rform__label">Nome da relíquia</span>
+                    <input v-model="draft.name" class="rform__input" placeholder="Módulo Lunar Apollo" @input="onName">
+                    <span v-if="errors.name" class="rform__err">{{ errors.name }}</span>
+                  </label>
+                  <label class="rform__field">
+                    <span class="rform__label">Identificador <em>(URL)</em></span>
+                    <input v-model="draft.id" class="rform__input rform__input--mono" placeholder="apollo-lunar-module">
+                    <span v-if="errors.id" class="rform__err">{{ errors.id }}</span>
+                  </label>
                 </div>
 
-                <div class="rform__mediaFields">
+                <div class="rform__pairRow">
                   <label class="rform__field">
-                    <span class="rform__label">Imagem (URL ou ficheiro)</span>
-                    <input v-model="draft.image" class="rform__input rform__input--mono" placeholder="/images/relics/nova.jpg">
-                    <span v-if="errors.image" class="rform__err">{{ errors.image }}</span>
+                    <span class="rform__label">Missão</span>
+                    <input v-model="draft.mission" class="rform__input" placeholder="Apollo 11–17 · 1969–1972">
+                    <span v-if="errors.mission" class="rform__err">{{ errors.mission }}</span>
                   </label>
-                  <label class="rform__upload">
-                    <input type="file" accept="image/*" class="sr-only" @change="onFile">
-                    <span>Enviar imagem</span>
-                  </label>
-
                   <label class="rform__field">
-                    <span class="rform__label">Texto alternativo <em>(acessibilidade)</em></span>
-                    <input v-model="draft.alt" class="rform__input" placeholder="Descrição da imagem">
-                    <span v-if="errors.alt" class="rform__err">{{ errors.alt }}</span>
-                  </label>
-
-                  <label class="rform__field">
-                    <span class="rform__label">Proporção <em>(automática)</em></span>
-                    <input v-model="draft.ratio" class="rform__input rform__input--mono" placeholder="1376 / 768">
-                    <span v-if="errors.ratio" class="rform__err">{{ errors.ratio }}</span>
+                    <span class="rform__label">Frase de efeito</span>
+                    <input v-model="draft.tagline" class="rform__input" placeholder="Seis pousos, seis módulos deixados para trás.">
+                    <span v-if="errors.tagline" class="rform__err">{{ errors.tagline }}</span>
                   </label>
                 </div>
+
+                <label class="rform__field">
+                  <span class="rform__label">História</span>
+                  <textarea v-model="draft.body" class="rform__input rform__area" rows="4" placeholder="O que ficou para trás, contado em duas ou três frases." />
+                  <span v-if="errors.body" class="rform__err">{{ errors.body }}</span>
+                </label>
               </div>
             </section>
 
             <section class="rform__group">
-              <div class="rform__legendRow">
+              <div class="rform__groupHead">
+                <span class="rform__num">02</span>
+                <h3 class="rform__legend">Cartão</h3>
+              </div>
+
+              <div class="rform__groupBody">
+                <div class="rform__media">
+                  <div class="rform__thumb">
+                    <img v-if="draft.image" :src="draft.image" :alt="draft.alt || 'Pré-visualização'" @load="onImageLoad">
+                    <span v-else class="rform__thumbEmpty">sem imagem</span>
+                    <label class="rform__upload">
+                      <input type="file" accept="image/*" class="sr-only" @change="onFile">
+                      <span>{{ draft.image ? 'Substituir' : 'Enviar imagem' }}</span>
+                    </label>
+                  </div>
+
+                  <div class="rform__mediaFields">
+                    <label class="rform__field">
+                      <span class="rform__label">Imagem <em>(URL ou ficheiro)</em></span>
+                      <input v-model="draft.image" class="rform__input rform__input--mono" placeholder="/images/relics/nova.jpg">
+                      <span v-if="errors.image" class="rform__err">{{ errors.image }}</span>
+                    </label>
+
+                    <div class="rform__pairRow">
+                      <label class="rform__field">
+                        <span class="rform__label">Texto alternativo</span>
+                        <input v-model="draft.alt" class="rform__input" placeholder="Descrição da imagem">
+                        <span v-if="errors.alt" class="rform__err">{{ errors.alt }}</span>
+                      </label>
+                      <label class="rform__field">
+                        <span class="rform__label">Proporção <em>(automática)</em></span>
+                        <input v-model="draft.ratio" class="rform__input rform__input--mono" placeholder="1376 / 768">
+                        <span v-if="errors.ratio" class="rform__err">{{ errors.ratio }}</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="rform__group">
+              <div class="rform__groupHead">
+                <span class="rform__num">03</span>
                 <h3 class="rform__legend">Ficha técnica</h3>
-                <button type="button" class="rform__add" @click="addFact">+ acrescentar linha</button>
+                <button type="button" class="rform__add" @click="addFact">+ linha</button>
               </div>
 
-              <div v-for="(fact, i) in draft.facts" :key="`fact-${i}`" class="rform__pair">
-                <input v-model="fact.label" class="rform__input" placeholder="Rótulo (ex.: Primeiro pouso)">
-                <input v-model="fact.value" class="rform__input" placeholder="Valor (ex.: 20 jul 1969)">
-                <button type="button" class="rform__del" :aria-label="`Remover linha ${i + 1}`" @click="draft.facts.splice(i, 1)">✕</button>
+              <div class="rform__groupBody">
+                <div v-for="(fact, i) in draft.facts" :key="`fact-${i}`" class="rform__factRow">
+                  <input v-model="fact.label" class="rform__input" placeholder="Rótulo — Primeiro pouso">
+                  <input v-model="fact.value" class="rform__input" placeholder="Valor — 20 jul 1969">
+                  <button type="button" class="rform__del" :aria-label="`Remover linha ${i + 1}`" @click="draft.facts.splice(i, 1)">
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" /></svg>
+                  </button>
+                </div>
+                <span v-if="errors.facts" class="rform__err">{{ errors.facts }}</span>
               </div>
-              <span v-if="errors.facts" class="rform__err">{{ errors.facts }}</span>
             </section>
 
             <section class="rform__group">
-              <div class="rform__legendRow">
-                <h3 class="rform__legend">Cenas <em>(as que o robô narra)</em></h3>
-                <button type="button" class="rform__add" @click="addScene">+ acrescentar cena</button>
+              <div class="rform__groupHead">
+                <span class="rform__num">04</span>
+                <h3 class="rform__legend">Cenas <em>(narradas)</em></h3>
+                <button type="button" class="rform__add" @click="addScene">+ cena</button>
               </div>
 
-              <article v-for="(scene, i) in draft.scenes" :key="`scene-${i}`" class="rform__scene">
-                <header class="rform__sceneHead">
-                  <span class="rform__sceneNum">Cena {{ String(i + 1).padStart(2, '0') }}</span>
-                  <button
-                    v-if="draft.scenes.length > 1"
-                    type="button"
-                    class="rform__del"
-                    :aria-label="`Remover cena ${i + 1}`"
-                    @click="draft.scenes.splice(i, 1)"
-                  >✕</button>
-                </header>
+              <div class="rform__groupBody">
+                <article v-for="(scene, i) in draft.scenes" :key="`scene-${i}`" class="rform__scene">
+                  <header class="rform__sceneHead">
+                    <span class="rform__sceneNum">Cena {{ String(i + 1).padStart(2, '0') }}</span>
+                    <div class="rform__sceneTools">
+                      <div class="rform__segment" role="group" aria-label="Tipo de mídia">
+                        <button
+                          type="button"
+                          :class="{ 'is-on': scene.kind === 'image' }"
+                          @click="scene.kind = 'image'"
+                        >Imagem</button>
+                        <button
+                          type="button"
+                          :class="{ 'is-on': scene.kind === 'video' }"
+                          @click="scene.kind = 'video'"
+                        >Vídeo</button>
+                      </div>
+                      <button
+                        v-if="draft.scenes.length > 1"
+                        type="button"
+                        class="rform__del"
+                        :aria-label="`Remover cena ${i + 1}`"
+                        @click="draft.scenes.splice(i, 1)"
+                      >
+                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" /></svg>
+                      </button>
+                    </div>
+                  </header>
 
-                <div class="rform__row">
-                  <label class="rform__field">
-                    <span class="rform__label">Tipo</span>
-                    <select v-model="scene.kind" class="rform__input">
-                      <option value="image">Imagem</option>
-                      <option value="video">Vídeo</option>
-                    </select>
+                  <div class="rform__pairRow">
+                    <label class="rform__field">
+                      <span class="rform__label">{{ scene.kind === 'video' ? 'Vídeo' : 'Imagem' }} <em>(URL ou ficheiro)</em></span>
+                      <input v-model="scene.src" class="rform__input rform__input--mono" placeholder="/media/loop.mp4">
+                    </label>
+                    <label class="rform__field">
+                      <span class="rform__label">Etiqueta</span>
+                      <input v-model="scene.kicker" class="rform__input" placeholder="Fotografia / Transmissão">
+                    </label>
+                  </div>
+
+                  <label v-if="scene.kind === 'video'" class="rform__field">
+                    <span class="rform__label">Poster do vídeo</span>
+                    <input v-model="scene.poster" class="rform__input rform__input--mono" placeholder="/images/relics/poster.jpg">
                   </label>
+
                   <label class="rform__field">
-                    <span class="rform__label">Etiqueta</span>
-                    <input v-model="scene.kicker" class="rform__input" placeholder="Fotografia / Transmissão">
+                    <span class="rform__label">Texto narrado</span>
+                    <textarea v-model="scene.body" class="rform__input rform__area" rows="3" placeholder="O que o diário conta nesta cena." />
                   </label>
-                </div>
-
-                <label class="rform__field">
-                  <span class="rform__label">{{ scene.kind === 'video' ? 'Vídeo' : 'Imagem' }} (URL ou ficheiro)</span>
-                  <input v-model="scene.src" class="rform__input rform__input--mono" placeholder="/media/loop.mp4">
-                </label>
-
-                <label v-if="scene.kind === 'video'" class="rform__field">
-                  <span class="rform__label">Poster do vídeo</span>
-                  <input v-model="scene.poster" class="rform__input rform__input--mono" placeholder="/images/relics/poster.jpg">
-                </label>
-
-                <label class="rform__field">
-                  <span class="rform__label">Texto narrado</span>
-                  <textarea v-model="scene.body" class="rform__input rform__area" rows="3" placeholder="O que o diário conta nesta cena." />
-                </label>
+                </article>
                 <span v-if="errors.scenes" class="rform__err">{{ errors.scenes }}</span>
-              </article>
+              </div>
             </section>
           </div>
 
           <footer class="rform__foot">
-            <p v-if="errors.general" class="rform__err">{{ errors.general }}</p>
+            <p class="rform__footNote">Guardado neste dispositivo.</p>
+            <span v-if="errors.general" class="rform__err">{{ errors.general }}</span>
             <div class="rform__actions">
               <button type="button" class="rform__cancel" @click="requestClose">Cancelar</button>
               <button type="submit" class="rform__save">{{ isEdit ? 'Guardar alterações' : 'Criar relíquia' }}</button>
@@ -231,10 +262,9 @@ watch(
   (open) => {
     if (!open) return
     Object.assign(draft, blank())
-    Object.assign(draft, props.relic ? JSON.parse(JSON.stringify(props.relic)) : {})
+    if (props.relic) Object.assign(draft, JSON.parse(JSON.stringify(props.relic)))
     // criar: o identificador segue o nome. editar: o identificador fica estável.
     idTouched = Boolean(props.relic)
-    errors.general = ''
     for (const key of Object.keys(errors)) delete errors[key]
   },
   { immediate: true },
@@ -263,8 +293,7 @@ async function onFile(event: Event): Promise<void> {
   const file = input.files?.[0]
   if (!file) return
   const bitmap = await createImageBitmap(file)
-  const max = 1280
-  const scale = Math.min(1, max / bitmap.width)
+  const scale = Math.min(1, 1280 / bitmap.width)
   const canvas = document.createElement('canvas')
   canvas.width = Math.round(bitmap.width * scale)
   canvas.height = Math.round(bitmap.height * scale)
@@ -312,7 +341,9 @@ function save(): void {
     image: draft.image.trim(),
     alt: draft.alt.trim(),
     ratio: draft.ratio.trim() || '1376 / 768',
-    facts: draft.facts.filter(fact => fact.label.trim() && fact.value.trim()).map(fact => ({ label: fact.label.trim(), value: fact.value.trim() })),
+    facts: draft.facts
+      .filter(fact => fact.label.trim() && fact.value.trim())
+      .map(fact => ({ label: fact.label.trim(), value: fact.value.trim() })),
     scenes: draft.scenes
       .filter(scene => scene.src.trim() && scene.body.trim())
       .map(scene => ({
@@ -344,8 +375,8 @@ function requestClose(): void {
   position: absolute;
   inset: 0;
   border: 0;
-  background: color-mix(in srgb, #03040a 86%, transparent);
-  backdrop-filter: blur(12px) saturate(0.6);
+  background: color-mix(in srgb, #03040a 88%, transparent);
+  backdrop-filter: blur(14px) saturate(0.6);
   cursor: default;
 }
 
@@ -353,80 +384,97 @@ function requestClose(): void {
   position: relative;
   display: flex;
   flex-direction: column;
-  width: min(900px, 100%);
-  max-height: min(88vh, 1000px);
+  width: min(1240px, 100%);
+  max-height: min(92vh, 1080px);
   color: var(--fr-fg, #e8e6e1);
   background:
-    radial-gradient(90% 50% at 50% -10%, color-mix(in srgb, var(--accent, #7aa2ff) 12%, transparent), transparent 70%),
+    radial-gradient(80% 40% at 50% -6%, color-mix(in srgb, var(--accent, #7aa2ff) 14%, transparent), transparent 72%),
     #070910;
   border: 1px solid rgb(255 255 255 / 12%);
-  box-shadow: 0 50px 140px rgb(0 0 0 / 70%);
+  box-shadow: 0 60px 160px rgb(0 0 0 / 72%);
 }
 
 .rform__head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
-  padding: 26px 30px 18px;
-  border-bottom: 1px solid rgb(255 255 255 / 8%);
+  gap: 24px;
+  padding: 34px 44px 26px;
 }
 
 .rform__kicker {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-size: 9px;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 .rform__title {
   margin: 0;
   font-family: var(--fr-serif, inherit);
-  font-size: clamp(26px, 3vw, 36px);
+  font-size: clamp(30px, 3.4vw, 44px);
   font-weight: 400;
-  letter-spacing: -0.02em;
-  line-height: 1;
+  letter-spacing: -0.03em;
+  line-height: 0.94;
 }
 
 .rform__x {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: inherit;
   background: none;
   border: 1px solid rgb(255 255 255 / 14%);
-  color: inherit;
-  width: 32px;
-  height: 32px;
-  font-size: 12px;
+  border-radius: 50%;
   cursor: pointer;
+  transition: background 0.25s ease, transform 0.35s ease;
 }
+
+.rform__x svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.2; }
+.rform__x:hover { background: rgb(255 255 255 / 8%); transform: rotate(90deg); }
 
 .rform__body {
-  padding: 24px 30px 8px;
-  overflow: auto;
   display: flex;
   flex-direction: column;
-  gap: 26px;
-  scrollbar-width: thin;
+  padding: 0 44px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+.rform__body::-webkit-scrollbar { width: 0; height: 0; }
 
 .rform__group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 28px;
+  padding: 30px 0;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  align-items: start;
 }
 
-.rform__legendRow {
+.rform__groupHead {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rform__num {
+  font-family: var(--fr-serif, inherit);
+  font-size: 34px;
+  line-height: 0.8;
+  opacity: 0.22;
 }
 
 .rform__legend {
   margin: 0;
-  font-size: 10px;
+  font-size: 9.5px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .rform__legend em,
@@ -438,67 +486,76 @@ function requestClose(): void {
 }
 
 .rform__add {
-  background: none;
-  border: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 6px 10px;
   color: inherit;
-  font-size: 10px;
-  letter-spacing: 0.14em;
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  opacity: 0.65;
+  background: none;
+  border: 1px solid rgb(255 255 255 / 14%);
+  opacity: 0.7;
   cursor: pointer;
 }
 
-.rform__add:hover { opacity: 1; }
+.rform__add:hover { opacity: 1; background: rgb(255 255 255 / 6%); }
 
-.rform__row {
+.rform__groupBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.rform__pairRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 14px;
 }
 
 .rform__field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
+  min-width: 0;
 }
 
 .rform__label {
   font-size: 9px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
 .rform__input {
   width: 100%;
-  padding: 11px 13px;
+  padding: 12px 14px;
   font: inherit;
-  font-size: 13px;
+  font-size: 13.5px;
   color: inherit;
-  background: rgb(255 255 255 / 4%);
-  border: 1px solid rgb(255 255 255 / 12%);
-  border-radius: 2px;
+  background: rgb(255 255 255 / 3.5%);
+  border: 1px solid rgb(255 255 255 / 11%);
+  border-radius: 3px;
   outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .rform__input:focus-visible {
-  border-color: color-mix(in srgb, var(--accent, #7aa2ff) 65%, transparent);
-  background: rgb(255 255 255 / 7%);
+  border-color: color-mix(in srgb, var(--accent, #7aa2ff) 60%, transparent);
+  background: rgb(255 255 255 / 6%);
 }
 
 .rform__input--mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
 
-.rform__area { resize: vertical; min-height: 84px; line-height: 1.5; }
+.rform__area { resize: vertical; min-height: 92px; line-height: 1.55; }
 
-.rform__err {
-  font-size: 11px;
-  color: #ff9a9a;
-}
+.rform__err { font-size: 11px; line-height: 1.35; color: #ff9a9a; }
 
 .rform__media {
   display: grid;
-  grid-template-columns: 210px 1fr;
-  gap: 16px;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 20px;
   align-items: start;
 }
 
@@ -509,114 +566,174 @@ function requestClose(): void {
   place-items: center;
   overflow: hidden;
   background: rgb(255 255 255 / 4%);
-  border: 1px solid rgb(255 255 255 / 12%);
+  border: 1px solid rgb(255 255 255 / 11%);
+  border-radius: 3px;
 }
 
 .rform__thumb img { width: 100%; height: 100%; object-fit: cover; }
 
 .rform__thumbEmpty {
-  font-size: 9px;
-  letter-spacing: 0.2em;
+  font-size: 8.5px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  opacity: 0.35;
+  opacity: 0.3;
 }
 
-.rform__mediaFields { display: flex; flex-direction: column; gap: 10px; }
-
 .rform__upload {
-  display: inline-flex;
-  align-self: flex-start;
-  padding: 8px 12px;
-  font-size: 9px;
-  letter-spacing: 0.18em;
+  position: absolute;
+  inset: auto 8px 8px auto;
+  padding: 7px 10px;
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  border: 1px solid rgb(255 255 255 / 16%);
+  color: inherit;
+  background: rgb(4 6 12 / 80%);
+  border: 1px solid rgb(255 255 255 / 18%);
+  backdrop-filter: blur(6px);
   cursor: pointer;
 }
 
-.rform__upload:hover { background: rgb(255 255 255 / 6%); }
+.rform__upload:hover { background: rgb(255 255 255 / 12%); }
 
-.rform__pair {
+.rform__mediaFields { display: flex; flex-direction: column; gap: 14px; }
+
+.rform__factRow {
   display: grid;
-  grid-template-columns: 1fr 1fr 32px;
-  gap: 8px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) 38px;
+  gap: 10px;
+  align-items: center;
 }
 
 .rform__del {
-  background: none;
-  border: 1px solid rgb(255 255 255 / 12%);
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: 38px;
   color: inherit;
+  background: none;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 3px;
+  opacity: 0.45;
   cursor: pointer;
-  font-size: 11px;
-  opacity: 0.6;
+  transition: opacity 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
+.rform__del svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 1.3; }
 .rform__del:hover { opacity: 1; border-color: #ff9a9a; color: #ff9a9a; }
 
 .rform__scene {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  border: 1px solid rgb(255 255 255 / 10%);
-  background: rgb(255 255 255 / 2%);
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 2.5%), transparent);
 }
 
 .rform__sceneHead {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 14px;
 }
 
 .rform__sceneNum {
   font-size: 9px;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   opacity: 0.5;
 }
 
+.rform__sceneTools { display: flex; align-items: center; gap: 8px; }
+
+.rform__segment {
+  display: inline-flex;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.rform__segment button {
+  padding: 6px 12px;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: inherit;
+  background: none;
+  border: 0;
+  opacity: 0.45;
+  cursor: pointer;
+}
+
+.rform__segment button.is-on {
+  background: rgb(255 255 255 / 12%);
+  opacity: 1;
+}
+
+.rform__segment .rform__del,
+.rform__sceneTools .rform__del { min-height: 28px; width: 28px; }
+
 .rform__foot {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
-  padding: 18px 30px 24px;
-  border-top: 1px solid rgb(255 255 255 / 8%);
+  padding: 20px 44px 26px;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  background: linear-gradient(to top, #06080f 40%, transparent);
 }
+
+.rform__footNote { margin: 0; font-size: 9.5px; letter-spacing: 0.08em; opacity: 0.32; }
 
 .rform__actions { display: flex; gap: 10px; margin-left: auto; }
 
 .rform__cancel {
-  padding: 12px 18px;
-  font-size: 10px;
+  padding: 13px 20px;
+  font-size: 9.5px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: inherit;
   background: none;
-  border: 1px solid rgb(255 255 255 / 16%);
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 3px;
   cursor: pointer;
 }
 
+.rform__cancel:hover { background: rgb(255 255 255 / 6%); }
+
 .rform__save {
-  padding: 12px 22px;
-  font-size: 10px;
+  padding: 13px 24px;
+  font-size: 9.5px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #06070c;
   background: var(--fr-fg, #e8e6e1);
   border: 0;
+  border-radius: 3px;
   cursor: pointer;
 }
 
 .rform__save:hover { filter: brightness(1.08); }
 
-.form-enter-active, .form-leave-active { transition: opacity 0.28s ease; }
+.form-enter-active, .form-leave-active { transition: opacity 0.3s ease; }
 .form-enter-from, .form-leave-to { opacity: 0; }
 
-@media (max-width: 720px) {
-  .rform__row, .rform__media { grid-template-columns: 1fr; }
-  .rform__body { padding: 18px 18px 8px; }
-  .rform__head, .rform__foot { padding-inline: 18px; }
+@media (max-width: 900px) {
+  .rform__group { grid-template-columns: 1fr; gap: 14px; }
+  .rform__groupHead { flex-direction: row; align-items: center; gap: 14px; position: static; }
+  .rform__num { font-size: 24px; }
+  .rform__media { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .rform { padding: 12px; }
+  .rform__body { padding: 0 20px 8px; }
+  .rform__head { padding: 24px 20px 18px; }
+  .rform__foot { padding: 16px 20px 20px; flex-wrap: wrap; }
+  .rform__footNote { display: none; }
+  .rform__pairRow { grid-template-columns: 1fr; }
+  .rform__factRow { grid-template-columns: 1fr 38px; }
+  .rform__factRow .rform__input:nth-child(2) { grid-column: 1; }
 }
 
 .sr-only {

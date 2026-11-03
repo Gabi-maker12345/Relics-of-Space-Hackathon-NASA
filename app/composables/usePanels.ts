@@ -1,29 +1,40 @@
 let wiredClient = false
 
+/**
+ * Estado do painel de acesso. O painel vive sobre o "hole" do engine (como no
+ * original): abrir/fechar anima o portal, Escape e clique fora fecham.
+ * A fiação (listeners) é registada uma única vez no client.
+ */
 export type PanelName = 'profile' | null
 
-/**
- * Estado do painel de acesso. Escape e clique fora fecham.
- * O painel é DOM (formulário), por isso não passa pelo engine GL.
- */
+function shieldEl(name: Exclude<PanelName, null>): HTMLElement | null {
+  return document.querySelector<HTMLElement>(`[data-gl-shield][data-shield="${name}"]`)
+}
+
 export function usePanels() {
   const active = useState<PanelName>('panel', () => null)
 
-  const sync = (next: PanelName): void => {
-    if (typeof document === 'undefined') return
+  const applyEngine = (next: PanelName): void => {
+    if (typeof window === 'undefined') return
+    const engine = useGlEngine()
+    for (const name of ['profile'] as const) {
+      const el = shieldEl(name)
+      if (el) engine.setShieldOpen(el, next === name)
+    }
     document.documentElement.dataset.panel = next ?? ''
+    engine.openHole(next !== null)
   }
 
   const open = (name: Exclude<PanelName, null>): void => {
     if (active.value === name) return
     active.value = name
-    sync(name)
+    applyEngine(name)
   }
 
   const close = (): void => {
     if (active.value === null) return
     active.value = null
-    sync(null)
+    applyEngine(null)
   }
 
   const toggle = (name: Exclude<PanelName, null>): void => {
@@ -49,7 +60,7 @@ export function usePanels() {
     onMounted(() => {
       window.addEventListener('keydown', onKey)
       window.addEventListener('pointerdown', onDown, true)
-      sync(active.value)
+      applyEngine(active.value)
     })
     onBeforeUnmount(() => {
       window.removeEventListener('keydown', onKey)

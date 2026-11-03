@@ -10,10 +10,6 @@
       </div>
       <div class="admin__actions">
         <button type="button" class="admin__ghost" @click="signOutAndLeave">Sair</button>
-        <button type="button" class="admin__primary" @click="openForm(null)">
-          Nova relíquia
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v11M2.5 8h11" /></svg>
-        </button>
       </div>
     </header>
 
@@ -43,8 +39,10 @@
 
       <li v-if="user" class="admin__item">
         <button type="button" class="card card--new" @click="openForm(null)">
-          <span class="card__plus" aria-hidden="true">
-            <svg viewBox="0 0 48 48"><path d="M24 10v28M10 24h28" /></svg>
+          <span class="card__center" aria-hidden="true">
+            <span class="card__plus">
+              <svg viewBox="0 0 48 48"><path d="M24 10v28M10 24h28" /></svg>
+            </span>
           </span>
           <span class="card__newLabel">Adicionar relíquia</span>
         </button>
@@ -76,7 +74,6 @@ const takenIds = computed(() => relics.value.map(relic => relic.id).filter(id =>
 onMounted(() => {
   load()
   restore()
-  if (!user.value) openPanel('profile')
 })
 
 function openForm(relic: Relic | null): void {
@@ -295,9 +292,7 @@ function requestLogin(): void {
 .card__tool--danger:hover { border-color: #ff8f8f; color: #ff8f8f; }
 
 .card--new {
-  display: grid;
-  place-items: center;
-  gap: 14px;
+  display: block;
   background:
     radial-gradient(70% 70% at 50% 40%, color-mix(in srgb, var(--accent, #7aa2ff) 12%, transparent), transparent 70%),
     rgb(255 255 255 / 1.5%);
@@ -313,9 +308,16 @@ function requestLogin(): void {
     rgb(255 255 255 / 3%);
 }
 
+.card__center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
 .card__plus {
-  width: 54px;
-  height: 54px;
+  width: 58px;
+  height: 58px;
   display: grid;
   place-items: center;
   border: 1px solid rgb(255 255 255 / 26%);
@@ -328,10 +330,13 @@ function requestLogin(): void {
 .card__plus svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.2; }
 
 .card__newLabel {
+  position: absolute;
+  inset: auto 0 18px;
+  text-align: center;
   font-size: 9px;
   letter-spacing: 0.26em;
   text-transform: uppercase;
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .admin__locked {

@@ -9,7 +9,11 @@ export function useAuth() {
   const error = ref('')
 
   const restore = (): void => {
-    if (!import.meta.client || loaded.value) return
+    if (!import.meta.client) return
+    if (user.value) {
+      loaded.value = true
+      return
+    }
     try {
       const raw = localStorage.getItem(SESSION_KEY)
       if (raw) user.value = raw

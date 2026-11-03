@@ -410,3 +410,13 @@ formulário de login. Ao autenticar (`admin@spacerelics.space` / `relics2026`) e
 Verificado no browser: login (erro e sucesso), criar, editar, remover, id duplicado, recarregar
 mantém sessão e dados, relic nova aparece no painel do landing, no carrossel 3D (com textura) e no
 diário aberto pelo cartão.
+
+## Iteração 19 — login no portal original, painel e formulário refinados
+
+- O login deixou de ser um overlay novo: voltou a viver no **mesmo painel do "hole"** que o
+  original abria no profile, agora com email/palavra-passe e erro inline.
+- Admin sem o botão redundante "Nova relíquia"; no cartão tracejado o **+** está no centro exacto
+  e o rótulo fica no fundo.
+- Formulário: `data-lenis-prevent` no corpo rolável (a Lenis deixou de capturar a roda), barra de
+  scroll invisível, 1240 px de largura e secções numeradas 01–04 (identidade, cartão, ficha, cenas)
+  com cabeçalho de coluna alinhado.

@@ -1,68 +1,61 @@
 <template>
-  <Teleport to="body">
-    <Transition name="login">
-      <div
-        v-if="active === 'profile'"
-        id="profile-panel"
-        class="login"
-        data-gl-shield
-        data-shield="profile"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="login-title"
-      >
-        <button class="login__scrim" type="button" aria-label="Fechar" @click="close()" />
-        <form class="login__card" @submit.prevent="submit">
-          <p class="login__kicker">Arquivo · acesso restrito</p>
-          <h2 id="login-title" class="login__title">Entrar</h2>
-          <p class="login__lede">Autentica-te para abrir o painel de relíquias.</p>
+  <div class="portal" :class="active === 'profile' ? 'is-open' : ''">
+    <div
+      data-gl-shield
+      data-shield="profile"
+      class="portal__inner"
+      :class="active === 'profile' ? '' : 'pointer-events-none'"
+    >
+      <p class="portal__kicker">Arquivo · acesso restrito</p>
+      <h2 class="portal__title">Entrar</h2>
 
-          <label class="login__field">
-            <span class="login__label">Email</span>
-            <input
-              v-model="email"
-              type="email"
-              name="email"
-              autocomplete="email"
-              class="login__input"
-              placeholder="nome@dominio.space"
-              required
-            >
-          </label>
+      <form class="portal__form" novalidate @submit.prevent="submit">
+        <label class="portal__field">
+          <span class="portal__label">Email</span>
+          <input
+            v-model="email"
+            type="email"
+            name="email"
+            autocomplete="email"
+            class="portal__input"
+            placeholder="nome@dominio.space"
+          >
+        </label>
 
-          <label class="login__field">
-            <span class="login__label">Palavra-passe</span>
+        <label class="portal__field">
+          <span class="portal__label">Palavra-passe</span>
+          <span class="portal__wrap">
             <input
               v-model="password"
               :type="reveal ? 'text' : 'password'"
               name="password"
               autocomplete="current-password"
-              class="login__input"
+              class="portal__input"
               placeholder="••••••••"
-              required
             >
             <button
-              class="login__reveal"
+              class="portal__reveal"
               type="button"
               :aria-pressed="reveal"
+              tabindex="-1"
               @click="reveal = !reveal"
-            >{{ reveal ? 'Esconder' : 'Mostrar' }}</button>
-          </label>
+            >{{ reveal ? 'esconder' : 'mostrar' }}</button>
+          </span>
+        </label>
 
-          <p v-if="error" class="login__error" role="alert">{{ error }}</p>
+        <p v-if="error" class="portal__error" role="alert">{{ error }}</p>
 
-          <button class="login__submit" type="submit">
-            <span>Entrar</span>
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h10M8.5 3.5 13 8l-4.5 4.5" /></svg>
-          </button>
+        <button class="portal__submit" type="submit">
+          <span>Entrar no arquivo</span>
+          <svg viewBox="0 0 24 12" aria-hidden="true"><path d="M0 6h22M17 1l5 5-5 5" /></svg>
+        </button>
+      </form>
 
-          <p class="login__hint">
-            Demo: <code>admin@spacerelics.space</code> · <code>relics2026</code>
-          </p>
-        </form>
-      </div>
-    </Transition>
-  </Teleport>
+      <p class="portal__hint">
+        demonstração · <code>admin@spacerelics.space</code> / <code>relics2026</code>
+      </p>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -82,167 +75,155 @@ async function submit(): Promise<void> {
 </script>
 
 <style scoped>
-.login {
+.portal {
   position: fixed;
-  inset: 0;
-  z-index: 120;
-  display: grid;
-  place-items: center;
-  padding: 20px;
+  left: 50%;
+  top: 50%;
+  z-index: 40;
+  width: min(560px, calc(100vw - 40px));
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.45s ease, visibility 0.45s ease;
 }
 
-.login__scrim {
-  position: absolute;
-  inset: 0;
-  border: 0;
-  background: color-mix(in srgb, #04050a 82%, transparent);
-  backdrop-filter: blur(10px) saturate(0.7);
-  cursor: default;
+.portal.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
-.login__card {
-  position: relative;
-  width: min(460px, 100%);
-  padding: 38px 34px 30px;
+.portal__inner {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  color: var(--fr-fg, #e8e6e1);
-  background:
-    radial-gradient(120% 90% at 50% -10%, color-mix(in srgb, var(--accent, #7aa2ff) 18%, transparent), transparent 60%),
-    color-mix(in srgb, #080a12 92%, transparent);
-  border: 1px solid color-mix(in srgb, var(--fr-fg, #e8e6e1) 18%, transparent);
-  box-shadow: 0 40px 120px rgb(0 0 0 / 65%), 0 0 0 1px rgb(255 255 255 / 4%) inset;
+  align-items: center;
+  gap: 10px;
+  color: #f5f3ee;
+  text-align: center;
 }
 
-.login__card::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  pointer-events: none;
-  background: linear-gradient(120deg, transparent 30%, color-mix(in srgb, var(--accent, #7aa2ff) 45%, transparent), transparent 70%);
-  mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
-  mask-composite: exclude;
-  padding: 1px;
-}
-
-.login__kicker {
+.portal__kicker {
   margin: 0;
-  font-size: 10px;
-  letter-spacing: 0.28em;
+  font-size: 9px;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
-.login__title {
-  margin: 0;
+.portal__title {
+  margin: 0 0 18px;
   font-family: var(--fr-serif, inherit);
-  font-size: clamp(38px, 6vw, 56px);
+  font-size: clamp(46px, 7vw, 74px);
   font-weight: 400;
-  line-height: 0.95;
-  letter-spacing: -0.03em;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
 }
 
-.login__lede {
-  margin: -4px 0 10px;
-  font-size: 13px;
-  line-height: 1.5;
-  opacity: 0.65;
+.portal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(340px, 100%);
 }
 
-.login__field {
-  position: relative;
+.portal__field {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  text-align: left;
 }
 
-.login__label {
-  font-size: 10px;
-  letter-spacing: 0.2em;
+.portal__label {
+  font-size: 8.5px;
+  letter-spacing: 0.26em;
   text-transform: uppercase;
-  opacity: 0.55;
+  opacity: 0.45;
 }
 
-.login__input {
+.portal__wrap { position: relative; display: block; }
+
+.portal__input {
   width: 100%;
-  padding: 12px 14px;
+  padding: 8px 0 10px;
   font: inherit;
-  font-size: 14px;
+  font-size: 15px;
+  letter-spacing: 0.01em;
   color: inherit;
-  background: rgb(255 255 255 / 4%);
-  border: 1px solid rgb(255 255 255 / 14%);
-  border-radius: 2px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid rgb(255 255 255 / 22%);
   outline: none;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: border-color 0.25s ease;
 }
 
-.login__input:focus-visible {
-  border-color: color-mix(in srgb, var(--accent, #7aa2ff) 70%, transparent);
-  background: rgb(255 255 255 / 7%);
-}
+.portal__input::placeholder { color: rgb(255 255 255 / 28%); }
 
-.login__reveal {
+.portal__input:focus-visible { border-color: #fff; }
+
+.portal__reveal {
   position: absolute;
-  right: 12px;
+  right: 0;
   bottom: 12px;
-  font-size: 9px;
+  padding: 0;
+  font-size: 8.5px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  opacity: 0.5;
+  color: inherit;
+  opacity: 0.35;
   background: none;
   border: 0;
   cursor: pointer;
 }
 
-.login__reveal:hover { opacity: 0.9; }
+.portal__reveal:hover { opacity: 0.8; }
 
-.login__error {
-  margin: 2px 0 0;
-  font-size: 12px;
-  color: #ff8b8b;
+.portal__error {
+  margin: -4px 0 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  text-align: left;
+  color: #ff9a9a;
 }
 
-.login__submit {
+.portal__submit {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   margin-top: 8px;
-  padding: 15px 18px;
-  font-size: 11px;
-  letter-spacing: 0.22em;
+  padding: 15px 20px;
+  font-size: 9.5px;
+  letter-spacing: 0.26em;
   text-transform: uppercase;
   color: #06070c;
-  background: var(--fr-fg, #e8e6e1);
+  background: #f5f3ee;
   border: 0;
   cursor: pointer;
-  transition: transform 0.25s ease, filter 0.25s ease;
+  transition: transform 0.3s ease, filter 0.3s ease;
 }
 
-.login__submit svg {
-  width: 16px;
-  height: 16px;
+.portal__submit svg {
+  width: 24px;
+  height: 12px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.4;
+  stroke-width: 1.2;
 }
 
-.login__submit:hover { filter: brightness(1.08); transform: translateX(2px); }
+.portal__submit:hover { filter: brightness(1.06); }
+.portal__submit:hover svg { transform: translateX(3px); transition: transform 0.3s ease; }
 
-.login__hint {
-  margin: 10px 0 0;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  opacity: 0.45;
+.portal__hint {
+  margin: 14px 0 0;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  opacity: 0.32;
 }
 
-.login__hint code {
-  font-size: 10px;
-  padding: 1px 4px;
-  border: 1px solid rgb(255 255 255 / 12%);
-}
+.portal__hint code { font-size: 9px; }
 
-.login-enter-active, .login-leave-active { transition: opacity 0.35s ease; }
-.login-enter-from, .login-leave-to { opacity: 0; }
+@media (max-width: 560px) {
+  .portal { width: calc(100vw - 32px); }
+}
 </style>
