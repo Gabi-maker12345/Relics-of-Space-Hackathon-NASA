@@ -1,4 +1,8 @@
 <template>
+  <Teleport to="body">
+    <div v-if="active === 'profile'" class="portal__veil" aria-hidden="true" />
+  </Teleport>
+
   <div class="portal" :class="active === 'profile' ? 'is-open' : ''">
     <div
       data-gl-shield
@@ -6,12 +10,12 @@
       class="portal__inner"
       :class="active === 'profile' ? '' : 'pointer-events-none'"
     >
-      <p class="portal__kicker">Arquivo · acesso restrito</p>
-      <h2 class="portal__title">Entrar</h2>
+      <p class="portal__kicker" data-gl="text">Arquivo · acesso restrito</p>
+      <h2 class="portal__title" data-gl="text">Entrar</h2>
 
       <form class="portal__form" novalidate @submit.prevent="submit">
         <label class="portal__field">
-          <span class="portal__label">Email</span>
+          <span class="portal__label" data-gl="text">Email</span>
           <input
             v-model="email"
             type="email"
@@ -23,7 +27,7 @@
         </label>
 
         <label class="portal__field">
-          <span class="portal__label">Palavra-passe</span>
+          <span class="portal__label" data-gl="text">Palavra-passe</span>
           <span class="portal__wrap">
             <input
               v-model="password"
@@ -51,7 +55,7 @@
         </button>
       </form>
 
-      <p class="portal__hint">
+      <p class="portal__hint" data-gl="text">
         demonstração · <code>admin@spacerelics.space</code> / <code>relics2026</code>
       </p>
     </div>
@@ -79,7 +83,7 @@ async function submit(): Promise<void> {
   position: fixed;
   left: 50%;
   top: 50%;
-  z-index: 40;
+  z-index: 110;
   width: min(560px, calc(100vw - 40px));
   transform: translate(-50%, -50%);
   opacity: 0;
@@ -92,6 +96,26 @@ async function submit(): Promise<void> {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+}
+
+.portal__veil {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  background: color-mix(in srgb, #03040a 78%, transparent);
+  backdrop-filter: blur(6px) saturate(0.55);
+  animation: veil-in 0.6s ease both;
+}
+
+@keyframes veil-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* O engine GL pinta estes textos por cima do véu; o DOM serve de layout.
+   `color` fica intacto — é dele que o engine lê a cor dos glifos. */
+.portal [data-gl="text"] {
+  -webkit-text-fill-color: transparent;
 }
 
 .portal__inner {
@@ -114,7 +138,7 @@ async function submit(): Promise<void> {
 .portal__title {
   margin: 0 0 18px;
   font-family: var(--fr-serif, inherit);
-  font-size: clamp(46px, 7vw, 74px);
+  font-size: clamp(34px, 5vw, 52px);
   font-weight: 400;
   line-height: 0.9;
   letter-spacing: -0.04em;
@@ -136,9 +160,9 @@ async function submit(): Promise<void> {
 
 .portal__label {
   font-size: 8.5px;
-  letter-spacing: 0.26em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  opacity: 0.45;
+  opacity: 0.62;
 }
 
 .portal__wrap { position: relative; display: block; }
@@ -216,9 +240,9 @@ async function submit(): Promise<void> {
 
 .portal__hint {
   margin: 14px 0 0;
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: 0.1em;
-  opacity: 0.32;
+  opacity: 0.45;
 }
 
 .portal__hint code { font-size: 9px; }

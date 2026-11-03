@@ -420,3 +420,11 @@ diário aberto pelo cartão.
 - Formulário: `data-lenis-prevent` no corpo rolável (a Lenis deixou de capturar a roda), barra de
   scroll invisível, 1240 px de largura e secções numeradas 01–04 (identidade, cartão, ficha, cenas)
   com cabeçalho de coluna alinhado.
+
+## Iteração 20 — o login volta a ter a magia do portal
+
+- Texto do painel passou a ser **GL** (`data-gl="text"`), com a revelação linha a linha (slot-machine)
+  rearmada a cada abertura via `replayShield`, tal como o clone descreve (CLONE.md §painéis).
+- Véu escuro a z 15 por baixo do canvas (`--gl-z: 20`): a página escurece, o buraco e o anel
+  mantêm-se nítidos; o formulário assenta a z 110 (acima do header 70 e do modal 90).
+- Com o painel aberto a chrome recua (header e barra de progresso a opacity 0).

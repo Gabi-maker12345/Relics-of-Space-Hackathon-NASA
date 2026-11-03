@@ -48,6 +48,21 @@ html {
 html[data-panel="profile"] {
   --gl-z: 20;
 }
+
+/* o painel assume o ecrã: a chrome recua */
+html[data-panel="profile"] .fr-header,
+html[data-panel="profile"] .fr-progress {
+  opacity: 0;
+  pointer-events: none;
+}
+
+html[data-panel="profile"] .fr-progress {
+  transition: opacity 0.3s ease;
+}
+
+.fr-header {
+  transition: opacity 0.3s ease;
+}
 body {
   background: #000;
   color: #fff;

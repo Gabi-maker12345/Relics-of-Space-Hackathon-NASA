@@ -23,6 +23,13 @@ export function usePanels() {
     }
     document.documentElement.dataset.panel = next ?? ''
     engine.openHole(next !== null)
+    if (next !== null) {
+      // revelação linha a linha (slot-machine) como no original
+      engine.defer(200, () => {
+        const el = shieldEl(next)
+        if (el) engine.replayShield(el)
+      })
+    }
   }
 
   const open = (name: Exclude<PanelName, null>): void => {
