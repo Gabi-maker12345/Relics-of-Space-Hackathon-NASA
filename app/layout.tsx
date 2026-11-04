@@ -38,7 +38,8 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-PT">
-      <body>
+      {/* extensões do browser (ex.: ColorZilla) injectam atributos no <body> */}
+      <body suppressHydrationWarning>
         <SiteShell>{children}</SiteShell>
       </body>
     </html>
