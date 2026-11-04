@@ -12,6 +12,7 @@ interface CardItem {
   tagline: string
   ratio: string
   image: string
+  poster: string
 }
 
 const cards = computed<CardItem[]>(() =>
@@ -23,6 +24,7 @@ const cards = computed<CardItem[]>(() =>
       tagline: relic.tagline,
       ratio: relic.ratio,
       image: relic.image,
+      poster: relic.coverPoster ?? relic.image,
     })),
   ).flat(),
 )
@@ -63,7 +65,7 @@ function openRelic(id: string): void {
       :style="{ aspectRatio: card.ratio }"
       :data-id="card.id"
       data-gl="card"
-      :data-texture="card.image"
+      :data-texture="card.poster"
       :aria-hidden="card.copy === 1 || copies === 1 ? undefined : 'true'"
       @click="openRelic(card.id)"
     >

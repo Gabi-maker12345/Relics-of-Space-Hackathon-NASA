@@ -49,6 +49,32 @@
                   </label>
                 </div>
 
+                <div class="rform__pairRow">
+                  <label class="rform__field">
+                    <span class="rform__label">Estado</span>
+                    <select v-model="draft.status" class="rform__input">
+                      <option value="active">Activo</option>
+                      <option value="silent">Silencioso</option>
+                      <option value="lost">Perdido</option>
+                    </select>
+                  </label>
+                  <label class="rform__field">
+                    <span class="rform__label">Local</span>
+                    <select v-model="draft.location" class="rform__input">
+                      <option value="moon">Lua</option>
+                      <option value="mars">Marte</option>
+                      <option value="deep_space">Espaço profundo</option>
+                    </select>
+                  </label>
+                  <label class="rform__field">
+                    <span class="rform__label">Visibilidade</span>
+                    <select v-model="draft.published" class="rform__input">
+                      <option :value="true">Publicado</option>
+                      <option :value="false">Rascunho</option>
+                    </select>
+                  </label>
+                </div>
+
                 <label class="rform__field">
                   <span class="rform__label">História</span>
                   <textarea v-model="draft.body" class="rform__input rform__area" rows="4" placeholder="O que ficou para trás, contado em duas ou três frases." />
@@ -86,6 +112,10 @@
                         <span class="rform__label">Texto alternativo</span>
                         <input v-model="draft.alt" class="rform__input" placeholder="Descrição da imagem">
                         <span v-if="errors.alt" class="rform__err">{{ errors.alt }}</span>
+                      </label>
+                      <label v-if="coverIsVideo" class="rform__field">
+                        <span class="rform__label">Poster da capa <em>(vídeo)</em></span>
+                        <input v-model="draft.coverPoster" class="rform__input rform__input--mono" placeholder="/images/relics/poster.jpg">
                       </label>
                       <label class="rform__field">
                         <span class="rform__label">Proporção <em>(automática)</em></span>
@@ -170,6 +200,11 @@
                   </label>
 
                   <label class="rform__field">
+                    <span class="rform__label">Áudio narrado <em>(opcional)</em></span>
+                    <input v-model="scene.audio" class="rform__input rform__input--mono" placeholder="/media/narracao.mp3">
+                  </label>
+
+                  <label class="rform__field">
                     <span class="rform__label">Texto narrado</span>
                     <textarea v-model="scene.body" class="rform__input rform__area" rows="3" placeholder="O que o diário conta nesta cena." />
                   </label>
@@ -194,7 +229,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Relic, RelicFact, RelicScene } from '~/data/relics'
+import type { Relic, RelicFact, RelicLocation, RelicScene, RelicStatus } from '~/data/relics'
+import { isVideoUrl } from '~/utils/relics'
 
 const props = defineProps<{
   open: boolean
@@ -216,8 +252,12 @@ type Draft = {
   tagline: string
   body: string
   image: string
+  coverPoster: string
   alt: string
   ratio: string
+  status: RelicStatus
+  location: RelicLocation
+  published: boolean
   facts: RelicFact[]
   scenes: RelicScene[]
 }
@@ -229,8 +269,12 @@ const blank = (): Draft => ({
   tagline: '',
   body: '',
   image: '',
+  coverPoster: '',
   alt: '',
   ratio: '1376 / 768',
+  status: 'active',
+  location: 'moon',
+  published: true,
   facts: [
     { label: '', value: '' },
     { label: '', value: '' },
@@ -243,6 +287,8 @@ const blank = (): Draft => ({
 function emptyScene(kind: 'image' | 'video'): RelicScene {
   return { kind, src: '', poster: '', kicker: kind === 'video' ? 'Transmissão' : 'Fotografia', body: '' }
 }
+
+const coverIsVideo = computed(() => isVideoUrl(draft.image))
 
 const draft = reactive<Draft>(blank())
 const errors = reactive<Record<string, string>>({})
@@ -339,7 +385,11 @@ function save(): void {
     tagline: draft.tagline.trim(),
     body: draft.body.trim(),
     image: draft.image.trim(),
+    coverPoster: draft.coverPoster.trim() || undefined,
     alt: draft.alt.trim(),
+    status: draft.status,
+    location: draft.location,
+    published: draft.published,
     ratio: draft.ratio.trim() || '1376 / 768',
     facts: draft.facts
       .filter(fact => fact.label.trim() && fact.value.trim())
@@ -352,6 +402,7 @@ function save(): void {
         poster: scene.poster?.trim() || undefined,
         kicker: scene.kicker.trim(),
         body: scene.body.trim(),
+        audio: scene.audio?.trim() || undefined,
       })),
   })
 }

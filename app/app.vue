@@ -18,9 +18,14 @@
 // fiação dos painéis (Escape, clique fora, engine)
 usePanels()
 
+const { lang } = useLocale()
+useHead(() => ({ htmlAttrs: { lang: lang.value === 'pt' ? 'pt-PT' : 'en' } }))
+
 onMounted(() => {
   useRelics().load()
   useAuth().restore()
+  useSound().load()
+  useLocale().load()
   initSmoothScroll()
   const route = useRoute()
   if (route.path !== '/') window.scrollTo({ top: 0 })

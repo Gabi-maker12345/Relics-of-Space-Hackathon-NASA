@@ -5,12 +5,17 @@ export interface RelicFact {
 
 export type SceneKind = 'image' | 'video'
 
+export type RelicStatus = 'active' | 'silent' | 'lost'
+export type RelicLocation = 'moon' | 'mars' | 'deep_space'
+
 export interface RelicScene {
   kind: SceneKind
   src: string
   poster?: string
   kicker: string
   body: string
+  /** narração opcional desta cena (executor de voz) */
+  audio?: string
 }
 
 export interface Relic {
@@ -21,8 +26,13 @@ export interface Relic {
   body: string
   facts: RelicFact[]
   image: string
+  /** poster quando a capa é vídeo */
+  coverPoster?: string
   alt: string
   ratio: string
+  status?: RelicStatus
+  location?: RelicLocation
+  published?: boolean
   scenes: RelicScene[]
 }
 
@@ -42,6 +52,9 @@ export const relics: Relic[] = [
     image: '/images/relics/apollo-lunar-module.jpg',
     alt: 'Módulo lunar Apollo em exposição, com o estágio de descida dourado e as pernas de pouso',
     ratio: '1376 / 768',
+    status: 'active',
+    location: 'moon',
+    published: true,
     scenes: [
       {
         kind: 'image',
@@ -73,6 +86,9 @@ export const relics: Relic[] = [
     image: '/images/relics/opportunity.jpg',
     alt: 'Rover Opportunity em Marte, com painéis solares cobertos de poeira e o mastro da câmara erguido',
     ratio: '1408 / 768',
+    status: 'silent',
+    location: 'mars',
+    published: true,
     scenes: [
       {
         kind: 'image',
@@ -104,6 +120,9 @@ export const relics: Relic[] = [
     image: '/images/relics/viking-1.jpg',
     alt: 'Lander Viking 1 com o corpo hexagonal, os três painéis solares e a antena de alto ganho',
     ratio: '1376 / 768',
+    status: 'silent',
+    location: 'mars',
+    published: true,
     scenes: [
       {
         kind: 'image',

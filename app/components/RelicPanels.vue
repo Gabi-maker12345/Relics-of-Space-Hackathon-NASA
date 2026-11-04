@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { isPublished, LOCATION_LABEL, relicLocation, relicStatus } from '~/utils/relics'
+
 const { relics } = useRelics()
+const visible = computed(() => relics.value.filter(isPublished))
 
 const wrap = ref<HTMLElement | null>(null)
 const progress = ref(0)
@@ -9,7 +12,7 @@ const viewportH = ref(900)
 
 let frame = 0
 
-const total = computed(() => relics.value.length)
+const total = computed(() => visible.value.length)
 const counter = (index: number) => `${String(index + 1).padStart(2, '0')} / ${String(total.value).padStart(2, '0')}`
 
 onMounted(() => {
@@ -57,16 +60,21 @@ const cardInset = (index: number) => {
 </script>
 
 <template>
-  <div ref="wrap" class="fr-panels" :style="{ height: `${total * 100}vh` }">
+  <div v-if="visible.length === 0" class="fr-panels fr-panels--empty">
+    <p class="fr-label">Arquivo vazio</p>
+    <p class="fr-panels__emptyTitle">Ainda não há relíquias publicadas.</p>
+  </div>
+
+  <div v-else ref="wrap" class="fr-panels" :style="{ height: `${Math.max(1, total) * 100}vh` }">
     <aside class="fr-panels__media" aria-hidden="true">
       <div class="fr-panels__mediaInner" :style="mediaStyle">
         <div
-          v-for="(relic, index) in relics"
+          v-for="(relic, index) in visible"
           :key="`bg-${relic.id}`"
           class="fr-panels__layer"
           :class="{ 'is-active': index === active }"
         >
-          <img :src="relic.image" alt="" width="1376" height="768" />
+          <RelicCover :src="relic.image" :poster="relic.coverPoster" alt="" :autoplay="index === active" />
         </div>
         <div class="fr-panels__veil" />
       </div>
@@ -76,26 +84,32 @@ const cardInset = (index: number) => {
       <aside class="fr-panels__cards" aria-hidden="true">
         <div class="fr-panels__cardsInner">
           <figure
-            v-for="(relic, index) in relics"
+            v-for="(relic, index) in visible"
             :key="`card-${relic.id}`"
             class="fr-panels__card"
             :style="{ zIndex: index + 1, clipPath: `inset(${cardInset(index).toFixed(2)}%)` }"
           >
-            <img :src="relic.image" alt="" width="1376" height="768" />
+            <RelicCover :src="relic.image" :poster="relic.coverPoster" alt="" :autoplay="index === active" />
           </figure>
         </div>
       </aside>
 
       <div class="fr-panels__copy">
         <article
-          v-for="(relic, index) in relics"
+          v-for="(relic, index) in visible"
           :key="relic.id"
           class="fr-step"
           :class="{ 'is-active': index === active }"
           :aria-current="index === active ? 'true' : undefined"
           :aria-labelledby="`relic-${relic.id}`"
         >
-          <p class="fr-label fr-step__counter">{{ counter(index) }}</p>
+          <p class="fr-label fr-step__counter">
+            {{ counter(index) }}
+            <span class="fr-step__meta">
+              {{ LOCATION_LABEL[relicLocation(relic)] }}
+              <StatusBadge :status="relicStatus(relic)" />
+            </span>
+          </p>
           <h3 :id="`relic-${relic.id}`" class="fr-serif fr-step__title">{{ relic.name }}</h3>
           <p class="fr-label fr-step__mission">{{ relic.mission }}</p>
           <p class="fr-body fr-step__body">{{ relic.body }}</p>

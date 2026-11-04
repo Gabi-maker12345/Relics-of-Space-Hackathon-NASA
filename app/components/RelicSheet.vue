@@ -1,10 +1,51 @@
 <script setup lang="ts">
 import type { Relic, RelicScene } from '~/data/relics'
+import { LOCATION_LABEL, relicLocation, relicStatus } from '~/utils/relics'
 
 const props = defineProps<{ relic: Relic; index: number; armed?: boolean }>()
 const emit = defineEmits<{ 'update:index': [index: number]; 'open-media': [scene: RelicScene]; typing: [active: boolean] }>()
 
 const scroller = ref<HTMLElement | null>(null)
+const { muted } = useSound()
+const soundtrack = useSoundtrack()
+
+/** Executor de voz: um áudio por passo, nunca dois ao mesmo tempo. */
+let voice: HTMLAudioElement | null = null
+
+const stopVoice = (): void => {
+  if (!voice) return
+  voice.pause()
+  voice.currentTime = 0
+  soundtrack.duck(false)
+}
+
+const playStepAudio = (): void => {
+  const src = current.value?.audio
+  if (!src) {
+    stopVoice()
+    return
+  }
+  if (!voice || voice.dataset.src !== src) {
+    stopVoice()
+    voice = new Audio(src)
+    voice.preload = 'auto'
+    voice.dataset.src = src
+    voice.addEventListener('ended', () => soundtrack.duck(false))
+  }
+  if (muted.value) return
+  voice.volume = 0.9
+  soundtrack.duck(true)
+  void voice.play().catch(() => soundtrack.duck(false))
+}
+
+/** Pré-carrega o áudio do passo seguinte (metadata) para a troca ser imediata. */
+const preloadNext = (): void => {
+  const next = scenes.value[props.index + 1]
+  if (!next?.audio) return
+  const warm = new Audio()
+  warm.preload = 'metadata'
+  warm.src = next.audio
+}
 const typed = ref('')
 const typing = ref(false)
 let typeTimer = 0
@@ -48,6 +89,21 @@ const typeScene = (delay = 220) => {
 const scenes = computed(() => props.relic.scenes)
 const current = computed(() => scenes.value[props.index] ?? scenes.value[0])
 
+watch([() => props.index, scenes], () => {
+  playStepAudio()
+  preloadNext()
+})
+
+watch(muted, (value) => {
+  if (value) stopVoice()
+  else playStepAudio()
+})
+
+onBeforeUnmount(() => {
+  clearTyping()
+  stopVoice()
+})
+
 const resetTyping = () => {
   clearTyping()
   typed.value = ''
@@ -57,8 +113,14 @@ const resetTyping = () => {
 
 // o texto só começa quando o glitch termina (o pai "arma" o diário)
 watch(() => props.armed, (armed) => {
-  if (armed) typeScene()
-  else resetTyping()
+  if (armed) {
+    typeScene()
+    playStepAudio()
+    preloadNext()
+  } else {
+    resetTyping()
+    stopVoice()
+  }
 })
 
 watch(() => props.index, () => {
@@ -103,8 +165,11 @@ defineExpose({ goTo })
 <template>
   <div class="rsheet">
     <aside class="rsheet__info">
-      <p class="rsheet__eyebrow" data-sheet-item>{{ relic.mission }}</p>
+      <p class="rsheet__eyebrow" data-sheet-item>
+        {{ relic.mission }} · {{ LOCATION_LABEL[relicLocation(relic)] }}
+      </p>
       <h2 class="sheet__title" data-sheet-item>{{ relic.name }}</h2>
+      <p class="rsheet__state" data-sheet-item><StatusBadge :status="relicStatus(relic)" /></p>
 
       <div class="rsheet__copy" data-sheet-item>
         <Transition name="swap" mode="out-in">
@@ -182,6 +247,8 @@ defineExpose({ goTo })
 </template>
 
 <style scoped>
+.rsheet__state { margin: 0; }
+
 .swap-enter-active,
 .swap-leave-active {
   transition:

@@ -428,3 +428,14 @@ diário aberto pelo cartão.
 - Véu escuro a z 15 por baixo do canvas (`--gl-z: 20`): a página escurece, o buraco e o anel
   mantêm-se nítidos; o formulário assenta a z 110 (acima do header 70 e do modal 90).
 - Com o painel aberto a chrome recua (header e barra de progresso a opacity 0).
+
+## Iteração 21 — fecho do grupo A/B/C
+
+- **Modelo**: `status` (activo/silencioso/perdido), `location` (lua/marte/espaço profundo),
+  `published`, `coverPoster` e `audio` por cena.
+- **Home**: selo + local nos painéis, capa em vídeo (detetada pela extensão, com poster),
+  estado vazio, apenas relíquias publicadas.
+- **Modal**: link direto `/#slug` (abre ao carregar, limpa ao fechar), áudio por passo com
+  ducking da trilha, pré-carga do passo seguinte, tela inteira no telemóvel.
+- **Admin**: sem sessão redireciona para o login; publicar/despublicar; toasts; cartão em rascunho.
+- **Som**: mute global desligado por padrão, persistido, com botão no header; seletor PT/EN (UI).

@@ -3,7 +3,7 @@ import gsap from 'gsap'
 import type { RelicScene } from '~/data/relics'
 
 const { relics } = useRelics()
-const { activeSlug, close } = useProjectModal()
+const { activeSlug, open, close } = useProjectModal()
 const frame = ref<{ focusSelf: () => void } | null>(null)
 const sheet = ref<{ goTo: (index: number) => void } | null>(null)
 let lastFocus: HTMLElement | null = null
@@ -93,6 +93,24 @@ const onLeave = (el: Element, done: () => void): void => {
   }
 }
 
+/** `/#slug` abre o diário; fechar limpa o hash (link direto partilhável). */
+function syncHash(): void {
+  if (!import.meta.client) return
+  const target = relic.value ? `#${relic.value.id}` : ''
+  if (target) {
+    if (window.location.hash !== target) window.history.replaceState(window.history.state, '', target)
+    return
+  }
+  if (!window.location.hash) return
+  window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+}
+
+function openFromHash(): void {
+  const id = window.location.hash.replace(/^#/, '')
+  if (!id) return
+  if (relics.value.some(item => item.id === id)) open(id)
+}
+
 watch(relic, (value) => {
   index.value = 0
   lightbox.value = null
@@ -113,6 +131,7 @@ watch(relic, (value) => {
     lastFocus?.focus?.()
     lastFocus = null
   }
+  syncHash()
 }, { flush: 'post' })
 
 const focusables = (): HTMLElement[] => {
@@ -157,9 +176,14 @@ function onKey(e: KeyboardEvent): void {
   }
 }
 
-onMounted(() => window.addEventListener('keydown', onKey))
+onMounted(() => {
+  window.addEventListener('keydown', onKey)
+  window.addEventListener('hashchange', openFromHash)
+  openFromHash()
+})
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey)
+  window.removeEventListener('hashchange', openFromHash)
   clearGlitch()
 })
 </script>

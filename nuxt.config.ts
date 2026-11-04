@@ -8,7 +8,6 @@ export default defineNuxtConfig({
   vite: { plugins: [tailwindcss()] },
   app: {
     head: {
-      htmlAttrs: { lang: 'pt-BR' },
       title: 'Space Relics — abandonados, mas não esquecidos',
       meta: [
         { charset: 'utf-8' },

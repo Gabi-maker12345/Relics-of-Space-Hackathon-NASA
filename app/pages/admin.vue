@@ -21,16 +21,23 @@
 
     <ul v-else class="admin__grid">
       <li v-for="relic in relics" :key="relic.id" class="admin__item">
-        <article class="card">
-          <img class="card__img" :src="relic.image" :alt="relic.alt" loading="lazy">
+        <article class="card" :class="{ 'is-draft': relic.published === false }">
+          <RelicCover class="card__img" :src="relic.image" :poster="relic.coverPoster" :alt="relic.alt" />
           <div class="card__scrim" />
           <div class="card__body">
+            <p class="card__flags">
+              <StatusBadge :status="relicStatus(relic)" />
+              <span v-if="relic.published === false" class="card__draft">Rascunho</span>
+            </p>
             <p class="card__mission">{{ relic.mission }}</p>
             <h2 class="card__name">{{ relic.name }}</h2>
             <p class="card__tagline">{{ relic.tagline }}</p>
             <p class="card__meta">{{ relic.facts.length }} factos · {{ relic.scenes.length }} cenas</p>
           </div>
           <div class="card__tools">
+            <button type="button" class="card__tool" @click="togglePublished(relic)">
+              {{ relic.published === false ? 'Publicar' : 'Despublicar' }}
+            </button>
             <button type="button" class="card__tool" @click="openForm(relic)">Editar</button>
             <button type="button" class="card__tool card__tool--danger" @click="confirmRemove(relic)">Remover</button>
           </div>
@@ -49,6 +56,10 @@
       </li>
     </ul>
 
+    <Transition name="toast">
+      <p v-if="toast" class="admin__toast" role="status">{{ toast }}</p>
+    </Transition>
+
     <RelicForm
       :open="formOpen"
       :relic="editing"
@@ -61,6 +72,7 @@
 
 <script setup lang="ts">
 import type { Relic } from '~/data/relics'
+import { relicStatus } from '~/utils/relics'
 
 const { relics, load, create, update, remove } = useRelics()
 const { user, restore, signOut } = useAuth()
@@ -71,10 +83,26 @@ const editing = ref<Relic | null>(null)
 
 const takenIds = computed(() => relics.value.map(relic => relic.id).filter(id => id !== editing.value?.id))
 
-onMounted(() => {
+const toast = ref('')
+let toastTimer = 0
+
+function flash(message: string): void {
+  toast.value = message
+  window.clearTimeout(toastTimer)
+  toastTimer = window.setTimeout(() => { toast.value = '' }, 2600)
+}
+
+onMounted(async () => {
   load()
   restore()
+  await nextTick()
+  if (!user.value) {
+    openPanel('profile')
+    await navigateTo('/')
+  }
 })
+
+onBeforeUnmount(() => window.clearTimeout(toastTimer))
 
 function openForm(relic: Relic | null): void {
   editing.value = relic
@@ -82,15 +110,27 @@ function openForm(relic: Relic | null): void {
 }
 
 function store(relic: Relic): void {
-  if (editing.value) update(editing.value.id, relic)
-  else create(relic)
+  if (editing.value) {
+    update(editing.value.id, relic)
+    flash('Alterações guardadas.')
+  } else {
+    create(relic)
+    flash('Relíquia criada.')
+  }
   formOpen.value = false
   editing.value = null
+}
+
+function togglePublished(relic: Relic): void {
+  const next = relic.published === false
+  update(relic.id, { ...relic, published: next })
+  flash(next ? 'Publicada na home.' : 'Movida para rascunho.')
 }
 
 function confirmRemove(relic: Relic): void {
   if (!window.confirm(`Remover “${relic.name}” do arquivo?`)) return
   remove(relic.id)
+  flash('Relíquia removida.')
 }
 
 async function signOutAndLeave(): Promise<void> {
@@ -353,6 +393,42 @@ function requestLogin(): void {
   font-family: var(--fr-serif, inherit);
   font-size: 34px;
 }
+
+.card__flags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 2px;
+}
+
+.card__draft {
+  padding: 3px 7px;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px dashed rgb(255 255 255 / 30%);
+  color: rgb(255 255 255 / 65%);
+}
+
+.card.is-draft .card__img { opacity: 0.45; filter: grayscale(0.55); }
+
+.admin__toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  z-index: 140;
+  margin: 0;
+  padding: 12px 20px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #06070c;
+  background: var(--fr-fg, #e8e6e1);
+  transform: translateX(-50%);
+}
+
+.toast-enter-active, .toast-leave-active { transition: opacity 0.25s ease, transform 0.25s ease; }
+.toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, 8px); }
 
 @media (max-width: 620px) {
   .admin { padding-top: 120px; }
