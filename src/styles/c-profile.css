@@ -1,0 +1,171 @@
+.portal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 110;
+  width: min(560px, calc(100vw - 40px));
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.45s ease, visibility 0.45s ease;
+}
+
+.portal.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.portal__veil {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  background: color-mix(in srgb, #03040a 78%, transparent);
+  backdrop-filter: blur(6px) saturate(0.55);
+  animation: veil-in 0.6s ease both;
+}
+
+@keyframes veil-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* O engine GL pinta estes textos por cima do véu; o DOM serve de layout.
+   `color` fica intacto — é dele que o engine lê a cor dos glifos. */
+.portal [data-gl="text"] {
+  -webkit-text-fill-color: transparent;
+}
+
+.portal__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #f5f3ee;
+  text-align: center;
+}
+
+.portal__kicker {
+  margin: 0;
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.portal__title {
+  margin: 0 0 18px;
+  font-family: var(--fr-serif, inherit);
+  font-size: clamp(34px, 5vw, 52px);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+
+.portal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(340px, 100%);
+}
+
+.portal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.portal__label {
+  font-size: 8.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  opacity: 0.62;
+}
+
+.portal__wrap { position: relative; display: block; }
+
+.portal__input {
+  width: 100%;
+  padding: 8px 0 10px;
+  font: inherit;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid rgb(255 255 255 / 22%);
+  outline: none;
+  transition: border-color 0.25s ease;
+}
+
+.portal__input::placeholder { color: rgb(255 255 255 / 28%); }
+
+.portal__input:focus-visible { border-color: #fff; }
+
+.portal__reveal {
+  position: absolute;
+  right: 0;
+  bottom: 12px;
+  padding: 0;
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: inherit;
+  opacity: 0.35;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.portal__reveal:hover { opacity: 0.8; }
+
+.portal__error {
+  margin: -4px 0 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  text-align: left;
+  color: #ff9a9a;
+}
+
+.portal__submit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 8px;
+  padding: 15px 20px;
+  font-size: 9.5px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #06070c;
+  background: #f5f3ee;
+  border: 0;
+  cursor: pointer;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.portal__submit svg {
+  width: 24px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+}
+
+.portal__submit:hover { filter: brightness(1.06); }
+.portal__submit:hover svg { transform: translateX(3px); transition: transform 0.3s ease; }
+
+.portal__hint {
+  margin: 14px 0 0;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  opacity: 0.45;
+}
+
+.portal__hint code { font-size: 9px; }
+
+@media (max-width: 560px) {
+  .portal { width: calc(100vw - 32px); }
+}

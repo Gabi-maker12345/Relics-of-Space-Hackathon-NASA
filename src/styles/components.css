@@ -1,0 +1,31 @@
+/* Estilos dos componentes portados (scoped do Vue → global, classes já isoladas). */
+@import "./c-gl-canvas.css";
+@import "./c-cosmos-background.css";
+@import "./c-status-badge.css";
+@import "./c-relic-cover.css";
+@import "./c-header.css";
+@import "./c-profile.css";
+@import "./c-hero.css";
+@import "./c-approach.css";
+@import "./c-archive.css";
+@import "./c-panels.css";
+@import "./c-carousel.css";
+@import "./c-gate.css";
+@import "./c-sheet-frame.css";
+@import "./c-sheet.css";
+@import "./c-bot.css";
+@import "./c-lightbox.css";
+@import "./c-modal.css";
+@import "./c-relform.css";
+@import "./c-admin.css";
+
+/* ── Shell (app.vue) ── */
+.site {
+  position: relative;
+  min-height: 100vh;
+}
+
+.site__main {
+  position: relative;
+  z-index: 10;
+}

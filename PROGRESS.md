@@ -439,3 +439,21 @@ diário aberto pelo cartão.
   ducking da trilha, pré-carga do passo seguinte, tela inteira no telemóvel.
 - **Admin**: sem sessão redireciona para o login; publicar/despublicar; toasts; cartão em rascunho.
 - **Som**: mute global desligado por padrão, persistido, com botão no header; seletor PT/EN (UI).
+
+## Iteração 22 — migração Nuxt/Vue → Next.js 16 + React 19
+
+Migração in-place (o histórico do git mantém o Vue). Estrutura nova:
+
+- `app/` — rotas App Router: `page.tsx` (home), `full/`, `admin/`, `[...slug]` → `not-found.tsx`,
+  `layout.tsx` com metadata/fonts e `SiteShell` (providers + overlays GL).
+- `src/gl/*` — engine/shaders/choreo/textCanvas portados sem alterações (só imports `@/`).
+- `src/hooks/*` — composables → hooks React: `useRelics`, `useAuth`, `usePanels`,
+  `useProjectModal`, `useAct`, `useLocale`, `useSound`; `src/lib/*` — engine, trilha, scroll, mute.
+- `src/components/*.tsx` — 22 componentes; `Teleport` → `createPortal`, `Transition` → CSS/GSAP,
+  `defineExpose` → `useImperativeHandle`, `v-model` → estado controlado.
+- `src/styles/` — `main.css` (Tailwind 4 `source(none)` + `@source`) e `forge.css` intactos;
+  cada `<style scoped>` vive agora em `c-*.css` importado por `components.css`.
+
+Verificado no browser (dev): home, painéis com selos e capa, portal de login com texto GL,
+admin CRUD (criar/remover/públicar), modal `/#slug` com robô, mute/idoma, `/full`, 404.
+`npm run build` → 4 rotas estáticas + catch-all; `next start` serve `/`, `/admin`, `/full`.
