@@ -48,7 +48,7 @@ onMounted(() => {
         depth,
         phase: Math.random() * Math.PI * 2,
         speed: 0.4 + Math.random() * 1.6,
-        tint: palette[Math.floor(Math.random() * palette.length)],
+        tint: palette[Math.floor(Math.random() * palette.length)] ?? '#ffffff',
         glow: Math.random() > 0.86,
       }
     })

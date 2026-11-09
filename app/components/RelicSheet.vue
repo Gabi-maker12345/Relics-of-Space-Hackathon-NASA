@@ -46,7 +46,8 @@ const typeScene = (delay = 220) => {
 }
 
 const scenes = computed(() => props.relic.scenes)
-const current = computed(() => scenes.value[props.index] ?? scenes.value[0])
+const emptyScene: RelicScene = { kind: 'image', src: '', kicker: '', body: '' }
+const current = computed<RelicScene>(() => scenes.value[props.index] ?? scenes.value[0] ?? emptyScene)
 
 const resetTyping = () => {
   clearTyping()

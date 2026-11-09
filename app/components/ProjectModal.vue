@@ -146,7 +146,11 @@ function onKey(e: KeyboardEvent): void {
     return
   }
   const first = items[0]
-  const last = items[items.length - 1]
+  const last = items.at(-1)
+  if (!first || !last) {
+    e.preventDefault()
+    return
+  }
   const active = document.activeElement as HTMLElement | null
   if (e.shiftKey && (active === first || active === null || !items.includes(active))) {
     e.preventDefault()
