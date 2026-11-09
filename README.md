@@ -76,7 +76,7 @@ Abre `http://localhost:3000`. O painel fica em `/admin` e o índice em `/full`.
 
 ## Base de dados
 
-As migrações vivem em `supabase/migrations/` (criadas na BE-02) e são SQL puro, versionado.
+As migrações vivem em `supabase/migrations/` e são SQL puro, versionado.
 
 ```bash
 # opção A — CLI ligada ao projeto remoto
@@ -87,7 +87,7 @@ npx supabase db push
 # executar os ficheiros por ordem: 0001_..., 0002_...
 ```
 
-O esquema será documentado em `docs/database.md` na BE-02.
+O esquema está documentado em [`docs/database.md`](docs/database.md).
 
 ### Criar o administrador
 
@@ -117,15 +117,14 @@ Supabase Auth e garante a linha correspondente em `admin_users`.
 
 ---
 
-## Estrutura prevista
+## Estrutura
 
 ```
 app/                  front (páginas, componentes, GL)
-server/
-  api/                endpoints Nitro
-  utils/              auth, validação, repositórios
+server/               endpoints Nitro e repositórios (a partir da BE-03)
 tests/                testes unitários
 supabase/
+  config.toml         configuração do CLI / stack local
   migrations/         esquema + RLS + storage policies
   seed.sql            dados de demonstração (idempotente)
 docs/                 arquitetura e esquema
