@@ -4,8 +4,21 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-01',
   devtools: { enabled: false },
+  modules: ['@nuxtjs/supabase', '@nuxt/eslint'],
   css: ['~/assets/css/main.css'],
   vite: { plugins: [tailwindcss()] },
+  // Auth is enforced by route handlers and by the /admin page guard.
+  // The module's automatic redirect is disabled so the existing admin panel
+  // can keep its own login UI.
+  supabase: {
+    redirect: false,
+    useSsrCookies: true,
+    cookieOptions: {
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    },
+  },
   app: {
     head: {
       htmlAttrs: { lang: 'pt-BR' },

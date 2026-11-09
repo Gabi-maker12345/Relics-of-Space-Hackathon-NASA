@@ -13,6 +13,7 @@ export type FontSpec = {
   lineHeightPx: number
   alignCss: 'left' | 'center'
   color: string
+  radiusPx: number
   textTransform: string
   dpr: number
 }
@@ -60,6 +61,7 @@ export function drawTextPlane(input: PlaneInput): void {
   let globalIndex = 0
   for (let lineIndex = 0; lineIndex < input.lines.length; lineIndex += 1) {
     const line = input.lines[lineIndex]
+    if (!line) continue
     const bandTop = lineIndex * win
     const revealValue = input.reveal ? (input.reveal[lineIndex] ?? 1) : 1
     const slidePx = (1 - revealValue) * win * LINE_WINDOW_OVER

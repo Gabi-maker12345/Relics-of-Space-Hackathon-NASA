@@ -19,7 +19,6 @@ export type GlRole = 'title' | 'text' | 'label'
 
 const FOLLOW_LERP = 0.1 // damp do original (a.a = lerp(a.a, a.t, .1*ratio))
 const MAX_DPR = 2
-const WHEEL_DIVISOR = 0.3
 const DIGIT_ROLL_DUR = 0.9
 const CAROUSEL_EASE_DUR = 0.85
 const HOLE_RADIUS_FACTOR = 0.225 // raio medido no portal do original (576 css de diâmetro @1280)
@@ -154,7 +153,10 @@ function folioEase(n: number): number {
   if (n <= 0) return 0
   if (n >= 1) return 1
   for (const seg of FOLIO_SEGMENTS) {
-    const [e, , i, , r, , o] = seg
+    const e = seg[0] ?? 0
+    const i = seg[2] ?? 0
+    const r = seg[4] ?? 0
+    const o = seg[6] ?? 1
     if (n > o) continue
     let u = 0
     let c = 1
@@ -163,13 +165,13 @@ function folioEase(n: number): number {
       if (cubic(f, e, i, r, o) < n) u = f
       else c = f
     }
-    return cubic((u + c) / 2, seg[1], seg[3], seg[5], seg[7])
+    return cubic((u + c) / 2, seg[1] ?? 0, seg[3] ?? 0, seg[5] ?? 0, seg[7] ?? 1)
   }
   return n
 }
 
 type EngineTween = {
-  obj: Record<string, number>
+  obj: Record<string, unknown>
   key: string
   from: number
   to: number
@@ -235,7 +237,7 @@ export class GlEngine {
   private viewport = { w: 1, h: 1, dpr: 1 }
   private bootPromise: Promise<void> | null = null
   private bootedResolve: (() => void) | null = null
-  private bootDone = false
+
   trackEl: HTMLElement | null = null
   private hasCenteredInitial = false
   private readonly carousel = { p: 0, target: 0, max: 1, axis: 'x' as 'x' | 'y', infinite: false, copySpan: 0, perCopy: 0 }
@@ -388,12 +390,12 @@ export class GlEngine {
     mesh.scale.set(width, 1, depth)
     mesh.position.set(0, nearY, (nearZ - run) / 2)
     const u = mesh.material.uniforms
-    u.uRun.value = run
-    u.uLeanA.value = this.sheet.A
-    u.uLeanW.value = W
-    u.uLeanK.value = 1
+    u.uRun!.value = run
+    u.uLeanA!.value = this.sheet.A
+    u.uLeanW!.value = W
+    u.uLeanK!.value = 1
     const cell = H * FLOOR_CELL
-    u.uGridF.value.set(width / cell, run / cell)
+    u.uGridF!.value.set(width / cell, run / cell)
   }
 
   private holeRadius(): number {
@@ -499,8 +501,8 @@ export class GlEngine {
     mesh.position.x = this.ball.x - this.viewport.w / 2
     mesh.position.y = -(this.ball.y - this.viewport.h / 2)
     const u = mesh.material.uniforms
-    u.uOpacity.value = this.ball.alpha
-    u.uRes.value.set(BALL_SIZE, BALL_SIZE)
+    u.uOpacity!.value = this.ball.alpha
+    u.uRes!.value.set(BALL_SIZE, BALL_SIZE)
   }
 
   /** Abre/fecha o portal (hole). Durações/easing do original. */
@@ -556,13 +558,12 @@ export class GlEngine {
       await this.loadTextures()
       this.scan()
       this.bootedResolve?.()
-      this.bootDone = true
     })()
     return this.bootPromise
   }
 
   private async loadTextures(): Promise<void> {
-    let manifest: Record<string, string> = {}
+    let manifest: Record<string, string>
     try {
       const response = await fetch('/textures/manifest.json')
       const parsed: unknown = await response.json()
@@ -896,11 +897,12 @@ export class GlEngine {
     const mobile = window.innerWidth < 650
     this.carousel.axis = mobile ? 'y' : 'x'
     const cards = Array.from(el.querySelectorAll<HTMLElement>('[data-gl="card"]'))
-    const last = cards.length > 0 ? cards[cards.length - 1] : null
-    if (last !== null) {
+    const first = cards[0]
+    const last = cards.at(-1)
+    if (first && last) {
       if (mobile) {
         this.carousel.infinite = false
-        const anchor = cards[1] ?? cards[0]
+        const anchor = cards[1] ?? first
         const vh = window.innerHeight
         const start = vh / 2 - (anchor.offsetTop + anchor.offsetHeight / 2)
         const lastBottom = last.offsetTop + last.offsetHeight
@@ -912,7 +914,8 @@ export class GlEngine {
         const copies = Number(el.getAttribute('data-copies') ?? 1) || 1
         if (el.hasAttribute('data-infinite') && copies > 1) {
           const perCopy = Math.floor(cards.length / copies)
-          const span = cards[perCopy] ? cards[perCopy].offsetLeft - cards[0].offsetLeft : 0
+          const nextCopy = cards[perCopy]
+          const span = nextCopy ? nextCopy.offsetLeft - first.offsetLeft : 0
           if (span > 10) {
             this.carousel.infinite = true
             this.carousel.perCopy = perCopy
@@ -985,7 +988,7 @@ export class GlEngine {
     if (this.holeMesh) {
       const d = this.holeRadius() * 2
       this.holeMesh.scale.set(d, d, 1)
-      this.holeMesh.material.uniforms.uAspect.value = this.viewport.w / this.viewport.h
+      this.holeMesh.material.uniforms.uAspect!.value = this.viewport.w / this.viewport.h
     }
     this.measureTrack()
     for (const plane of this.planes) {
@@ -1161,13 +1164,13 @@ export class GlEngine {
     const mesh = this.holeMesh
     if (!mesh) return
     const u = mesh.material.uniforms
-    u.uP.value = this.hole.p
+    u.uP!.value = this.hole.p
     mesh.visible = this.hole.p > 0.002 || this.hole.scale > 0.25
     const d = this.holeRadius() * 2 * Math.max(0.001, this.hole.scale)
     mesh.scale.set(d, d, 1)
-    u.uTime.value = this.reduced ? 0 : this.sheetClock
+    u.uTime!.value = this.reduced ? 0 : this.sheetClock
     const floor = this.floorMesh?.material.uniforms
-    if (floor) floor.uAlpha.value = this.floorBase * (1 - 0.6 * this.hole.p)
+    if (floor) floor.uAlpha!.value = this.floorBase * (1 - 0.6 * this.hole.p)
   }
 
   private advanceCarousel(): void {
@@ -1372,7 +1375,6 @@ export class GlEngine {
       const cy = h * (0.5 - lens * 0.03)
       const tail = d * 0.115
       const head = d * 0.105
-      const half = d * 0.085
       ctx.beginPath()
       ctx.moveTo(cx - tail, cy + tail)
       ctx.lineTo(cx - head * 0.1, cy + head * 0.1)
@@ -1412,6 +1414,7 @@ export class GlEngine {
 
   /** Saída das barras do loader — tween no clock do engine (resolvido mesmo com RAF throttled). */
   exitBars(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
     const { promise, resolve } = Promise.withResolvers<void>()
     const bars = this.planes.filter(p => p.kind === 'bar')
     if (bars.length === 0) {
@@ -1546,7 +1549,7 @@ export class GlEngine {
   /* ————— tween engine-próprio (roda no clock do engine, indiferente a RAF throttled) ————— */
 
   private addTween(
-    obj: Record<string, number>,
+    obj: Record<string, unknown>,
     key: string,
     from: number,
     to: number,

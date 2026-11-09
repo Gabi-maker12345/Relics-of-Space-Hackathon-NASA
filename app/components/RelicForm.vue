@@ -265,10 +265,14 @@ watch(
     if (props.relic) Object.assign(draft, JSON.parse(JSON.stringify(props.relic)))
     // criar: o identificador segue o nome. editar: o identificador fica estável.
     idTouched = Boolean(props.relic)
-    for (const key of Object.keys(errors)) delete errors[key]
+    clearErrors()
   },
   { immediate: true },
 )
+
+function clearErrors(): void {
+  for (const key of Object.keys(errors)) errors[key] = ''
+}
 
 function onName(): void {
   if (!idTouched) draft.id = slugify(draft.name)
@@ -306,7 +310,7 @@ async function onFile(event: Event): Promise<void> {
 }
 
 function validate(): boolean {
-  for (const key of Object.keys(errors)) delete errors[key]
+  clearErrors()
   const required: Array<[keyof Draft, string]> = [
     ['name', 'Dá um nome à relíquia.'],
     ['mission', 'Indica a missão.'],
@@ -327,7 +331,7 @@ function validate(): boolean {
   const scenes = draft.scenes.filter(scene => scene.src.trim() && scene.body.trim())
   if (scenes.length < 1) errors.scenes = 'Cada cena precisa de mídia e texto narrado.'
 
-  return Object.keys(errors).length === 0
+  return Object.values(errors).every(message => !message)
 }
 
 function save(): void {
