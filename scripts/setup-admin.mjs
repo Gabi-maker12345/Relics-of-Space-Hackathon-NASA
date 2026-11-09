@@ -10,7 +10,16 @@
  *
  * The script is idempotent: running it twice does not duplicate the user.
  */
+import { loadEnvFile } from 'node:process'
 import { createClient } from '@supabase/supabase-js'
+
+// Allow `npm run setup:admin` to read the local `.env` without extra tooling.
+try {
+  loadEnvFile()
+}
+catch {
+  // No .env file: fall back to the process environment (CI, Vercel, ...).
+}
 
 const url = process.env.NUXT_PUBLIC_SUPABASE_URL
 const secret = process.env.NUXT_SUPABASE_SECRET_KEY

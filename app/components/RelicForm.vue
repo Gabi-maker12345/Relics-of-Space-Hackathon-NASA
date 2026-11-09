@@ -331,7 +331,7 @@ function validate(): boolean {
   const scenes = draft.scenes.filter(scene => scene.src.trim() && scene.body.trim())
   if (scenes.length < 1) errors.scenes = 'Cada cena precisa de mídia e texto narrado.'
 
-  return Object.keys(errors).length === 0
+  return Object.values(errors).every(message => !message)
 }
 
 function save(): void {
