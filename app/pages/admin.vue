@@ -94,7 +94,7 @@ function confirmRemove(relic: Relic): void {
 }
 
 async function signOutAndLeave(): Promise<void> {
-  signOut()
+  await signOut()
   formOpen.value = false
   await navigateTo('/')
 }
