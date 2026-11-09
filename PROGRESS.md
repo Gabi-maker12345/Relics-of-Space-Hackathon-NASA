@@ -428,3 +428,16 @@ diário aberto pelo cartão.
 - Véu escuro a z 15 por baixo do canvas (`--gl-z: 20`): a página escurece, o buraco e o anel
   mantêm-se nítidos; o formulário assenta a z 110 (acima do header 70 e do modal 90).
 - Com o painel aberto a chrome recua (header e barra de progresso a opacity 0).
+
+## Iteração 21 — backend milestone 1 & 2: autenticação e guarda admin (BE-03)
+
+- **Endpoints Nitro:**
+  - `POST /api/auth/login`: valida credenciais via Supabase Auth + verifica presença em `admin_users`. Rejeita utilizadores não-admin com 403 e revoga sessão; credenciais inválidas com 401; formato com 400.
+  - `POST /api/auth/logout`: encerra sessão no Supabase e limpa cookies SSR.
+  - `GET /api/auth/me`: devolve `{ authenticated: true, user }` para administradores ou `{ authenticated: false, user: null }` para visitantes anónimos.
+  - `GET /api/admin/status`: endpoint de teste protegido que comprova o funcionamento da guarda.
+- **Guarda global e utilitários (`server/utils/auth.ts` + `server/middleware/admin.ts`):**
+  - `requireAdmin(event)`: extrai utilizador da sessão SSR (ou cabeçalho `Authorization: Bearer <token>`) e valida autorização na tabela `admin_users` através da service role.
+  - Middleware para `/api/admin/**`: qualquer rota de escrita ou administração bloqueia automaticamente acessos não autenticados (401) e utilizadores sem perfil de administrador (403).
+- **Integração no front-end:** `useAuth.ts`, `ProfilePanel.vue` e `pages/admin.vue` adaptados para chamadas assíncronas aos endpoints Nitro, mantendo mensagens localizadas em português.
+- **Testes unitários (`tests/auth.test.ts`):** 19 novos testes no Vitest cobrindo validação de esquema, extração de sessão/token, guarda admin, middleware e endpoints (totalizando 29 testes verdes no projeto).

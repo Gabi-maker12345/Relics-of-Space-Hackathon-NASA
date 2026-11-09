@@ -71,7 +71,8 @@ const password = ref('')
 const reveal = ref(false)
 
 async function submit(): Promise<void> {
-  if (!signIn(email.value, password.value)) return
+  const ok = await signIn(email.value, password.value)
+  if (!ok) return
   password.value = ''
   close()
   await navigateTo('/admin')
