@@ -28,7 +28,8 @@ export default defineEventHandler(async (event) => {
   catch (err) {
     const rateErr = err as RateLimitError
     if (rateErr.headers?.['Retry-After']) {
-      setResponseHeader(event, 'Retry-After', rateErr.headers['Retry-After'] as any)
+      const retryAfter = rateErr.headers['Retry-After']
+      setResponseHeader(event, 'Retry-After', String(retryAfter))
     }
     throw createError({
       statusCode: rateErr.statusCode || 429,
