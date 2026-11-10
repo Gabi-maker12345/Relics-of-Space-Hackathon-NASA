@@ -82,15 +82,15 @@ function openForm(relic: Relic | null): void {
 }
 
 function store(relic: Relic): void {
-  if (editing.value) update(editing.value.id, relic)
-  else create(relic)
+  if (editing.value) void update(editing.value.id, relic)
+  else void create(relic)
   formOpen.value = false
   editing.value = null
 }
 
 function confirmRemove(relic: Relic): void {
   if (!window.confirm(`Remover “${relic.name}” do arquivo?`)) return
-  remove(relic.id)
+  void remove(relic.id)
 }
 
 async function signOutAndLeave(): Promise<void> {
