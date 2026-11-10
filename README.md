@@ -47,18 +47,58 @@ Não há CORS: front e API são same-origin.
 # 1. Dependências
 npm ci
 
-# 2. Variáveis de ambiente
+# 2. Supabase local (Docker tem de estar a correr)
+npm run supabase:start
+# imprime as chaves locais; copia-as para o .env (ver abaixo)
+
+# 3. Variáveis de ambiente
 cp .env.example .env
 # preencher NUXT_PUBLIC_SUPABASE_URL, NUXT_PUBLIC_SUPABASE_KEY e
-# NUXT_SUPABASE_SECRET_KEY
+# NUXT_SUPABASE_SECRET_KEY (valores de `npx supabase status`)
 
-# 3. Base de dados (ver secção abaixo)
+# 4. Admin inicial
+npm run setup:admin
 
-# 4. Servidor
+# 5. Servidor
 npm run dev
 ```
 
 Abre `http://localhost:3000`. O painel fica em `/admin` e o índice em `/full`.
+O Supabase Studio local fica em `http://127.0.0.1:54323` e o Mailpit (emails de
+teste) em `http://127.0.0.1:54324`.
+
+### Supabase local
+
+A stack local é definida por [`supabase/config.toml`](supabase/config.toml):
+
+- registo público **desativado** (`enable_signup = false`): o único caminho de
+  entrada é `npm run setup:admin`;
+- password mínima de 8 caracteres;
+- migrações e `seed.sql` aplicados automaticamente no arranque.
+
+```bash
+npm run supabase:start    # arranca Postgres, Auth, Storage, Studio, Mailpit
+npm run supabase:reset    # recria a BD + migrações + seed
+npm run supabase:stop     # pára os containers
+```
+
+Depois de alterar o esquema, gera os tipos:
+
+```bash
+npx supabase gen types typescript --local > app/types/database.types.ts
+```
+
+### Smoke test
+
+Com `npm run dev` e o Supabase local a correr, valida o caminho completo
+(login, sessão, guarda admin, RLS de leitura e de escrita):
+
+```bash
+npm run smoke
+```
+
+O script [`scripts/smoke.mjs`](scripts/smoke.mjs) usa `BASE_URL` (por omissão
+`http://127.0.0.1:3000`) e as credenciais `ADMIN_*` do `.env`.
 
 ### Variáveis
 
@@ -114,6 +154,10 @@ Supabase Auth e garante a linha correspondente em `admin_users`.
 | `npm run test` | testes unitários (Vitest) |
 | `npm run test:watch` | testes em watch |
 | `npm run setup:admin` | cria o administrador inicial |
+| `npm run smoke` | valida login, sessão, guarda admin e RLS |
+| `npm run supabase:start` | arranca o Supabase local |
+| `npm run supabase:reset` | recria a BD, migrações e seed |
+| `npm run supabase:stop` | pára o Supabase local |
 
 ---
 
