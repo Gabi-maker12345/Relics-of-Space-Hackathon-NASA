@@ -1,59 +1,71 @@
 import { relics as seedRelics } from '~/data/relics'
 import type { Relic } from '~/data/relics'
 
-const STORAGE_KEY = 'space-relics:relics:v1'
-
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
 /**
- * Fonte única das relíquias: começa no seed (`data/relics.ts`) e passa a viver
- * em localStorage assim que o admin grava. SSR usa sempre o seed.
+ * Fonte única das relíquias: tenta carregar da API (pública/admin conforme contexto),
+ * cai para seed em caso de falha ou em SSR.
  */
 export function useRelics() {
   const relics = useState<Relic[]>('relics-list', () => clone(seedRelics))
   const loaded = useState<boolean>('relics-loaded', () => false)
+  const { user } = useAuth()
 
-  const load = (): void => {
+  const load = async (): Promise<void> => {
     if (!import.meta.client || loaded.value) return
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const parsed: unknown = JSON.parse(raw)
-        if (Array.isArray(parsed) && parsed.length > 0) relics.value = parsed as Relic[]
+      if (user.value) {
+        const data = await $fetch<Relic[]>('/api/admin/relics')
+        if (Array.isArray(data) && data.length > 0) {
+          relics.value = data
+        }
       }
-    } catch {
-      /* storage indisponível: segue com o seed */
+      else {
+        const data = await $fetch<Relic[]>('/api/public/relics')
+        if (Array.isArray(data) && data.length > 0) {
+          relics.value = data
+        }
+      }
+    }
+    catch {
+      // Mantém seed em caso de falha
     }
     loaded.value = true
   }
 
-  const persist = (): void => {
-    if (!import.meta.client) return
+  const create = async (relic: Relic): Promise<void> => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(relics.value))
-    } catch {
-      /* quota cheia: mantém em memória */
+      const data = await $fetch<Relic>('/api/admin/relics', { method: 'POST', body: relic })
+      relics.value = [...relics.value, data]
+    }
+    catch {
+      relics.value = [...relics.value, relic]
     }
   }
 
-  const create = (relic: Relic): void => {
-    relics.value = [...relics.value, relic]
-    persist()
+  const update = async (id: string, patch: Relic): Promise<void> => {
+    try {
+      const data = await $fetch<Relic>(`/api/admin/relics/${id}`, { method: 'PUT', body: patch })
+      relics.value = relics.value.map(relic => (relic.id === id ? data : relic))
+    }
+    catch {
+      relics.value = relics.value.map(relic => (relic.id === id ? patch : relic))
+    }
   }
 
-  const update = (id: string, patch: Relic): void => {
-    relics.value = relics.value.map(relic => (relic.id === id ? patch : relic))
-    persist()
-  }
-
-  const remove = (id: string): void => {
+  const remove = async (id: string): Promise<void> => {
+    try {
+      await $fetch(`/api/admin/relics/${id}`, { method: 'DELETE' })
+    }
+    catch {
+      /* ignora erro e remove localmente */
+    }
     relics.value = relics.value.filter(relic => relic.id !== id)
-    persist()
   }
 
   const reset = (): void => {
     relics.value = clone(seedRelics)
-    persist()
   }
 
   return { relics, loaded, load, create, update, remove, reset }
