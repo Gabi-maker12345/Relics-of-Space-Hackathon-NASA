@@ -56,7 +56,7 @@
       </form>
 
       <p class="portal__hint" data-gl="text">
-        demonstração · <code>admin@spacerelics.space</code> / <code>relics2026</code>
+        acesso restrito ao arquivo
       </p>
     </div>
   </div>

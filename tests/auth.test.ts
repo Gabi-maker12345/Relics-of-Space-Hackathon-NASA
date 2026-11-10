@@ -61,14 +61,14 @@ describe('loginSchema validation', () => {
     }
   })
 
-  it('rejects passwords shorter than 6 characters', () => {
+  it('rejects passwords shorter than 8 characters', () => {
     const invalid = loginSchema.safeParse({
       email: 'admin@spacerelics.space',
-      password: '123',
+      password: '1234567',
     })
     expect(invalid.success).toBe(false)
     if (!invalid.success) {
-      expect(invalid.error.issues[0]?.message).toMatch(/6 caracteres/i)
+      expect(invalid.error.issues[0]?.message).toMatch(/8 caracteres/i)
     }
   })
 })
@@ -128,13 +128,13 @@ describe('requireAdmin', () => {
     })
   })
 
-  it('throws 403 when authenticated user is not in admin_users', async () => {
-    mockServerSupabaseUser.mockResolvedValueOnce({ sub: 'regular-user-id' })
+  it('throws 500 when admin lookup fails due to infrastructure error', async () => {
+    mockServerSupabaseUser.mockResolvedValueOnce({ sub: 'admin-uuid-1', email: 'admin@spacerelics.space' })
     mockServerSupabaseServiceRole.mockReturnValueOnce({
       from: () => ({
         select: () => ({
           eq: () => ({
-            maybeSingle: vi.fn().mockResolvedValueOnce({ data: null, error: null }),
+            maybeSingle: vi.fn().mockResolvedValueOnce({ data: null, error: { message: 'db down' } }),
           }),
         }),
       }),
@@ -142,8 +142,8 @@ describe('requireAdmin', () => {
 
     const event = createMockEvent()
     await expect(requireAdmin(event)).rejects.toMatchObject({
-      statusCode: 403,
-      statusMessage: 'Forbidden',
+      statusCode: 500,
+      statusMessage: 'Internal Server Error',
     })
   })
 
@@ -179,6 +179,20 @@ describe('admin middleware', () => {
     await expect(adminMiddleware(event)).rejects.toMatchObject({
       statusCode: 401,
     })
+  })
+
+  it('enforces admin check on exact /api/admin path', async () => {
+    mockServerSupabaseUser.mockResolvedValueOnce(null)
+    const event = createMockEvent({ path: '/api/admin' })
+
+    await expect(adminMiddleware(event)).rejects.toMatchObject({
+      statusCode: 401,
+    })
+  })
+
+  it('does not intercept paths that merely contain /api/admin in name', async () => {
+    const event = createMockEvent({ path: '/api/administer' })
+    await expect(adminMiddleware(event)).resolves.toBeUndefined()
   })
 
   it('passes through for public or non-admin paths', async () => {
