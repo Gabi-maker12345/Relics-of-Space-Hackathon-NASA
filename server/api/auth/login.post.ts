@@ -4,6 +4,12 @@ import type { Database } from '~/types/database.types'
 import { loginSchema } from '../../utils/auth'
 import { checkLoginRateLimit, resetLoginRateLimit } from '../../utils/rateLimit'
 
+interface RateLimitError extends Error {
+  statusCode?: number
+  statusMessage?: string
+  headers?: Record<string, string>
+}
+
 export default defineEventHandler(async (event) => {
   const body = await readBody(event).catch(() => ({}))
   const parsed = loginSchema.safeParse(body)
@@ -19,14 +25,15 @@ export default defineEventHandler(async (event) => {
   try {
     checkLoginRateLimit(event, email)
   }
-  catch (err: any) {
-    if (err.headers?.['Retry-After']) {
-      setResponseHeader(event, 'Retry-After', err.headers['Retry-After'])
+  catch (err) {
+    const rateErr = err as RateLimitError
+    if (rateErr.headers?.['Retry-After']) {
+      setResponseHeader(event, 'Retry-After', rateErr.headers['Retry-After'])
     }
     throw createError({
-      statusCode: err.statusCode || 429,
-      statusMessage: err.statusMessage || 'Too Many Requests',
-      message: err.message || 'Demasiadas tentativas de login. Tenta novamente mais tarde.',
+      statusCode: rateErr.statusCode || 429,
+      statusMessage: rateErr.statusMessage || 'Too Many Requests',
+      message: rateErr.message || 'Demasiadas tentativas de login. Tenta novamente mais tarde.',
     })
   }
 
