@@ -14,7 +14,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "nuxt typecheck",
-    "test": "vitest run",
+    "test": "vitest run --config vitest.unit.config.ts",
     "test:watch": "vitest",
     "setup:admin": "node scripts/setup-admin.mjs",
     "smoke": "node scripts/smoke.mjs",
