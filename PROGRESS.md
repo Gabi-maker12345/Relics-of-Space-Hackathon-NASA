@@ -441,3 +441,21 @@ diário aberto pelo cartão.
   - Middleware para `/api/admin/**`: qualquer rota de escrita ou administração bloqueia automaticamente acessos não autenticados (401) e utilizadores sem perfil de administrador (403).
 - **Integração no front-end:** `useAuth.ts`, `ProfilePanel.vue` e `pages/admin.vue` adaptados para chamadas assíncronas aos endpoints Nitro, mantendo mensagens localizadas em português.
 - **Testes unitários (`tests/auth.test.ts`):** 19 novos testes no Vitest cobrindo validação de esquema, extração de sessão/token, guarda admin, middleware e endpoints (totalizando 29 testes verdes no projeto).
+
+## Iteração 22 — ambiente Supabase local validado (BE-19)
+
+- **Stack local a correr:** `npx supabase start` com Postgres 17, Auth, Storage, Studio e Mailpit.
+  Migração `20261109000100_core_schema.sql` e `seed.sql` aplicados sem intervenção manual.
+- **`npm run supabase:reset`** recria a base de dados do zero (caminho documentado) sem erros.
+- **Admin:** `npm run setup:admin` cria o utilizador `admin@spacerelics.space` e a linha em
+  `admin_users`; correr duas vezes atualiza em vez de duplicar.
+- **Smoke test real (`npm run smoke`)**, todos verdes:
+  - `anon` lê as 3 relíquias publicadas através do PostgREST;
+  - login do admin devolve 200 e define o cookie de sessão;
+  - `/api/auth/me` reconhece a sessão; sem cookie devolve `authenticated: false`;
+  - `/api/admin/status` responde 401 sem sessão e 200 com sessão de admin;
+  - despublicar uma relíquia faz a linha desaparecer da vista `anon` (e o restore repõe);
+  - `anon` não consegue inserir (`42501`, RLS).
+- **Caminho negativo:** utilizador autenticado mas fora de `admin_users` recebe 403 no login.
+- **Scripts novos:** `supabase:start`, `supabase:reset`, `supabase:stop`, `smoke`.
+- **Tooling:** `supabase` CLI fixado como devDependency (v3.0.0) para o fluxo ser reprodutível.
