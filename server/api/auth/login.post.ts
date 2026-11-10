@@ -1,7 +1,8 @@
-import { createError, defineEventHandler, readBody } from 'h3'
+import { createError, defineEventHandler, readBody, setResponseHeader } from 'h3'
 import { serverSupabaseClient, serverSupabaseServiceRole } from '#supabase/server'
 import type { Database } from '~/types/database.types'
 import { loginSchema } from '../../utils/auth'
+import { checkLoginRateLimit, resetLoginRateLimit } from '../../utils/rateLimit'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event).catch(() => ({}))
@@ -15,6 +16,20 @@ export default defineEventHandler(async (event) => {
   }
 
   const { email, password } = parsed.data
+  try {
+    checkLoginRateLimit(event, email)
+  }
+  catch (err: any) {
+    if (err.headers?.['Retry-After']) {
+      setResponseHeader(event, 'Retry-After', err.headers['Retry-After'])
+    }
+    throw createError({
+      statusCode: err.statusCode || 429,
+      statusMessage: err.statusMessage || 'Too Many Requests',
+      message: err.message || 'Demasiadas tentativas de login. Tenta novamente mais tarde.',
+    })
+  }
+
   const supabase = await serverSupabaseClient<Database>(event)
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -47,6 +62,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  resetLoginRateLimit(event, email)
   return {
     ok: true,
     user: {

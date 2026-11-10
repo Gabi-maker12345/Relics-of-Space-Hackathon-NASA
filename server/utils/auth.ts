@@ -5,7 +5,7 @@ import type { Database } from '~/types/database.types'
 
 export const loginSchema = z.object({
   email: z.string().trim().email('Escreve um email válido.'),
-  password: z.string().min(6, 'A palavra-passe precisa de 6 caracteres ou mais.'),
+  password: z.string().min(8, 'A palavra-passe precisa de 8 caracteres ou mais.'),
 })
 
 export type LoginInput = z.infer<typeof loginSchema>
@@ -52,7 +52,7 @@ export async function getAuthenticatedUser(event: H3Event): Promise<{ id: string
 
 /**
  * Ensures the request is from an authenticated administrator.
- * Throws 401 if unauthenticated, 403 if authenticated but not in admin_users.
+ * Throws 401 if unauthenticated, 403 if authenticated but not in admin_users or on DB error.
  */
 export async function requireAdmin(event: H3Event): Promise<AuthenticatedAdmin> {
   const user = await getAuthenticatedUser(event)
@@ -71,7 +71,15 @@ export async function requireAdmin(event: H3Event): Promise<AuthenticatedAdmin> 
     .eq('user_id', user.id)
     .maybeSingle()
 
-  if (error || !data) {
+  if (error) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Internal Server Error',
+      message: 'Erro ao validar permissões.',
+    })
+  }
+
+  if (!data) {
     throw createError({
       statusCode: 403,
       statusMessage: 'Forbidden',

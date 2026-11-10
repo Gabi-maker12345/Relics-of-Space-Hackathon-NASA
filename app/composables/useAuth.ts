@@ -1,15 +1,13 @@
-const SESSION_KEY = 'space-relics:session:v1'
-
-/** Credencial de demonstração (semente em scripts/setup-admin.mjs). */
-export const DEMO_ACCOUNT = { email: 'admin@spacerelics.space', password: 'relics2026' }
-
 export function useAuth() {
   const user = useState<string | null>('auth-user', () => null)
   const loaded = useState<boolean>('auth-loaded', () => false)
   const error = ref('')
 
   const restore = async (): Promise<void> => {
-    if (!import.meta.client) return
+    if (!import.meta.client) {
+      loaded.value = true
+      return
+    }
     try {
       const res = await $fetch<{ authenticated: boolean, user: { id: string, email: string } | null }>('/api/auth/me')
       if (res?.authenticated && res.user) {
@@ -20,14 +18,7 @@ export function useAuth() {
       }
     }
     catch {
-      // Fallback local caso offline
-      try {
-        const raw = localStorage.getItem(SESSION_KEY)
-        if (raw) user.value = raw
-      }
-      catch {
-        /* ignora */
-      }
+      user.value = null
     }
     finally {
       loaded.value = true
@@ -41,8 +32,8 @@ export function useAuth() {
       error.value = 'Escreve um email válido.'
       return false
     }
-    if (password.length < 6) {
-      error.value = 'A palavra-passe precisa de 6 caracteres ou mais.'
+    if (password.length < 8) {
+      error.value = 'A palavra-passe precisa de 8 caracteres ou mais.'
       return false
     }
 
@@ -53,14 +44,6 @@ export function useAuth() {
       })
       if (res?.ok && res.user) {
         user.value = res.user.email
-        if (import.meta.client) {
-          try {
-            localStorage.setItem(SESSION_KEY, res.user.email)
-          }
-          catch {
-            /* ignora */
-          }
-        }
         return true
       }
       error.value = 'Falha ao autenticar.'
@@ -81,16 +64,6 @@ export function useAuth() {
     }
     catch {
       /* ignora */
-    }
-    finally {
-      if (import.meta.client) {
-        try {
-          localStorage.removeItem(SESSION_KEY)
-        }
-        catch {
-          /* ignora */
-        }
-      }
     }
   }
 
