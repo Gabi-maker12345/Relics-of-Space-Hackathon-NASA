@@ -1,46 +1,57 @@
-import { defineEventHandler, readMultipartFormData, createError } from 'h3'
+import { createError, defineEventHandler, readMultipartFormData } from 'h3'
 import { serverSupabaseServiceRole } from '#supabase/server'
 import { requireAdmin } from '../../../utils/auth'
-import { randomUUID } from 'node:crypto'
-import path from 'node:path'
+import {
+  MAX_SERVER_UPLOAD_BYTES,
+  buildStoragePath,
+  extensionForMime,
+  isUploadKind,
+  normalizeRelicId,
+  validateUpload,
+} from '../../../utils/upload'
 
-const MAX_SIZES = {
-  image: 5 * 1024 * 1024,
-  audio: 15 * 1024 * 1024,
-  video: 100 * 1024 * 1024,
-} as const
-
-const MIME_MAP = {
-  image: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
-  audio: ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/aac'],
-  video: ['video/mp4', 'video/webm', 'video/quicktime'],
-} as const
-
+/**
+ * Direct upload for small files (tests, scripts, avatars).
+ *
+ * Vercel caps function request bodies at 4.5 MB, so larger uploads must use
+ * `POST /api/admin/upload/sign` and talk to Storage from the browser.
+ */
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
+
   const form = await readMultipartFormData(event)
   if (!form) throw createError({ statusCode: 400, message: 'Ficheiro em falta' })
 
-  const filePart = form.find(p => p.name === 'file')
-  const relicId = form.find(p => p.name === 'relicId')?.data?.toString() || 'common'
-  const kind = (form.find(p => p.name === 'kind')?.data?.toString() || 'image') as keyof typeof MAX_SIZES
-
-  if (!filePart || !filePart.data) throw createError({ statusCode: 400, message: 'Ficheiro em falta' })
-  if (!MAX_SIZES[kind]) throw createError({ statusCode: 400, message: 'Tipo inválido' })
-
-  const mime = filePart.type || ''
-  if (!(MIME_MAP[kind] as readonly string[]).includes(mime)) {
-    throw createError({ statusCode: 400, message: 'Tipo MIME não permitido' })
+  const filePart = form.find(part => part.name === 'file')
+  if (!filePart || !filePart.data || filePart.data.length === 0) {
+    throw createError({ statusCode: 400, message: 'Ficheiro em falta' })
   }
 
-  if (filePart.data.length > MAX_SIZES[kind]) {
-    throw createError({ statusCode: 400, message: 'Ficheiro demasiado grande' })
+  const kindRaw = form.find(part => part.name === 'kind')?.data?.toString() ?? 'image'
+  if (!isUploadKind(kindRaw)) {
+    throw createError({ statusCode: 400, message: 'Tipo inválido (image, audio ou video).' })
   }
 
-  const ext = path.extname(filePart.filename || '') || (kind === 'image' ? '.jpg' : kind === 'audio' ? '.mp3' : '.mp4')
-  const safeName = `${randomUUID()}${ext.toLowerCase()}`
-  const key = `relics/${relicId}/${kind === 'image' ? 'images' : kind === 'audio' ? 'audio' : 'videos'}/${safeName}`
+  const relicId = normalizeRelicId(form.find(part => part.name === 'relicId')?.data?.toString())
+  if (relicId === null) {
+    throw createError({ statusCode: 400, message: 'relicId inválido.' })
+  }
 
+  if (filePart.data.length > MAX_SERVER_UPLOAD_BYTES) {
+    throw createError({
+      statusCode: 413,
+      message: 'Ficheiro grande demais para upload direto. Usa /api/admin/upload/sign.',
+    })
+  }
+
+  const mime = filePart.type ?? ''
+  const invalid = validateUpload({ kind: kindRaw, mime, size: filePart.data.length })
+  if (invalid) throw createError({ statusCode: 400, message: invalid })
+
+  const extension = extensionForMime(mime)
+  if (!extension) throw createError({ statusCode: 400, message: `Tipo não suportado: ${mime}` })
+
+  const key = buildStoragePath(relicId, kindRaw, extension)
   const supabase = serverSupabaseServiceRole(event)
   const { error } = await supabase.storage.from('relic-media').upload(key, filePart.data, {
     contentType: mime,
@@ -48,9 +59,9 @@ export default defineEventHandler(async (event) => {
   })
 
   if (error) {
-    throw createError({ statusCode: 400, message: error.message })
+    throw createError({ statusCode: 502, message: `Falha no armazenamento: ${error.message}` })
   }
 
   const { data } = supabase.storage.from('relic-media').getPublicUrl(key)
-  return { url: data.publicUrl, path: key }
+  return { url: data.publicUrl, path: key, kind: kindRaw, size: filePart.data.length, contentType: mime }
 })
