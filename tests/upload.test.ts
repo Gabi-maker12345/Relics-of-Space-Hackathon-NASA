@@ -70,10 +70,15 @@ describe('normalizeRelicId', () => {
     expect(normalizeRelicId(RELIC_ID.toUpperCase())).toBe(RELIC_ID)
   })
 
+  it('accepts a slug so new relics can upload before they have an id', () => {
+    expect(normalizeRelicId('apollo-lunar-module')).toBe('apollo-lunar-module')
+    expect(normalizeRelicId('Apollo-Lunar')).toBe('apollo-lunar')
+  })
+
   it('rejects anything that could escape the folder', () => {
     expect(normalizeRelicId('../etc')).toBeNull()
     expect(normalizeRelicId('relics/x')).toBeNull()
-    expect(normalizeRelicId('not-a-uuid')).toBeNull()
+    expect(normalizeRelicId('a/b')).toBeNull()
     expect(normalizeRelicId(42)).toBeNull()
   })
 })

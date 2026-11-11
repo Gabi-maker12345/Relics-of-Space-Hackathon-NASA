@@ -49,6 +49,12 @@ export function isUuid(value: unknown): value is string {
   return typeof value === 'string' && UUID_RE.test(value)
 }
 
+const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+export function isSlug(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && value.length <= 80 && SLUG_RE.test(value)
+}
+
 export function isUploadKind(value: unknown): value is UploadKind {
   return typeof value === 'string' && (UPLOAD_KINDS as readonly string[]).includes(value)
 }
@@ -58,16 +64,17 @@ export function extensionForMime(mime: string): string | null {
 }
 
 /**
- * Accepts a relic UUID or the literal `common` for shared assets.
+ * Accepts a relic UUID, a slug or the literal `common` for shared assets.
  * Returns `null` when the value could escape the folder or is malformed.
  */
 export function normalizeRelicId(raw: unknown): string | null {
   if (raw === undefined || raw === null || raw === '') return 'common'
   if (typeof raw !== 'string') return null
-  const value = raw.trim()
+  const value = raw.trim().toLowerCase()
   if (value === 'common') return 'common'
-  if (!isUuid(value)) return null
-  return value.toLowerCase()
+  if (isUuid(value)) return value
+  if (isSlug(value)) return value
+  return null
 }
 
 const FOLDER_BY_KIND: Record<UploadKind, string> = {
