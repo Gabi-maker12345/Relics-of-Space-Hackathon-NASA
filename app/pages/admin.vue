@@ -13,6 +13,8 @@
       </div>
     </header>
 
+    <p v-if="saveErrorText" class="admin__error" role="alert">{{ saveErrorText }}</p>
+
     <div v-if="!user" class="admin__locked">
       <p class="admin__lockedTitle">Acesso restrito</p>
       <p class="admin__lede">Entra para abrir o arquivo.</p>
@@ -28,7 +30,7 @@
             <p class="card__mission">{{ relic.mission }}</p>
             <h2 class="card__name">{{ relic.name }}</h2>
             <p class="card__tagline">{{ relic.tagline }}</p>
-            <p class="card__meta">{{ relic.facts.length }} factos · {{ relic.scenes.length }} cenas</p>
+            <p class="card__meta">{{ relic.facts.length }} factos · {{ relic.scenes.length }} cenas · {{ relic.published ? 'publicada' : 'rascunho' }}</p>
           </div>
           <div class="card__tools">
             <button type="button" class="card__tool" @click="openForm(relic)">Editar</button>
@@ -60,37 +62,55 @@
 </template>
 
 <script setup lang="ts">
-import type { Relic } from '~/data/relics'
+import type { Relic, RelicInput } from '#shared/types/relic'
 
-const { relics, load, create, update, remove } = useRelics()
+const { relics, load, create, update, remove, error: loadError } = useRelics()
 const { user, restore, signOut } = useAuth()
 const { open: openPanel } = usePanels()
 
 const formOpen = ref(false)
 const editing = ref<Relic | null>(null)
+const saveError = ref('')
+
+const saveErrorText = computed(() => saveError.value || loadError.value)
 
 const takenIds = computed(() => relics.value.map(relic => relic.id).filter(id => id !== editing.value?.id))
 
-onMounted(() => {
-  load()
-  restore()
+onMounted(async () => {
+  await restore()
+  await load(true)
 })
 
 function openForm(relic: Relic | null): void {
+  saveError.value = ''
   editing.value = relic
   formOpen.value = true
 }
 
-function store(relic: Relic): void {
-  if (editing.value) void update(editing.value.id, relic)
-  else void create(relic)
-  formOpen.value = false
-  editing.value = null
+async function store(input: RelicInput): Promise<void> {
+  saveError.value = ''
+  try {
+    if (editing.value) await update(editing.value.id, input)
+    else await create(input)
+    formOpen.value = false
+    editing.value = null
+  }
+  catch (err: unknown) {
+    const apiError = err as { data?: { message?: string }, statusMessage?: string, message?: string }
+    saveError.value = apiError.data?.message || apiError.statusMessage || 'Falha ao guardar a relíquia.'
+  }
 }
 
-function confirmRemove(relic: Relic): void {
+async function confirmRemove(relic: Relic): Promise<void> {
   if (!window.confirm(`Remover “${relic.name}” do arquivo?`)) return
-  void remove(relic.id)
+  saveError.value = ''
+  try {
+    await remove(relic.id)
+  }
+  catch (err: unknown) {
+    const apiError = err as { data?: { message?: string }, message?: string }
+    saveError.value = apiError.data?.message || 'Falha ao remover a relíquia.'
+  }
 }
 
 async function signOutAndLeave(): Promise<void> {
@@ -145,6 +165,15 @@ function requestLogin(): void {
   font-size: 12px;
   letter-spacing: 0.04em;
   opacity: 0.6;
+}
+
+.admin__error {
+  margin: 0 0 24px;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: #ffb3b3;
+  background: rgb(255 90 90 / 8%);
+  border: 1px solid rgb(255 90 90 / 25%);
 }
 
 .admin__actions { display: flex; gap: 10px; }

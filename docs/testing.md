@@ -14,11 +14,11 @@ Unit tests are pure Node tests — no Supabase stack required:
 | `tests/schema.test.ts` | Migration/seed conventions: unique ordered filenames, RLS enabled per table, seed idempotency. |
 | `tests/auth.test.ts` | Login schema, session/token extraction, `requireAdmin`, the `/api/admin` middleware and auth endpoints. |
 | `tests/upload.test.ts` | Upload rules: kind/MIME/size validation, extension by MIME, `relicId` normalisation, storage path safety, and a guard that the bucket `allowed_mime_types` matches the rules in `server/utils/upload.ts`. |
+| `tests/relic-contract.test.ts` | The front↔API contract: mapper (`id` = slug, cover only from images, no audio fallback), input schema, column mapping (`tagline`→`summary`, `body`→`story_text`), one-field publish patch and the cover-must-be-a-scene rule. |
 
 ## Integration tests (local Supabase required)
 
-Integration tests run against a local Supabase stack and exercise RLS at the
-database level.
+Integration tests run against a local Supabase stack.
 
 Prerequisites:
 - Docker running
@@ -34,9 +34,11 @@ npm run test:integration
 `test:integration` runs `supabase db reset` (applies migrations + seed) and then
 `vitest run tests/integration`.
 
-Current coverage (`tests/integration/rls.test.ts`):
-- anon can read published relics;
-- anon cannot insert relics.
+Current coverage:
+- `tests/integration/rls.test.ts` — anon can read published relics; anon cannot insert.
+- `tests/integration/relics.test.ts` — facts/media belong to a relic, the cover must
+  be one of its media, renaming keeps the slug and the children, drafts stay hidden
+  from anon until published, and deleting a relic cascades.
 
 `db reset` wipes `admin_users` — run `npm run setup:admin` afterwards before
 using the admin endpoints.

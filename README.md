@@ -174,28 +174,36 @@ supabase/
 docs/                 arquitetura e esquema
 ```
 
-### API (contrato planeado — implementação a partir da BE-03)
+### API
 
-Público:
+Contrato partilhado em `shared/types/relic.ts`: toda a resposta é um `Relic`
+(`id` = slug, `tagline`, `body`, `facts`, `image`, `scenes`, `published`) e o
+formulário envia um `RelicInput` no mesmo dialeto.
 
-- `GET /api/public/relics` — lista leve (filtros `location`, `status`, `q`, `lang`)
-- `GET /api/public/relics/:slug` — detalhe + `steps` de narração
+Público (cliente anon + RLS; rascunhos nunca aparecem):
+
+- `GET /api/public/relics` — lista de publicadas (filtros `location`, `status`, `q` na BE-09)
+- `GET /api/public/relics/:slug` — detalhe (UUID ainda aceite para links antigos)
 
 Admin (requer sessão Supabase com `is_admin`):
 
 - `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me`
 - `GET|POST /api/admin/relics`
-- `GET|PATCH|DELETE /api/admin/relics/:id`
-- `POST /api/admin/relics/:id/media`
-- `PATCH|DELETE /api/admin/media/:id`
-- `PUT /api/admin/relics/:id/media/order`
-- `PUT /api/admin/relics/:id/cover`
+- `GET|PUT|DELETE /api/admin/relics/:id` — `:id` é o slug ou o UUID
 - `POST /api/admin/upload` — upload direto, limitado a 4 MB (limite de body das
   functions da Vercel)
 - `POST /api/admin/upload/sign` — devolve uma *signed upload URL* para o browser
   enviar ficheiros grandes (até 50 MB) diretamente para o Storage
 - `POST /api/admin/storage/delete` — remove objetos do bucket, apenas dentro do
   prefixo `relics/`
+
+`PUT` só altera os campos enviados (publicar/despublicar é `{ "published": true }`)
+e o slug só muda quando o identificador é editado. `POST/PUT` devolvem sempre o
+`Relic` mapeado, com factos e cenas gravados.
+
+Rotas ainda por implementar (BE-06): `POST /api/admin/relics/:id/media`,
+`PATCH|DELETE /api/admin/media/:id`, `PUT /api/admin/relics/:id/media/order`,
+`PUT /api/admin/relics/:id/cover`.
 
 ### Uploads
 

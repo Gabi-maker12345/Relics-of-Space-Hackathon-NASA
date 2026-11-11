@@ -180,7 +180,11 @@
           </div>
 
           <footer class="rform__foot">
-            <p class="rform__footNote">Guardado neste dispositivo.</p>
+            <p class="rform__footNote">Guardado na base de dados.</p>
+            <label class="rform__publish">
+              <input v-model="draft.published" type="checkbox">
+              <span>Publicada no arquivo</span>
+            </label>
             <span v-if="errors.general" class="rform__err">{{ errors.general }}</span>
             <div class="rform__actions">
               <button type="button" class="rform__cancel" @click="requestClose">Cancelar</button>
@@ -194,7 +198,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Relic, RelicFact, RelicScene } from '~/data/relics'
+import type { Relic, RelicFact, RelicScene, RelicInput } from '#shared/types/relic'
 
 const props = defineProps<{
   open: boolean
@@ -204,7 +208,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  save: [relic: Relic]
+  save: [input: RelicInput]
 }>()
 
 const isEdit = computed(() => Boolean(props.relic))
@@ -218,6 +222,7 @@ type Draft = {
   image: string
   alt: string
   ratio: string
+  published: boolean
   facts: RelicFact[]
   scenes: RelicScene[]
 }
@@ -231,6 +236,7 @@ const blank = (): Draft => ({
   image: '',
   alt: '',
   ratio: '1376 / 768',
+  published: false,
   facts: [
     { label: '', value: '' },
     { label: '', value: '' },
@@ -291,22 +297,57 @@ function onImageLoad(event: Event): void {
   if (img.naturalWidth && img.naturalHeight) draft.ratio = `${img.naturalWidth} / ${img.naturalHeight}`
 }
 
-/** Converte o ficheiro numa data URL com largura máxima de 1280 px (cabe no localStorage). */
+/** Envia a imagem para o Storage e devolve o URL público. */
 async function onFile(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
-  const bitmap = await createImageBitmap(file)
-  const scale = Math.min(1, 1280 / bitmap.width)
-  const canvas = document.createElement('canvas')
-  canvas.width = Math.round(bitmap.width * scale)
-  canvas.height = Math.round(bitmap.height * scale)
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
-  draft.image = canvas.toDataURL('image/jpeg', 0.82)
-  draft.ratio = `${canvas.width} / ${canvas.height}`
-  input.value = ''
+
+  errors.image = ''
+  const form = new FormData()
+  form.append('file', file)
+  form.append('kind', 'image')
+  form.append('relicId', /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(draft.id) ? draft.id : 'common')
+
+  try {
+    const uploaded = await $fetch<{ url: string }>('/api/admin/upload', { method: 'POST', body: form })
+    draft.image = uploaded.url
+    // A capa tem de ser uma das cenas; preenche a primeira imagem vazia.
+    const emptyScene = draft.scenes.find(scene => scene.kind === 'image' && !scene.src.trim())
+    if (emptyScene) emptyScene.src = uploaded.url
+
+    const image = new Image()
+    image.addEventListener('load', () => {
+      if (image.naturalWidth && image.naturalHeight) {
+        draft.ratio = `${image.naturalWidth} / ${image.naturalHeight}`
+      }
+    })
+    image.src = uploaded.url
+    input.value = ''
+  }
+  catch (err: unknown) {
+    const apiError = err as { statusCode?: number, data?: { message?: string } }
+    errors.image = apiError.statusCode === 413
+      ? 'Imagem grande demais (máximo 4 MB).'
+      : apiError.data?.message || 'Falha ao enviar a imagem.'
+  }
+}
+
+function collect(): { facts: RelicFact[], scenes: RelicScene[] } {
+  return {
+    facts: draft.facts
+      .filter(fact => fact.label.trim() && fact.value.trim())
+      .map(fact => ({ label: fact.label.trim(), value: fact.value.trim() })),
+    scenes: draft.scenes
+      .filter(scene => scene.src.trim() && scene.body.trim())
+      .map(scene => ({
+        kind: scene.kind,
+        src: scene.src.trim(),
+        poster: scene.poster?.trim() || undefined,
+        kicker: scene.kicker.trim(),
+        body: scene.body.trim(),
+      })),
+  }
 }
 
 function validate(): boolean {
@@ -325,19 +366,26 @@ function validate(): boolean {
   if (!/^[a-z0-9-]+$/.test(draft.id)) errors.id = 'Só minúsculas, números e hífens.'
   else if (props.takenIds.includes(draft.id)) errors.id = 'Já existe uma relíquia com este identificador.'
 
-  const facts = draft.facts.filter(fact => fact.label.trim() && fact.value.trim())
+  const { facts, scenes } = collect()
   if (facts.length < 1) errors.facts = 'Preenche pelo menos uma linha da ficha.'
-
-  const scenes = draft.scenes.filter(scene => scene.src.trim() && scene.body.trim())
   if (scenes.length < 1) errors.scenes = 'Cada cena precisa de mídia e texto narrado.'
+  if (
+    !errors.image
+    && draft.image.trim()
+    && scenes.length > 0
+    && !scenes.some(scene => scene.src === draft.image.trim())
+  ) {
+    errors.image = 'A imagem do cartão tem de ser uma das cenas.'
+  }
 
   return Object.values(errors).every(message => !message)
 }
 
 function save(): void {
   if (!validate()) return
+  const { facts, scenes } = collect()
   emit('save', {
-    id: draft.id,
+    slug: draft.id,
     name: draft.name.trim(),
     mission: draft.mission.trim(),
     tagline: draft.tagline.trim(),
@@ -345,18 +393,9 @@ function save(): void {
     image: draft.image.trim(),
     alt: draft.alt.trim(),
     ratio: draft.ratio.trim() || '1376 / 768',
-    facts: draft.facts
-      .filter(fact => fact.label.trim() && fact.value.trim())
-      .map(fact => ({ label: fact.label.trim(), value: fact.value.trim() })),
-    scenes: draft.scenes
-      .filter(scene => scene.src.trim() && scene.body.trim())
-      .map(scene => ({
-        kind: scene.kind,
-        src: scene.src.trim(),
-        poster: scene.poster?.trim() || undefined,
-        kicker: scene.kicker.trim(),
-        body: scene.body.trim(),
-      })),
+    published: draft.published,
+    facts,
+    scenes,
   })
 }
 
@@ -688,6 +727,24 @@ function requestClose(): void {
 }
 
 .rform__footNote { margin: 0; font-size: 9.5px; letter-spacing: 0.08em; opacity: 0.32; }
+
+.rform__publish {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  cursor: pointer;
+}
+
+.rform__publish input {
+  width: 13px;
+  height: 13px;
+  accent-color: var(--accent, #7aa2ff);
+  cursor: pointer;
+}
 
 .rform__actions { display: flex; gap: 10px; margin-left: auto; }
 

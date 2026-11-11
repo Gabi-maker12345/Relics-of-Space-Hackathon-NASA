@@ -18,9 +18,9 @@
 // fiação dos painéis (Escape, clique fora, engine)
 usePanels()
 
-onMounted(() => {
-  useRelics().load()
-  useAuth().restore()
+onMounted(async () => {
+  await useAuth().restore()
+  await useRelics().load(true)
   initSmoothScroll()
   const route = useRoute()
   if (route.path !== '/') window.scrollTo({ top: 0 })

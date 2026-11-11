@@ -3,44 +3,64 @@ import { serverSupabaseServiceRole } from '#supabase/server'
 import type { Database } from '~/types/database.types'
 import { requireAdmin } from '../../../utils/auth'
 import { slugify, ensureUniqueSlug } from '../../../utils/slug'
-import { z } from 'zod'
-
-const schema = z.object({
-  name: z.string().min(1),
-  slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
-  mission: z.string().optional(),
-  summary: z.string().optional(),
-  story_text: z.string().optional(),
-  status: z.enum(['active', 'silent', 'lost']).optional(),
-  location: z.enum(['moon', 'mars', 'deep_space']).optional(),
-  published: z.boolean().optional(),
-  intro_audio_url: z.string().optional(),
-  alt: z.string().optional(),
-  ratio: z.string().optional(),
-  cover_media_id: z.string().uuid().optional().nullable(),
-})
+import {
+  relicInputSchema,
+  replaceRelicChildren,
+  toRelicInsert,
+  validateCover,
+} from '../../../utils/relicInput'
+import { loadRelicDto } from '../../../utils/relicMapper'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
   const body = await readBody(event)
-  const parsed = schema.safeParse(body)
+  const parsed = relicInputSchema.safeParse(body)
   if (!parsed.success) {
     throw createError({ statusCode: 400, message: parsed.error.issues[0]?.message || 'Dados inválidos' })
   }
 
-  const supabase = serverSupabaseServiceRole<Database>(event)
-  const baseSlug = parsed.data.slug || slugify(parsed.data.name)
-  const slug = await ensureUniqueSlug(supabase, baseSlug)
+  const coverError = validateCover(parsed.data.scenes, parsed.data.image)
+  if (coverError) throw createError({ statusCode: 400, message: coverError })
 
-  const { data, error } = await supabase
+  const supabase = serverSupabaseServiceRole<Database>(event)
+  const slug = await ensureUniqueSlug(supabase, parsed.data.slug || slugify(parsed.data.name))
+
+  const { data: created, error } = await supabase
     .from('relics')
-    .insert({ ...parsed.data, slug })
+    .insert(toRelicInsert(parsed.data, slug))
     .select()
     .single()
 
-  if (error) {
-    throw createError({ statusCode: 400, message: error.message })
+  if (error || !created) {
+    throw createError({ statusCode: 400, message: error?.message ?? 'Falha ao criar relíquia' })
   }
 
-  return data
+  const children = await replaceRelicChildren(supabase, created.id, {
+    facts: parsed.data.facts ?? [],
+    scenes: parsed.data.scenes ?? [],
+    cover: parsed.data.image,
+  })
+
+  if (children.error) {
+    // Do not leave a half-created relic behind.
+    await supabase.from('relics').delete().eq('id', created.id)
+    throw createError({ statusCode: 400, message: children.error })
+  }
+
+  let relic = created
+  if (children.coverMediaId !== undefined) {
+    const { data: withCover, error: coverWriteError } = await supabase
+      .from('relics')
+      .update({ cover_media_id: children.coverMediaId })
+      .eq('id', created.id)
+      .select()
+      .single()
+
+    if (coverWriteError || !withCover) {
+      throw createError({ statusCode: 500, message: coverWriteError?.message ?? 'Falha ao definir a capa' })
+    }
+    relic = withCover
+  }
+
+  return loadRelicDto(supabase, relic)
 })
