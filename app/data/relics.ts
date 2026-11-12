@@ -1,34 +1,11 @@
-export interface RelicFact {
-  label: string
-  value: string
-}
+import type { Relic } from '#shared/types/relic'
 
-export type SceneKind = 'image' | 'video'
-
-export interface RelicScene {
-  kind: SceneKind
-  src: string
-  poster?: string
-  kicker: string
-  body: string
-}
-
-export interface Relic {
-  id: string
-  name: string
-  mission: string
-  tagline: string
-  body: string
-  facts: RelicFact[]
-  image: string
-  alt: string
-  ratio: string
-  scenes: RelicScene[]
-}
+export type { Relic, RelicFact, RelicScene, SceneKind } from '#shared/types/relic'
 
 export const relics: Relic[] = [
   {
     id: 'apollo-lunar-module',
+    published: true,
     name: 'Módulo Lunar Apollo',
     mission: 'Apollo 11–17 · 1969–1972',
     tagline: 'Seis pousos, seis módulos deixados para trás.',
@@ -60,6 +37,7 @@ export const relics: Relic[] = [
   },
   {
     id: 'opportunity',
+    published: true,
     name: 'Opportunity',
     mission: 'Mars Exploration Rover · 2004–2018',
     tagline: 'Uma maratona de 45 km em outro mundo.',
@@ -91,6 +69,7 @@ export const relics: Relic[] = [
   },
   {
     id: 'viking-1',
+    published: true,
     name: 'Viking 1',
     mission: 'Viking · 1976–1982',
     tagline: 'A primeira nave a trabalhar em Marte.',

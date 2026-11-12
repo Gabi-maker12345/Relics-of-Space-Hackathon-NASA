@@ -3,7 +3,7 @@ import { serverSupabaseServiceRole } from '#supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '~/types/database.types'
 import { requireAdmin } from '../../../utils/auth'
-import { isUuid } from '../../../utils/upload'
+import { findRelic } from '../../../utils/relicInput'
 
 const STORAGE_FOLDERS = ['images', 'audio', 'videos'] as const
 
@@ -14,19 +14,22 @@ const STORAGE_FOLDERS = ['images', 'audio', 'videos'] as const
  */
 async function removeRelicMedia(
   supabase: SupabaseClient<Database>,
-  relicId: string,
+  relic: { id: string, slug: string },
 ): Promise<string[]> {
   const removed: string[] = []
   const bucket = supabase.storage.from('relic-media')
 
-  for (const folder of STORAGE_FOLDERS) {
-    const prefix = `relics/${relicId}/${folder}`
-    const { data: objects } = await bucket.list(prefix, { limit: 1000 })
-    if (!objects?.length) continue
+  // Uploads may be filed under the slug (new relics) or the UUID (older ones).
+  for (const folderId of new Set([relic.id, relic.slug])) {
+    for (const folder of STORAGE_FOLDERS) {
+      const prefix = `relics/${folderId}/${folder}`
+      const { data: objects } = await bucket.list(prefix, { limit: 1000 })
+      if (!objects?.length) continue
 
-    const paths = objects.map(object => `${prefix}/${object.name}`)
-    const { error } = await bucket.remove(paths)
-    if (!error) removed.push(...paths)
+      const paths = objects.map(object => `${prefix}/${object.name}`)
+      const { error } = await bucket.remove(paths)
+      if (!error) removed.push(...paths)
+    }
   }
 
   return removed
@@ -36,13 +39,15 @@ export default defineEventHandler(async (event) => {
   await requireAdmin(event)
   const id = getRouterParam(event, 'id')
   if (!id) throw createError({ statusCode: 400, message: 'Missing id' })
-  if (!isUuid(id)) throw createError({ statusCode: 400, message: 'Invalid id' })
 
   const supabase = serverSupabaseServiceRole<Database>(event)
+  const relic = await findRelic(supabase, id)
+  if (!relic) throw createError({ statusCode: 404, message: 'Relic not found' })
+
   const { error } = await supabase
     .from('relics')
     .delete()
-    .eq('id', id)
+    .eq('id', relic.id)
 
   if (error) {
     throw createError({ statusCode: 400, message: error.message })
@@ -50,7 +55,7 @@ export default defineEventHandler(async (event) => {
 
   let removedFiles: string[] = []
   try {
-    removedFiles = await removeRelicMedia(supabase, id)
+    removedFiles = await removeRelicMedia(supabase, relic)
   }
   catch {
     // Orphaned objects are preferable to a failed delete.

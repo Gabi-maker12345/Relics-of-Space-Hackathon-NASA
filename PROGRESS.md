@@ -484,3 +484,28 @@ diário aberto pelo cartão.
   inválido (400) e remoção dos ficheiros ao apagar a relíquia (200 → 400 na URL pública).
 - **Docs:** README (endpoints e modelo de upload) e `docs/testing.md` atualizados com o
   que os testes realmente cobrem.
+
+## Iteração 24 — contrato front↔API (BE-20)
+
+- **Tipos partilhados (`shared/types/relic.ts`):** `Relic` (resposta) e `RelicInput` (formulário)
+  vivem num único sítio; `app/data/relics.ts` reexporta-os para o front.
+- **Formulário e API no mesmo dialeto:** `POST/PUT /api/admin/relics` aceitam `tagline`, `body`,
+  `facts` e `scenes` e gravam `summary`, `story_text`, `relic_facts` e `relic_media`. Criar no
+  admin deixou de perder factos e cenas.
+- **Resposta sempre mapeada:** create, update, list e detail devolvem o `Relic` completo (factos,
+  cenas, `published`), nunca a linha crua da tabela.
+- **Identificador estável:** `id` público passa a ser o slug; rename não regenera o slug. As rotas
+  admin aceitam slug ou UUID e o detalhe público procura por slug.
+- **Publicação:** o formulário ganhou a opção “Publicada no arquivo”; `published` viaja no payload
+  (um PUT `{ "published": true }` altera apenas essa coluna).
+- **Capa coerente:** a capa vem de `cover_media_id` e só pode ser uma imagem; áudio nunca serve de
+  imagem. A API valida que `image` corresponde a uma das cenas.
+- **Leitura pública por RLS:** os endpoints públicos usam o cliente anon (`serverSupabaseClient`),
+  em vez da service role; rascunhos ficam invisíveis por política, não por filtro esquecido.
+- **Front:** `app.vue` faz `restore()` antes de `load()`; `useRelics` recarrega quando o login muda,
+  aceita listas vazias, expõe erros em vez de cair para o seed e já não engole falhas de create/update.
+- **Upload no formulário:** a imagem é enviada para o Storage e o URL público fica na cena/capa
+  (antes era um data URL guardado no “localStorage”).
+- **Testes:** `tests/relic-contract.test.ts` (mapper, schema, mapeamento de colunas, capa) e
+  `tests/integration/relics.test.ts` (cascata, capa, rascunhos, rename). Total: 45 unitários + 7 de
+  integração verdes.

@@ -2,54 +2,80 @@ import { defineEventHandler, readBody, createError, getRouterParam } from 'h3'
 import { serverSupabaseServiceRole } from '#supabase/server'
 import type { Database } from '~/types/database.types'
 import { requireAdmin } from '../../../utils/auth'
-import { slugify, ensureUniqueSlug } from '../../../utils/slug'
-import { z } from 'zod'
-
-const schema = z.object({
-  name: z.string().min(1).optional(),
-  slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
-  mission: z.string().optional(),
-  summary: z.string().optional(),
-  story_text: z.string().optional(),
-  status: z.enum(['active', 'silent', 'lost']).optional(),
-  location: z.enum(['moon', 'mars', 'deep_space']).optional(),
-  published: z.boolean().optional(),
-  intro_audio_url: z.string().optional(),
-  alt: z.string().optional(),
-  ratio: z.string().optional(),
-  cover_media_id: z.string().uuid().optional().nullable(),
-})
+import { ensureUniqueSlug } from '../../../utils/slug'
+import {
+  findRelic,
+  relicPatchSchema,
+  replaceRelicChildren,
+  toRelicPatch,
+  validateCover,
+} from '../../../utils/relicInput'
+import { loadRelicDto } from '../../../utils/relicMapper'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
   const id = getRouterParam(event, 'id')
   if (!id) throw createError({ statusCode: 400, message: 'Missing id' })
+
   const body = await readBody(event)
-  const parsed = schema.safeParse(body)
+  const parsed = relicPatchSchema.safeParse(body)
   if (!parsed.success) {
     throw createError({ statusCode: 400, message: parsed.error.issues[0]?.message || 'Dados inválidos' })
   }
 
   const supabase = serverSupabaseServiceRole<Database>(event)
-  const updateData = { ...parsed.data } as Database['public']['Tables']['relics']['Update']
+  const existing = await findRelic(supabase, id)
+  if (!existing) throw createError({ statusCode: 404, message: 'Relic not found' })
 
-  if (parsed.data.name && !parsed.data.slug) {
-    updateData.slug = await ensureUniqueSlug(supabase, slugify(parsed.data.name), id)
-  }
-  else if (parsed.data.slug) {
-    updateData.slug = await ensureUniqueSlug(supabase, parsed.data.slug, id)
-  }
+  const coverError = validateCover(parsed.data.scenes, parsed.data.image)
+  if (coverError) throw createError({ statusCode: 400, message: coverError })
 
-  const { data, error } = await supabase
-    .from('relics')
-    .update(updateData)
-    .eq('id', id)
-    .select()
-    .single()
+  const patch = toRelicPatch(parsed.data)
 
-  if (error) {
-    throw createError({ statusCode: 400, message: error.message })
+  // The slug is stable: it only changes when the user edits the identifier.
+  // Renaming a relic must not silently break its URL.
+  if (parsed.data.slug !== undefined) {
+    patch.slug = await ensureUniqueSlug(supabase, parsed.data.slug, existing.id)
   }
 
-  return data
+  let relic = existing
+  if (Object.keys(patch).length > 0) {
+    const { data: updated, error } = await supabase
+      .from('relics')
+      .update(patch)
+      .eq('id', existing.id)
+      .select()
+      .single()
+
+    if (error || !updated) {
+      throw createError({ statusCode: 400, message: error?.message ?? 'Falha ao atualizar relíquia' })
+    }
+    relic = updated
+  }
+
+  const children = await replaceRelicChildren(supabase, existing.id, {
+    facts: parsed.data.facts,
+    scenes: parsed.data.scenes,
+    cover: parsed.data.image,
+  })
+
+  if (children.error) {
+    throw createError({ statusCode: 400, message: children.error })
+  }
+
+  if (children.coverMediaId !== undefined) {
+    const { data: withCover, error: coverWriteError } = await supabase
+      .from('relics')
+      .update({ cover_media_id: children.coverMediaId })
+      .eq('id', existing.id)
+      .select()
+      .single()
+
+    if (coverWriteError || !withCover) {
+      throw createError({ statusCode: 500, message: coverWriteError?.message ?? 'Falha ao definir a capa' })
+    }
+    relic = withCover
+  }
+
+  return loadRelicDto(supabase, relic)
 })
