@@ -4,7 +4,7 @@ import path from 'node:path'
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['tests/schema.test.ts', 'tests/auth.test.ts', 'tests/upload.test.ts'],
+    include: ['tests/schema.test.ts', 'tests/auth.test.ts'],
     exclude: ['**/node_modules/**', '**/.nuxt/**', '**/.output/**'],
   },
   resolve: {

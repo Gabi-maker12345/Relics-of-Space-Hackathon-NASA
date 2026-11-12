@@ -190,20 +190,7 @@ Admin (requer sessão Supabase com `is_admin`):
 - `PATCH|DELETE /api/admin/media/:id`
 - `PUT /api/admin/relics/:id/media/order`
 - `PUT /api/admin/relics/:id/cover`
-- `POST /api/admin/upload` — upload direto, limitado a 4 MB (limite de body das
-  functions da Vercel)
-- `POST /api/admin/upload/sign` — devolve uma *signed upload URL* para o browser
-  enviar ficheiros grandes (até 50 MB) diretamente para o Storage
-- `POST /api/admin/storage/delete` — remove objetos do bucket, apenas dentro do
-  prefixo `relics/`
-
-### Uploads
-
-O browser nunca envia ficheiros grandes pela API: pede uma assinatura a
-`/api/admin/upload/sign`, envia o ficheiro para o `signedUrl` devolvido e guarda
-o `path`/`publicUrl` na relíquia. Os limites (imagem 5 MB, áudio 15 MB, vídeo
-50 MB) e os MIME permitidos em `server/utils/upload.ts` espelham o bucket
-`relic-media`; um teste unitário falha se divergirem.
+- `POST /api/admin/upload`
 
 ---
 
