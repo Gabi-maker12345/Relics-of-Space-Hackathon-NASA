@@ -1,7 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '~/types/database.types'
 import type {
-  QuizQuestion,
   Relic,
   RelicLocation,
   RelicPanelItem,
@@ -12,6 +11,7 @@ import type {
   SceneKind,
 } from '#shared/types/relic'
 import { DEFAULT_LANG, normalizeLang } from './i18n'
+import { quizRowToDto } from './quiz'
 
 type RelicRow = Database['public']['Tables']['relics']['Row']
 type FactRow = Database['public']['Tables']['relic_facts']['Row']
@@ -91,8 +91,16 @@ export function buildWarnings(media: MediaRow[]): RelicWarning[] {
 export interface MapRelicOptions {
   /** Admin responses carry warnings; public ones do not need them. */
   includeWarnings?: boolean
+  /** Admin responses include the correct answer of each quiz question. */
+  includeQuizAnswers?: boolean
   /** Language requested (e.g. 'en'). Defaults to 'pt' (base columns). */
   lang?: string
+}
+
+/** Options shared by every admin relic response. */
+export const ADMIN_RELIC_OPTIONS: MapRelicOptions = {
+  includeWarnings: true,
+  includeQuizAnswers: true,
 }
 
 /**
@@ -208,17 +216,7 @@ export function mapDbToRelic(
 
   const steps = buildSteps(relic, sortedMedia)
 
-  const quizQuestions: QuizQuestion[] = sortedQuiz.map(q => ({
-    id: q.id,
-    position: q.position,
-    question: q.question,
-    options: Array.isArray(q.options)
-      ? (q.options as string[])
-      : typeof q.options === 'string'
-        ? JSON.parse(q.options)
-        : [],
-    explanation: q.explanation || '',
-  }))
+  const quizQuestions = sortedQuiz.map(q => quizRowToDto(q, options.includeQuizAnswers))
 
   return {
     id: relic.slug,

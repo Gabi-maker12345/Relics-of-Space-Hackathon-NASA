@@ -4,7 +4,7 @@ import type { Database } from '~/types/database.types'
 import { requireAdmin } from '../../../utils/auth'
 import { findRelic } from '../../../utils/relicInput'
 import { deleteMedia, findMedia } from '../../../utils/media'
-import { loadRelicDto } from '../../../utils/relicMapper'
+import { ADMIN_RELIC_OPTIONS, loadRelicDto } from '../../../utils/relicMapper'
 
 /**
  * Removes one media item. If it was the cover, the FK sets the cover pointer
@@ -26,5 +26,5 @@ export default defineEventHandler(async (event) => {
   if (result.error) throw createError({ statusCode: 400, message: result.error })
 
   const fresh = await findRelic(supabase, relic.id)
-  return loadRelicDto(supabase, fresh ?? relic, { includeWarnings: true })
+  return loadRelicDto(supabase, fresh ?? relic, ADMIN_RELIC_OPTIONS)
 })

@@ -4,7 +4,7 @@ import type { Database } from '~/types/database.types'
 import { requireAdmin } from '../../../../../utils/auth'
 import { findRelic } from '../../../../../utils/relicInput'
 import { mediaOrderSchema, reorderMedia } from '../../../../../utils/media'
-import { loadRelicDto } from '../../../../../utils/relicMapper'
+import { ADMIN_RELIC_OPTIONS, loadRelicDto } from '../../../../../utils/relicMapper'
 
 /**
  * Rewrites the media order. The payload must list every media id of the relic
@@ -28,5 +28,5 @@ export default defineEventHandler(async (event) => {
   const result = await reorderMedia(supabase, relic, parsed.data.ids)
   if (result.error) throw createError({ statusCode: 400, message: result.error })
 
-  return loadRelicDto(supabase, relic, { includeWarnings: true })
+  return loadRelicDto(supabase, relic, ADMIN_RELIC_OPTIONS)
 })
