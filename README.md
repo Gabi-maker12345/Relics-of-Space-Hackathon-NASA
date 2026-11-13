@@ -196,14 +196,27 @@ Admin (requer sessão Supabase com `is_admin`):
   enviar ficheiros grandes (até 50 MB) diretamente para o Storage
 - `POST /api/admin/storage/delete` — remove objetos do bucket, apenas dentro do
   prefixo `relics/`
+- `POST /api/admin/relics/:id/media` — adiciona uma mídia (capa opcional via
+  `is_cover`); sem `position` fica no fim
+- `PATCH|DELETE /api/admin/media/:id` — edita/remove uma mídia
+- `PUT /api/admin/relics/:id/media/order` — `{ "ids": [...] }` com **todas** as
+  mídias da relíquia, pela nova ordem
+- `PUT /api/admin/relics/:id/cover` — `{ "media_id": "…" }` ou `null`; aceita
+  imagem ou vídeo
 
 `PUT` só altera os campos enviados (publicar/despublicar é `{ "published": true }`)
 e o slug só muda quando o identificador é editado. `POST/PUT` devolvem sempre o
 `Relic` mapeado, com factos e cenas gravados.
 
-Rotas ainda por implementar (BE-06): `POST /api/admin/relics/:id/media`,
-`PATCH|DELETE /api/admin/media/:id`, `PUT /api/admin/relics/:id/media/order`,
-`PUT /api/admin/relics/:id/cover`.
+Cada item de `scenes` expõe `id`, `kind`, `src`, `poster`, `kicker`, `title`,
+`body`, `credit`, `source_url`, `audio_url`, `mute_video` e `is_cover`. A capa
+está sempre marcada em exatamente uma cena; se for um vídeo, `Relic.image` é o
+respetivo `poster`. Cada relíquia tem também `intro_audio_url`.
+
+`PUT /api/admin/relics/:id` com `scenes` substitui a lista de mídias (é o que o
+formulário atual envia). Para preservar ids e áudio por item, usa os endpoints
+de mídia; `PATCH` rejeita `position` e a ordem altera-se só pelo endpoint
+`media/order`.
 
 ### Uploads
 

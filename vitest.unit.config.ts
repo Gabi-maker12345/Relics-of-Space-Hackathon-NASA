@@ -9,6 +9,7 @@ export default defineConfig({
       'tests/auth.test.ts',
       'tests/upload.test.ts',
       'tests/relic-contract.test.ts',
+      'tests/media.test.ts',
     ],
     exclude: ['**/node_modules/**', '**/.nuxt/**', '**/.output/**'],
   },
