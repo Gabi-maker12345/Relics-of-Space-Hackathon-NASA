@@ -153,7 +153,8 @@ export async function addMedia(
 ): Promise<MediaMutationResult> {
   const existing = await mediaOfRelic(client, relic.id)
   const lastPosition = existing.reduce((max, item) => Math.max(max, item.position), -1)
-  const position = input.position ?? lastPosition + 1
+  // Inserting beyond the end would leave pointless gaps; clamp to append.
+  const position = Math.min(Math.max(input.position ?? lastPosition + 1, 0), lastPosition + 1)
 
   const shifted = position <= lastPosition
     ? existing.filter(item => item.position >= position)
@@ -175,9 +176,7 @@ export async function addMedia(
 
   if (error || !data) {
     // Restore the previous positions, otherwise the list keeps gaps.
-    for (const item of [...shifted].reverse()) {
-      await client.from('relic_media').update({ position: item.position }).eq('id', item.id)
-    }
+    await restorePositions(client, new Map(shifted.map(item => [item.id, item.position])))
     return { error: error?.message ?? 'Falha ao adicionar a mídia.' }
   }
 
@@ -185,6 +184,7 @@ export async function addMedia(
   const coverError = await setCoverId(client, relic.id, data.id)
   if (coverError) {
     await client.from('relic_media').delete().eq('id', data.id)
+    await restorePositions(client, new Map(shifted.map(item => [item.id, item.position])))
     return { error: coverError }
   }
   return { coverMediaId: data.id }

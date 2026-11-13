@@ -213,6 +213,11 @@ Cada item de `scenes` expõe `id`, `kind`, `src`, `poster`, `kicker`, `title`,
 está sempre marcada em exatamente uma cena; se for um vídeo, `Relic.image` é o
 respetivo `poster`. Cada relíquia tem também `intro_audio_url`.
 
+`PUT /api/admin/relics/:id` com `scenes` substitui a lista de mídias (é o que o
+formulário atual envia). Para preservar ids e áudio por item, usa os endpoints
+de mídia; `PATCH` rejeita `position` e a ordem altera-se só pelo endpoint
+`media/order`.
+
 ### Uploads
 
 O browser nunca envia ficheiros grandes pela API: pede uma assinatura a

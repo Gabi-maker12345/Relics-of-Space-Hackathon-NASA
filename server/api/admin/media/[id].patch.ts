@@ -21,6 +21,12 @@ export default defineEventHandler(async (event) => {
   if (!parsed.success) {
     throw createError({ statusCode: 400, message: parsed.error.issues[0]?.message || 'Dados inválidos' })
   }
+  if (parsed.data.position !== undefined) {
+    throw createError({
+      statusCode: 400,
+      message: 'Usa PUT /api/admin/relics/:id/media/order para alterar a ordem.',
+    })
+  }
 
   const supabase = serverSupabaseServiceRole<Database>(event)
   const media = await findMedia(supabase, id)
