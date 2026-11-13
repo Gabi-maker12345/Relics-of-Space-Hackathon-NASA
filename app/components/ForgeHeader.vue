@@ -1,6 +1,8 @@
 <script setup lang="ts">
 const { active, toggle } = usePanels()
 const { user } = useAuth()
+const { lang, toggle: toggleLang } = useLocale()
+const { muted, toggle: toggleSound } = useSound()
 
 const socials = [
   {
@@ -51,14 +53,37 @@ const socials = [
       <img src="/images/nasa-logo.png" alt="NASA" width="2625" height="765" />
     </NuxtLink>
 
-    <NuxtLink v-if="user" to="/admin" class="fr-profile fr-label">Painel</NuxtLink>
-    <button
-      v-else
-      type="button"
-      class="fr-profile fr-label"
-      :aria-expanded="active === 'profile'"
-      aria-controls="profile-panel"
-      @click="toggle('profile')"
-    >Entrar</button>
+    <div class="fr-header__controls">
+      <button
+        type="button"
+        class="fr-control fr-label"
+        :aria-label="lang === 'pt' ? 'Mudar para inglês' : 'Switch to Portuguese'"
+        @click="toggleLang"
+      >{{ lang === 'pt' ? 'PT' : 'EN' }}</button>
+
+      <button
+        type="button"
+        class="fr-control fr-control--sound"
+        :aria-pressed="!muted"
+        :aria-label="muted ? 'Ligar som' : 'Desligar som'"
+        @click="toggleSound"
+      >
+        <svg viewBox="0 0 20 16" aria-hidden="true">
+          <path d="M2 6h3l4.5-3.4v10.8L5 10H2z" />
+          <path v-if="muted" d="M13 5.5l4 5M17 5.5l-4 5" />
+          <path v-else d="M13.4 5.2a3.6 3.6 0 0 1 0 5.6M15.6 3.2a6.4 6.4 0 0 1 0 9.6" />
+        </svg>
+      </button>
+
+      <NuxtLink v-if="user" to="/admin" class="fr-profile fr-label">Painel</NuxtLink>
+      <button
+        v-else
+        type="button"
+        class="fr-profile fr-label"
+        :aria-expanded="active === 'profile'"
+        aria-controls="profile-panel"
+        @click="toggle('profile')"
+      >Entrar</button>
+    </div>
   </header>
 </template>

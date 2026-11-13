@@ -49,10 +49,34 @@
                   </label>
                 </div>
 
+                <div class="rform__pairRow">
+                  <label class="rform__field">
+                    <span class="rform__label">Estado</span>
+                    <select v-model="draft.status" class="rform__input">
+                      <option value="active">Activo</option>
+                      <option value="silent">Silencioso</option>
+                      <option value="lost">Perdido</option>
+                    </select>
+                  </label>
+                  <label class="rform__field">
+                    <span class="rform__label">Local</span>
+                    <select v-model="draft.location" class="rform__input">
+                      <option value="moon">Lua</option>
+                      <option value="mars">Marte</option>
+                      <option value="deep_space">Espaço profundo</option>
+                    </select>
+                  </label>
+                </div>
+
                 <label class="rform__field">
                   <span class="rform__label">História</span>
                   <textarea v-model="draft.body" class="rform__input rform__area" rows="4" placeholder="O que ficou para trás, contado em duas ou três frases." />
                   <span v-if="errors.body" class="rform__err">{{ errors.body }}</span>
+                </label>
+
+                <label class="rform__field">
+                  <span class="rform__label">Áudio de introdução <em>(opcional)</em></span>
+                  <input v-model="draft.intro_audio_url" class="rform__input rform__input--mono" placeholder="/media/intro.mp3">
                 </label>
               </div>
             </section>
@@ -170,6 +194,11 @@
                   </label>
 
                   <label class="rform__field">
+                    <span class="rform__label">Áudio narrado <em>(opcional)</em></span>
+                    <input v-model="scene.audio_url" class="rform__input rform__input--mono" placeholder="/media/narracao.mp3">
+                  </label>
+
+                  <label class="rform__field">
                     <span class="rform__label">Texto narrado</span>
                     <textarea v-model="scene.body" class="rform__input rform__area" rows="3" placeholder="O que o diário conta nesta cena." />
                   </label>
@@ -198,7 +227,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Relic, RelicFact, RelicScene, RelicInput } from '#shared/types/relic'
+import type { Relic, RelicFact, RelicScene, RelicInput, RelicLocation, RelicStatus } from '#shared/types/relic'
 
 const props = defineProps<{
   open: boolean
@@ -222,7 +251,10 @@ type Draft = {
   image: string
   alt: string
   ratio: string
+  status: RelicStatus
+  location: RelicLocation
   published: boolean
+  intro_audio_url: string
   facts: RelicFact[]
   scenes: RelicScene[]
 }
@@ -236,7 +268,10 @@ const blank = (): Draft => ({
   image: '',
   alt: '',
   ratio: '1376 / 768',
+  status: 'active',
+  location: 'moon',
   published: false,
+  intro_audio_url: '',
   facts: [
     { label: '', value: '' },
     { label: '', value: '' },
@@ -247,7 +282,7 @@ const blank = (): Draft => ({
 })
 
 function emptyScene(kind: 'image' | 'video'): RelicScene {
-  return { kind, src: '', poster: '', kicker: kind === 'video' ? 'Transmissão' : 'Fotografia', body: '' }
+  return { kind, src: '', poster: '', kicker: kind === 'video' ? 'Transmissão' : 'Fotografia', body: '', audio_url: '' }
 }
 
 const draft = reactive<Draft>(blank())
@@ -268,7 +303,13 @@ watch(
   (open) => {
     if (!open) return
     Object.assign(draft, blank())
-    if (props.relic) Object.assign(draft, JSON.parse(JSON.stringify(props.relic)))
+    if (props.relic) {
+      Object.assign(draft, JSON.parse(JSON.stringify(props.relic)))
+      draft.status = props.relic.status ?? 'active'
+      draft.location = props.relic.location ?? 'moon'
+      draft.intro_audio_url = props.relic.intro_audio_url ?? ''
+      draft.scenes = props.relic.scenes.map(scene => ({ ...scene, audio_url: scene.audio_url ?? '' }))
+    }
     // criar: o identificador segue o nome. editar: o identificador fica estável.
     idTouched = Boolean(props.relic)
     clearErrors()
@@ -346,6 +387,7 @@ function collect(): { facts: RelicFact[], scenes: RelicScene[] } {
         poster: scene.poster?.trim() || undefined,
         kicker: scene.kicker.trim(),
         body: scene.body.trim(),
+        audio_url: scene.audio_url?.trim() || undefined,
       })),
   }
 }
@@ -373,7 +415,7 @@ function validate(): boolean {
     !errors.image
     && draft.image.trim()
     && scenes.length > 0
-    && !scenes.some(scene => scene.src === draft.image.trim())
+    && !scenes.some(scene => scene.src === draft.image.trim() || scene.poster === draft.image.trim())
   ) {
     errors.image = 'A imagem do cartão tem de ser uma das cenas.'
   }
@@ -393,7 +435,10 @@ function save(): void {
     image: draft.image.trim(),
     alt: draft.alt.trim(),
     ratio: draft.ratio.trim() || '1376 / 768',
+    status: draft.status,
+    location: draft.location,
     published: draft.published,
+    intro_audio_url: draft.intro_audio_url.trim() || undefined,
     facts,
     scenes,
   })

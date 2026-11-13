@@ -15,6 +15,7 @@ export default defineConfig({
       'tests/quiz.test.ts',
       'tests/nasa.test.ts',
       'tests/relic-filters.test.ts',
+      'tests/relics-ui.test.ts',
     ],
     exclude: ['**/node_modules/**', '**/.nuxt/**', '**/.output/**'],
   },

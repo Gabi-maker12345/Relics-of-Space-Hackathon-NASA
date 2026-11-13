@@ -68,7 +68,7 @@ export function useRelics() {
     return data
   }
 
-  const update = async (id: string, input: RelicInput): Promise<Relic> => {
+  const patch = async (id: string, input: Partial<RelicInput>): Promise<Relic> => {
     const data = await $fetch<Relic>(`/api/admin/relics/${encodeURIComponent(id)}`, {
       method: 'PUT',
       body: input,
@@ -76,6 +76,8 @@ export function useRelics() {
     relics.value = relics.value.map(relic => (relic.id === id ? data : relic))
     return data
   }
+
+  const update = (id: string, input: RelicInput): Promise<Relic> => patch(id, input)
 
   const remove = async (id: string): Promise<void> => {
     await $fetch(`/api/admin/relics/${encodeURIComponent(id)}`, { method: 'DELETE' })
@@ -87,5 +89,5 @@ export function useRelics() {
     loadedFor.value = null
   }
 
-  return { relics, loadedFor, error, load, create, update, remove, reset }
+  return { relics, loadedFor, error, load, create, update, patch, remove, reset }
 }

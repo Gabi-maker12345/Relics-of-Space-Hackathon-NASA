@@ -23,16 +23,23 @@
 
     <ul v-else class="admin__grid">
       <li v-for="relic in relics" :key="relic.id" class="admin__item">
-        <article class="card">
-          <img class="card__img" :src="relic.image" :alt="relic.alt" loading="lazy">
+        <article class="card" :class="{ 'is-draft': relic.published === false }">
+          <RelicCover class="card__img" :src="relic.image" :poster="relic.image" :alt="relic.alt" />
           <div class="card__scrim" />
           <div class="card__body">
+            <p class="card__flags">
+              <StatusBadge :status="relicStatus(relic)" />
+              <span v-if="relic.published === false" class="card__draft">Rascunho</span>
+            </p>
             <p class="card__mission">{{ relic.mission }}</p>
             <h2 class="card__name">{{ relic.name }}</h2>
             <p class="card__tagline">{{ relic.tagline }}</p>
-            <p class="card__meta">{{ relic.facts.length }} factos · {{ relic.scenes.length }} cenas · {{ relic.published ? 'publicada' : 'rascunho' }}</p>
+            <p class="card__meta">{{ relic.facts.length }} factos · {{ relic.scenes.length }} cenas</p>
           </div>
           <div class="card__tools">
+            <button type="button" class="card__tool" @click="togglePublished(relic)">
+              {{ relic.published === false ? 'Publicar' : 'Despublicar' }}
+            </button>
             <button type="button" class="card__tool" @click="openForm(relic)">Editar</button>
             <button type="button" class="card__tool card__tool--danger" @click="confirmRemove(relic)">Remover</button>
           </div>
@@ -51,6 +58,10 @@
       </li>
     </ul>
 
+    <Transition name="toast">
+      <p v-if="toast" class="admin__toast" role="status">{{ toast }}</p>
+    </Transition>
+
     <RelicForm
       :open="formOpen"
       :relic="editing"
@@ -63,8 +74,9 @@
 
 <script setup lang="ts">
 import type { Relic, RelicInput } from '#shared/types/relic'
+import { relicStatus } from '~/utils/relics'
 
-const { relics, load, create, update, remove, error: loadError } = useRelics()
+const { relics, load, create, update, patch, remove, error: loadError } = useRelics()
 const { user, restore, signOut } = useAuth()
 const { open: openPanel } = usePanels()
 
@@ -76,10 +88,26 @@ const saveErrorText = computed(() => saveError.value || loadError.value)
 
 const takenIds = computed(() => relics.value.map(relic => relic.id).filter(id => id !== editing.value?.id))
 
+const toast = ref('')
+let toastTimer = 0
+
+function flash(message: string): void {
+  toast.value = message
+  window.clearTimeout(toastTimer)
+  toastTimer = window.setTimeout(() => { toast.value = '' }, 2600)
+}
+
 onMounted(async () => {
   await restore()
+  if (!user.value) {
+    openPanel('profile')
+    await navigateTo('/')
+    return
+  }
   await load(true)
 })
+
+onBeforeUnmount(() => window.clearTimeout(toastTimer))
 
 function openForm(relic: Relic | null): void {
   saveError.value = ''
@@ -90,8 +118,14 @@ function openForm(relic: Relic | null): void {
 async function store(input: RelicInput): Promise<void> {
   saveError.value = ''
   try {
-    if (editing.value) await update(editing.value.id, input)
-    else await create(input)
+    if (editing.value) {
+      await update(editing.value.id, input)
+      flash('Alterações guardadas.')
+    }
+    else {
+      await create(input)
+      flash('Relíquia criada.')
+    }
     formOpen.value = false
     editing.value = null
   }
@@ -101,11 +135,25 @@ async function store(input: RelicInput): Promise<void> {
   }
 }
 
+async function togglePublished(relic: Relic): Promise<void> {
+  const next = relic.published === false
+  saveError.value = ''
+  try {
+    await patch(relic.id, { published: next })
+    flash(next ? 'Publicada na home.' : 'Movida para rascunho.')
+  }
+  catch (err: unknown) {
+    const apiError = err as { data?: { message?: string }, message?: string }
+    saveError.value = apiError.data?.message || 'Falha ao alterar a visibilidade.'
+  }
+}
+
 async function confirmRemove(relic: Relic): Promise<void> {
   if (!window.confirm(`Remover “${relic.name}” do arquivo?`)) return
   saveError.value = ''
   try {
     await remove(relic.id)
+    flash('Relíquia removida.')
   }
   catch (err: unknown) {
     const apiError = err as { data?: { message?: string }, message?: string }
@@ -287,6 +335,42 @@ function requestLogin(): void {
   text-transform: uppercase;
   opacity: 0.45;
 }
+
+.card__flags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 2px;
+}
+
+.card__draft {
+  padding: 3px 7px;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px dashed rgb(255 255 255 / 30%);
+  color: rgb(255 255 255 / 65%);
+}
+
+.card.is-draft .card__img { opacity: 0.45; filter: grayscale(0.55); }
+
+.admin__toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  z-index: 140;
+  margin: 0;
+  padding: 12px 20px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #06070c;
+  background: var(--fr-fg, #e8e6e1);
+  transform: translateX(-50%);
+}
+
+.toast-enter-active, .toast-leave-active { transition: opacity 0.25s ease, transform 0.25s ease; }
+.toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, 8px); }
 
 .card__tools {
   position: absolute;
