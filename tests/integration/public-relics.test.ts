@@ -16,22 +16,29 @@ const url = process.env.NUXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321'
 const anonKey = process.env.NUXT_PUBLIC_SUPABASE_KEY || ''
 const serviceKey = process.env.NUXT_SUPABASE_SECRET_KEY || ''
 
-describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 integration)', () => {
+describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 & BE-09 integration)', () => {
   const admin = createClient<Database>(url, serviceKey || 'placeholder', { auth: { persistSession: false } })
   const anon = createClient<Database>(url, anonKey || 'placeholder', { auth: { persistSession: false } })
 
-  const publishedSlug = `pub-test-${randomUUID().slice(0, 8)}`
+  const marsSlug = `mars-test-${randomUUID().slice(0, 8)}`
+  const moonSlug = `moon-test-${randomUUID().slice(0, 8)}`
   const draftSlug = `draft-test-${randomUUID().slice(0, 8)}`
 
-  let publishedId = ''
+  let marsId = ''
+  let moonId = ''
   let draftId = ''
 
-  const createMockEvent = (path: string, params: Record<string, string> = {}) => {
+  const createMockEvent = (
+    path: string,
+    params: Record<string, string> = {},
+    query: Record<string, string> = {},
+  ) => {
     const headers: Record<string, string> = {}
     return {
       path,
       context: { params },
       node: {
+        req: { url: path },
         res: {
           setHeader: (name: string, value: string) => {
             headers[name.toLowerCase()] = value
@@ -39,19 +46,20 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 integra
           getHeader: (name: string) => headers[name.toLowerCase()],
         },
       },
+      __query: query,
     } as unknown as H3Event
   }
 
   beforeAll(async () => {
-    // 1. Insert published relic
-    const { data: pubData, error: pubErr } = await admin
+    // 1. Insert active Mars relic
+    const { data: marsData, error: marsErr } = await admin
       .from('relics')
       .insert({
-        slug: publishedSlug,
-        name: 'Public Integration Relic',
-        mission: 'Public Mission',
-        summary: 'Public Tagline',
-        story_text: 'A very long story text that should not appear in the panel list.',
+        slug: marsSlug,
+        name: 'Curiosity Mars Rover Alpha',
+        mission: 'Mars Science Laboratory',
+        summary: 'Rover em Marte ativo',
+        story_text: 'História longa em Marte.',
         published: true,
         status: 'active',
         location: 'mars',
@@ -59,25 +67,25 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 integra
       .select()
       .single()
 
-    expect(pubErr).toBeNull()
-    publishedId = pubData!.id
+    expect(marsErr).toBeNull()
+    marsId = marsData!.id
 
-    // 2. Add media and quiz to published relic
+    // Add media and quiz to Mars relic
     const { data: mediaData } = await admin
       .from('relic_media')
       .insert([
         {
-          relic_id: publishedId,
+          relic_id: marsId,
           type: 'image',
-          url: '/images/pub-relic.jpg',
+          url: '/images/mars-rover.jpg',
           caption: 'Cena da relíquia pública',
           position: 0,
         },
         {
-          relic_id: publishedId,
+          relic_id: marsId,
           type: 'video',
-          url: '/media/pub-loop.mp4',
-          poster_url: '/images/pub-poster.jpg',
+          url: '/media/mars-loop.mp4',
+          poster_url: '/images/mars-poster.jpg',
           caption: 'Vídeo da relíquia',
           position: 1,
         },
@@ -86,18 +94,18 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 integra
 
     const coverItem = mediaData?.find(m => m.type === 'image')
     if (coverItem) {
-      await admin.from('relics').update({ cover_media_id: coverItem.id }).eq('id', publishedId)
+      await admin.from('relics').update({ cover_media_id: coverItem.id }).eq('id', marsId)
     }
 
     await admin.from('relic_facts').insert({
-      relic_id: publishedId,
+      relic_id: marsId,
       label: 'Velocidade',
       value: '20.000 km/h',
       position: 0,
     })
 
     await admin.from('quiz_questions').insert({
-      relic_id: publishedId,
+      relic_id: marsId,
       position: 0,
       question: 'Qual é o destino desta missão?',
       options: ['Lua', 'Marte', 'Vênus'],
@@ -105,16 +113,37 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 integra
       explanation: 'A missão foi enviada para Marte.',
     })
 
+    // 2. Insert silent Moon relic
+    const { data: moonData, error: moonErr } = await admin
+      .from('relics')
+      .insert({
+        slug: moonSlug,
+        name: 'Surveyor Moon Lander Beta',
+        mission: 'Surveyor Program',
+        summary: 'Pousador na Lua inativo',
+        story_text: 'História na Lua.',
+        published: true,
+        status: 'silent',
+        location: 'moon',
+      })
+      .select()
+      .single()
+
+    expect(moonErr).toBeNull()
+    moonId = moonData!.id
+
     // 3. Insert draft (unpublished) relic
     const { data: draftData, error: draftErr } = await admin
       .from('relics')
       .insert({
         slug: draftSlug,
-        name: 'Draft Relic',
+        name: 'Top Secret Draft Probe',
         mission: 'Secret Mission',
         summary: 'Draft summary',
         story_text: 'Top secret draft story',
         published: false,
+        status: 'active',
+        location: 'deep_space',
       })
       .select()
       .single()
@@ -124,11 +153,12 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 integra
   })
 
   afterAll(async () => {
-    if (publishedId) await admin.from('relics').delete().eq('id', publishedId)
+    if (marsId) await admin.from('relics').delete().eq('id', marsId)
+    if (moonId) await admin.from('relics').delete().eq('id', moonId)
     if (draftId) await admin.from('relics').delete().eq('id', draftId)
   })
 
-  it('lists published relics with lightweight panel fields only', async () => {
+  it('lists published relics with lightweight panel fields only (BE-08)', async () => {
     const event = createMockEvent('/api/public/relics')
     const list = await getPublicRelicsList(anon, event)
 
@@ -140,18 +170,18 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 integra
     expect(foundDraft).toBeUndefined()
 
     // The published relic must appear
-    const item = list.find(r => r.slug === publishedSlug)
+    const item = list.find(r => r.slug === marsSlug)
     expect(item).toBeDefined()
     expect(item).toMatchObject({
-      id: publishedSlug,
-      slug: publishedSlug,
-      name: 'Public Integration Relic',
-      summary: 'Public Tagline',
-      tagline: 'Public Tagline',
+      id: marsSlug,
+      slug: marsSlug,
+      name: 'Curiosity Mars Rover Alpha',
+      summary: 'Rover em Marte ativo',
+      tagline: 'Rover em Marte ativo',
       status: 'active',
       location: 'mars',
       cover_type: 'image',
-      image: '/images/pub-relic.jpg',
+      image: '/images/mars-rover.jpg',
     })
 
     // Panel item must NOT have heavy fields
@@ -165,14 +195,14 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 integra
     expect(event.node.res.getHeader('cache-control')).toContain('max-age=60')
   })
 
-  it('returns full detail (facts, steps, scenes, quiz) for a published relic', async () => {
-    const event = createMockEvent(`/api/public/relics/${publishedSlug}`, { id: publishedSlug })
-    const detail = await getPublicRelicDetail(anon, event, publishedSlug)
+  it('returns full detail (facts, steps, scenes, quiz) for a published relic (BE-08)', async () => {
+    const event = createMockEvent(`/api/public/relics/${marsSlug}`, { id: marsSlug })
+    const detail = await getPublicRelicDetail(anon, event, marsSlug)
 
     expect(detail).toBeDefined()
-    expect(detail.id).toBe(publishedSlug)
-    expect(detail.name).toBe('Public Integration Relic')
-    expect(detail.body).toBe('A very long story text that should not appear in the panel list.')
+    expect(detail.id).toBe(marsSlug)
+    expect(detail.name).toBe('Curiosity Mars Rover Alpha')
+    expect(detail.body).toBe('História longa em Marte.')
 
     // Facts
     expect(detail.facts).toEqual([{ label: 'Velocidade', value: '20.000 km/h' }])
@@ -202,7 +232,7 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 integra
     expect(event.node.res.getHeader('cache-control')).toContain('max-age=60')
   })
 
-  it('returns 404 when querying an unpublished draft relic', async () => {
+  it('returns 404 when querying an unpublished draft relic (BE-08)', async () => {
     const event = createMockEvent(`/api/public/relics/${draftSlug}`, { id: draftSlug })
     await expect(getPublicRelicDetail(anon, event, draftSlug)).rejects.toMatchObject({
       statusCode: 404,
@@ -210,11 +240,80 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 integra
     })
   })
 
-  it('returns 404 when querying a nonexistent slug', async () => {
+  it('returns 404 when querying a nonexistent slug (BE-08)', async () => {
     const event = createMockEvent('/api/public/relics/nonexistent-relic', { id: 'nonexistent-relic' })
     await expect(getPublicRelicDetail(anon, event, 'nonexistent-relic')).rejects.toMatchObject({
       statusCode: 404,
       message: 'Relic not found',
     })
+  })
+
+  // BE-09 Tests: Filters & Search
+  it('filters by location (BE-09)', async () => {
+    const event = createMockEvent('/api/public/relics')
+    const marsList = await getPublicRelicsList(anon, event, { location: 'mars' })
+    expect(marsList.some(r => r.slug === marsSlug)).toBe(true)
+    expect(marsList.some(r => r.slug === moonSlug)).toBe(false)
+
+    const moonList = await getPublicRelicsList(anon, event, { location: 'moon' })
+    expect(moonList.some(r => r.slug === moonSlug)).toBe(true)
+    expect(moonList.some(r => r.slug === marsSlug)).toBe(false)
+  })
+
+  it('filters by status (BE-09)', async () => {
+    const event = createMockEvent('/api/public/relics')
+    const activeList = await getPublicRelicsList(anon, event, { status: 'active' })
+    expect(activeList.some(r => r.slug === marsSlug)).toBe(true)
+    expect(activeList.some(r => r.slug === moonSlug)).toBe(false)
+
+    const silentList = await getPublicRelicsList(anon, event, { status: 'silent' })
+    expect(silentList.some(r => r.slug === moonSlug)).toBe(true)
+    expect(silentList.some(r => r.slug === marsSlug)).toBe(false)
+  })
+
+  it('searches relics by name with q parameter (BE-09)', async () => {
+    const event = createMockEvent('/api/public/relics')
+    const roverSearch = await getPublicRelicsList(anon, event, { q: 'Curiosity' })
+    expect(roverSearch.some(r => r.slug === marsSlug)).toBe(true)
+    expect(roverSearch.some(r => r.slug === moonSlug)).toBe(false)
+
+    const landerSearch = await getPublicRelicsList(anon, event, { q: 'Surveyor' })
+    expect(landerSearch.some(r => r.slug === moonSlug)).toBe(true)
+    expect(landerSearch.some(r => r.slug === marsSlug)).toBe(false)
+  })
+
+  it('combines location, status, and search filters with correct intersection (BE-09)', async () => {
+    const event = createMockEvent('/api/public/relics')
+    const matched = await getPublicRelicsList(anon, event, {
+      location: 'mars',
+      status: 'active',
+      q: 'Rover',
+    })
+    expect(matched.some(r => r.slug === marsSlug)).toBe(true)
+    expect(matched.some(r => r.slug === moonSlug)).toBe(false)
+  })
+
+  it('returns an empty array when filters match nothing (BE-09)', async () => {
+    const event = createMockEvent('/api/public/relics')
+    // No active relics on the moon in our test set
+    const emptyResult = await getPublicRelicsList(anon, event, {
+      location: 'deep_space',
+      q: 'NonExistentRelicName12345',
+    })
+    expect(Array.isArray(emptyResult)).toBe(true)
+    expect(emptyResult).toHaveLength(0)
+    expect(event.node.res.getHeader('cache-control')).toContain('public')
+  })
+
+  it('sorts relics by name or date (BE-09)', async () => {
+    const event = createMockEvent('/api/public/relics')
+    const sortedByNameAsc = await getPublicRelicsList(anon, event, { sort: 'name', order: 'asc' })
+    const names = sortedByNameAsc.map(r => r.name)
+    const sortedNames = [...names].sort((a, b) => a.localeCompare(b))
+    expect(names).toEqual(sortedNames)
+
+    const sortedByNameDesc = await getPublicRelicsList(anon, event, { sort: 'name', order: 'desc' })
+    const namesDesc = sortedByNameDesc.map(r => r.name)
+    expect(namesDesc).toEqual([...sortedNames].reverse())
   })
 })
