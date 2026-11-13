@@ -509,3 +509,35 @@ diário aberto pelo cartão.
 - **Testes:** `tests/relic-contract.test.ts` (mapper, schema, mapeamento de colunas, capa) e
   `tests/integration/relics.test.ts` (cascata, capa, rascunhos, rename). Total: 45 unitários + 7 de
   integração verdes.
+
+## Iteração 25 — API de mídias (BE-06)
+
+- **Endpoints novos:** `POST /api/admin/relics/:id/media`, `PATCH|DELETE
+  /api/admin/media/:id`, `PUT /api/admin/relics/:id/media/order` e
+  `PUT /api/admin/relics/:id/cover`. Todos devolvem o `Relic` completo e passam
+  por `requireAdmin`.
+- **Lista expansível:** qualquer número de mídias por relíquia; sem `position`
+  a mídia entra no fim, com `position` os restantes são deslocados (e
+  restaurados se o insert falhar).
+- **Edição por item:** `PATCH` altera só os campos enviados (legenda, crédito,
+  `source_url`, áudio próprio, `mute_video`, tipo, poster, capa).
+- **Reordenação segura:** `order` exige **todas** as mídias da relíquia,
+  exatamente uma vez; listas parciais, repetidas ou de outra relíquia são
+  rejeitadas com 400. As posições anteriores são restauradas se uma escrita
+  falhar.
+- **Capa única:** `cover_media_id` é a única fonte de verdade; a API aceita
+  imagem ou vídeo, rejeita mídia de outra relíquia e o mapper marca exatamente
+  um item com `is_cover`. Sem capa explícita, a primeira imagem serve de
+  fallback; para vídeos, `Relic.image` é o `poster`.
+- **Contrato de cena:** `id`, `kind`, `src`, `poster`, `kicker`, `title`,
+  `body`, `credit`, `source_url`, `audio_url`, `mute_video`, `is_cover`; a
+  relíquia expõe `intro_audio_url`. O `PUT /api/admin/relics/:id` grava os
+  mesmos campos e aceita capa em vídeo através do poster.
+- **Testes:** `tests/media.test.ts` (schemas, defaults, normalização e mapper) e
+  novos casos em `tests/relic-contract.test.ts`; `tests/integration/relics.test.ts`
+  cobre capa em vídeo e limpeza da capa ao apagar a mídia. Total: 81 unitários +
+  8 de integração verdes.
+- **Validação ao vivo:** 31 verificações contra o Supabase local (adicionar,
+  editar, reordenar, capa imagem/vídeo, fallback, payloads inválidos, 401 e
+  limpeza). `smoke` 12/12.
+- **Docs:** README com as rotas e o contrato de mídia.

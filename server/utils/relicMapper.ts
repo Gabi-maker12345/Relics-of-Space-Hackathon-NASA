@@ -10,7 +10,8 @@ type MediaRow = Database['public']['Tables']['relic_media']['Row']
  * Turns database rows into the `Relic` shape the front-end consumes.
  *
  * The public identifier is always the slug: UUIDs never leak into the UI, so
- * URLs stay stable and readable.
+ * URLs stay stable and readable. Media ids are exposed inside `scenes` because
+ * the admin needs them to edit, reorder and delete individual items.
  */
 export function mapDbToRelic(
   relic: RelicRow,
@@ -20,15 +21,25 @@ export function mapDbToRelic(
   const sortedFacts = [...facts].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
   const sortedMedia = [...media].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
 
-  const coverMedia = sortedMedia.find(m => m.id === relic.cover_media_id && m.type === 'image')
+  // The cover may be any media type. Only fall back to the first item when the
+  // stored cover was deleted or never set.
+  const coverMedia = sortedMedia.find(m => m.id === relic.cover_media_id)
     ?? sortedMedia.find(m => m.type === 'image')
+    ?? sortedMedia[0]
 
   const scenes: RelicScene[] = sortedMedia.map(m => ({
+    id: m.id,
     kind: m.type as SceneKind,
     src: m.url,
     poster: m.poster_url || undefined,
     kicker: m.kicker || m.title || '',
+    title: m.title || '',
     body: m.caption || '',
+    credit: m.credit || '',
+    source_url: m.source_url,
+    audio_url: m.audio_url,
+    mute_video: m.mute_video,
+    is_cover: coverMedia?.id === m.id,
   }))
 
   return {
@@ -38,10 +49,12 @@ export function mapDbToRelic(
     tagline: relic.summary || '',
     body: relic.story_text || relic.summary || '',
     facts: sortedFacts.map(f => ({ label: f.label, value: f.value })),
-    image: coverMedia?.url ?? '',
+    // A video cover is represented by its poster frame: `<img>` cannot play it.
+    image: coverMedia ? (coverMedia.type === 'video' ? coverMedia.poster_url ?? '' : coverMedia.url) : '',
     alt: relic.alt || relic.name,
     ratio: relic.ratio || '1376 / 768',
     scenes,
+    intro_audio_url: relic.intro_audio_url,
     published: relic.published,
   }
 }

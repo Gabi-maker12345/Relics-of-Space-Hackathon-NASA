@@ -29,7 +29,12 @@ const sceneSchema = z.object({
   src: z.string().trim().min(1, 'Cada cena precisa de mídia.'),
   poster: z.string().optional(),
   kicker: z.string().default(''),
+  title: z.string().optional(),
   body: z.string().default(''),
+  credit: z.string().optional(),
+  source_url: z.string().optional().nullable(),
+  audio_url: z.string().optional().nullable(),
+  mute_video: z.boolean().optional(),
 })
 
 export const relicInputSchema = z.object({
@@ -64,7 +69,9 @@ export const DEFAULT_RATIO = '1376 / 768'
  */
 export function validateCover(scenes: RelicScene[] | undefined, image: string | undefined): string | null {
   if (!image || !scenes) return null
-  if (scenes.some(scene => scene.src === image)) return null
+  // A video cover is identified by its poster frame, which is what the form
+  // sends as the card image.
+  if (scenes.some(scene => scene.src === image || scene.poster === image)) return null
   return 'A imagem do cartão tem de corresponder a uma das cenas.'
 }
 
@@ -123,9 +130,13 @@ function sceneToRow(relicId: string, scene: RelicScene, position: number): Media
     url: scene.src,
     poster_url: scene.poster || null,
     kicker: scene.kicker || '',
+    title: scene.title || '',
     caption: scene.body || '',
+    credit: scene.credit || '',
+    source_url: scene.source_url || null,
+    audio_url: scene.audio_url || null,
     position,
-    mute_video: scene.kind === 'video',
+    mute_video: scene.mute_video ?? scene.kind === 'video',
   }
 }
 
@@ -206,9 +217,9 @@ export async function replaceRelicChildren(
  * Resolves the cover row: the first media item whose URL the caller marked as
  * `image`, otherwise the first image scene.
  */
-export function pickCoverId(media: Pick<MediaRow, 'id' | 'type' | 'url'>[], image?: string): string | null {
+export function pickCoverId(media: Pick<MediaRow, 'id' | 'type' | 'url' | 'poster_url'>[], image?: string): string | null {
   if (image) {
-    const explicit = media.find(item => item.url === image)
+    const explicit = media.find(item => item.url === image || item.poster_url === image)
     if (explicit) return explicit.id
   }
   return media.find(item => item.type === 'image')?.id ?? null

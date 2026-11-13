@@ -112,6 +112,48 @@ describe.skipIf(!serviceKey || !anonKey)('relic CRUD contract (local database)',
     expect(visible).toHaveLength(1)
   })
 
+  it('allows a video cover and clears it when the media is deleted', async () => {
+    const { data: video, error } = await admin
+      .from('relic_media')
+      .insert({
+        relic_id: relicId,
+        type: 'video',
+        url: '/media/cover-loop.mp4',
+        poster_url: '/images/cover-poster.jpg',
+        position: 2,
+        mute_video: true,
+      })
+      .select()
+      .single()
+    expect(error).toBeNull()
+
+    const { error: coverError } = await admin
+      .from('relics')
+      .update({ cover_media_id: video!.id })
+      .eq('id', relicId)
+    expect(coverError).toBeNull()
+
+    const { data: withVideoCover } = await admin
+      .from('relics')
+      .select('cover_media_id')
+      .eq('id', relicId)
+      .single()
+    expect(withVideoCover!.cover_media_id).toBe(video!.id)
+
+    const { error: deleteError } = await admin.from('relic_media').delete().eq('id', video!.id)
+    expect(deleteError).toBeNull()
+
+    const { data: withoutCover } = await admin
+      .from('relics')
+      .select('cover_media_id')
+      .eq('id', relicId)
+      .single()
+    expect(withoutCover!.cover_media_id).toBeNull()
+
+    // Restore the image cover so the cascade assertions stay meaningful.
+    await admin.from('relics').update({ cover_media_id: coverId }).eq('id', relicId)
+  })
+
   it('cascades facts and media when the relic is deleted', async () => {
     const { error } = await admin.from('relics').delete().eq('id', relicId)
     expect(error).toBeNull()

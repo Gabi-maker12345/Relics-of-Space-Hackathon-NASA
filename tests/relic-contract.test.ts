@@ -95,9 +95,67 @@ describe('mapDbToRelic', () => {
     ])
 
     expect(dto.scenes).toEqual([
-      { kind: 'image', src: '/images/relics/apollo-lunar-module.jpg', poster: undefined, kicker: 'Fotografia', body: 'A história da cena.' },
-      { kind: 'video', src: '/media/loop.mp4', poster: '/images/p.jpg', kicker: 'Fotografia', body: 'A história da cena.' },
+      {
+        id: 'i',
+        kind: 'image',
+        src: '/images/relics/apollo-lunar-module.jpg',
+        poster: undefined,
+        kicker: 'Fotografia',
+        title: '',
+        body: 'A história da cena.',
+        credit: 'NASA',
+        source_url: null,
+        audio_url: null,
+        mute_video: true,
+        is_cover: true,
+      },
+      {
+        id: 'v',
+        kind: 'video',
+        src: '/media/loop.mp4',
+        poster: '/images/p.jpg',
+        kicker: 'Fotografia',
+        title: '',
+        body: 'A história da cena.',
+        credit: 'NASA',
+        source_url: null,
+        audio_url: null,
+        mute_video: true,
+        is_cover: false,
+      },
     ])
+  })
+
+  it('supports a video cover through its poster frame', () => {
+    const video = media({
+      id: 'v',
+      type: 'video',
+      url: '/media/loop.mp4',
+      poster_url: '/images/p.jpg',
+      position: 0,
+      mute_video: true,
+      audio_url: '/media/voice.mp3',
+      source_url: 'https://images.nasa.gov/details/x',
+    })
+    const dto = mapDbToRelic(relic({ cover_media_id: 'v' }), [], [video])
+
+    expect(dto.image).toBe('/images/p.jpg')
+    expect(dto.scenes[0]).toMatchObject({
+      id: 'v',
+      is_cover: true,
+      mute_video: true,
+      audio_url: '/media/voice.mp3',
+      source_url: 'https://images.nasa.gov/details/x',
+    })
+  })
+
+  it('leaves the cover empty for a video without a poster', () => {
+    const video = media({ id: 'v', type: 'video', url: '/media/loop.mp4', poster_url: null })
+    expect(mapDbToRelic(relic({ cover_media_id: 'v' }), [], [video]).image).toBe('')
+  })
+
+  it('exposes the intro audio for the front-end player', () => {
+    expect(mapDbToRelic(relic(), [], []).intro_audio_url).toBe('/media/intro.mp3')
   })
 })
 
@@ -165,16 +223,22 @@ describe('cover rules', () => {
     expect(validateCover(scenes, '/a.jpg')).toBeNull()
   })
 
+  it('accepts a video cover identified by its poster', () => {
+    const withPoster = [{ kind: 'video' as const, src: '/b.mp4', poster: '/b.jpg', kicker: '', body: '' }]
+    expect(validateCover(withPoster, '/b.jpg')).toBeNull()
+  })
+
   it('rejects a cover that is not a scene', () => {
     expect(validateCover(scenes, '/other.jpg')).toMatch(/uma das cenas/)
   })
 
   it('picks the explicit cover or the first image', () => {
     const media = [
-      { id: 'v', type: 'video', url: '/b.mp4' },
-      { id: 'i', type: 'image', url: '/a.jpg' },
+      { id: 'v', type: 'video', url: '/b.mp4', poster_url: '/b.jpg' },
+      { id: 'i', type: 'image', url: '/a.jpg', poster_url: null },
     ]
     expect(pickCoverId(media, '/a.jpg')).toBe('i')
+    expect(pickCoverId(media, '/b.jpg')).toBe('v')
     expect(pickCoverId(media)).toBe('i')
     expect(pickCoverId([media[0]])).toBeNull()
   })
