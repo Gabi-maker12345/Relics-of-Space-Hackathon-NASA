@@ -627,4 +627,24 @@ diário aberto pelo cartão.
   integração aplica o seed uma segunda vez com `psql`).
 - **Docs:** README, `docs/database.md` e `docs/testing.md` atualizados.
 
+## Iteração 31 — API do quiz (BE-13)
+
+- **CRUD admin:** `GET|POST /api/admin/relics/:id/quiz`, `PATCH|DELETE
+  /api/admin/quiz/:id` e `PUT /api/admin/relics/:id/quiz/order`.
+- **Validação:** 2 a 5 opções por pergunta, `correct_index` obrigatoriamente
+  dentro das opções (mesmo quando só as opções mudam), máximo de 5 perguntas por
+  relíquia e listas de ordenação completas, sem repetições nem ids de outra
+  relíquia.
+- **Posições:** inserir a meio desloca as perguntas seguintes (de baixo para
+  cima, por causa da constraint única); reordenar usa duas passagens por uma
+  gama temporária para evitar colisões.
+- **Respostas:** o detalhe público devolve `question`, `options` e `explanation`,
+  mas nunca `correct_index`; as respostas admin (incluindo o `GET` da relíquia)
+  usam `ADMIN_RELIC_OPTIONS` e incluem a resposta correta.
+- **Traduções:** apagar uma pergunta limpa as linhas de
+  `quiz_question_translations` por cascata.
+- **Testes:** 119 unitários verdes (`tests/quiz.test.ts`) e 35 de integração
+  verdes (`tests/integration/quiz.test.ts`, com o detalhe público sem resposta).
+- **Docs:** README, `docs/database.md` e `docs/testing.md` atualizados.
+
 

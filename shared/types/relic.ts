@@ -76,6 +76,30 @@ export interface QuizQuestion {
   question: string
   options: string[]
   explanation?: string
+  /**
+   * Index of the correct option. Only present on admin responses; the public
+   * detail deliberately omits it so the answer never reaches the browser.
+   */
+  correct_index?: number
+}
+
+/** Body accepted by `POST /api/admin/relics/:id/quiz`. */
+export interface QuizQuestionInput {
+  question: string
+  options: string[]
+  correct_index: number
+  explanation?: string
+  /** Omit to append at the end of the relic's quiz. */
+  position?: number
+}
+
+/** Body accepted by `PATCH /api/admin/quiz/:id`. */
+export type QuizQuestionPatch = Partial<QuizQuestionInput>
+
+/** Body accepted by `PUT /api/admin/relics/:id/quiz/order`. */
+export interface QuizOrderInput {
+  /** Every question id of the relic, exactly once, in the new order. */
+  ids: string[]
 }
 
 export interface RelicPanelCover {

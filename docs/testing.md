@@ -17,6 +17,7 @@ Unit tests are pure Node tests — no Supabase stack required:
 | `tests/relic-contract.test.ts` | The front↔API contract: mapper (`id` = slug, cover only from images, no audio fallback), input schema, column mapping (`tagline`→`summary`, `body`→`story_text`), one-field publish patch and the cover-must-be-a-scene rule. |
 | `tests/i18n.test.ts` | Language normalization (`en`, `pt-BR`, invalid → `pt`) and the translation payload schema (partial saves, UUIDs, quiz options, safe URLs). |
 | `tests/seed.test.ts` | The demo catalogue: 12 relics, unique ids/slugs, fact sheets, official media with credits/sources, every image present as a 1600×900 JPEG, and the SSR fallback matching `data/relics.json` (cover, scenes, steps). |
+| `tests/quiz.test.ts` | Quiz input/patch schemas (2–5 options, answer index in range, UUIDs for ordering) and the DTO guarantee: the public mapper omits `correct_index`, the admin mapper includes it. |
 
 ## Integration tests (local Supabase required)
 
@@ -55,6 +56,10 @@ Current coverage:
 - `tests/integration/seed.test.ts` — after the reset and a second seed run, the 12 demo
   relics exist exactly once, with their covers, fact sheets, media counts, credits and
   sources; anon can read all published relics.
+- `tests/integration/quiz.test.ts` — adding, inserting at a position, updating, reordering
+  and deleting questions; the five-question cap; out-of-range answers after shrinking the
+  options; partial/duplicate/foreign order lists; translations cascade on delete; and the
+  public detail omits `correct_index` while the admin payload includes it.
 
 `db reset` wipes `admin_users` — run `npm run setup:admin` afterwards before
 using the admin endpoints.

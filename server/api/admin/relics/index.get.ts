@@ -2,7 +2,7 @@ import { defineEventHandler, createError } from 'h3'
 import { serverSupabaseServiceRole } from '#supabase/server'
 import type { Database } from '~/types/database.types'
 import { requireAdmin } from '../../../utils/auth'
-import { loadRelicDto } from '../../../utils/relicMapper'
+import { ADMIN_RELIC_OPTIONS, loadRelicDto } from '../../../utils/relicMapper'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
@@ -17,5 +17,5 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: 'Failed to load relics' })
   }
 
-  return Promise.all(relics.map(relic => loadRelicDto(supabase, relic, { includeWarnings: true })))
+  return Promise.all(relics.map(relic => loadRelicDto(supabase, relic, ADMIN_RELIC_OPTIONS)))
 })

@@ -12,6 +12,7 @@ export default defineConfig({
       'tests/media.test.ts',
       'tests/i18n.test.ts',
       'tests/seed.test.ts',
+      'tests/quiz.test.ts',
     ],
     exclude: ['**/node_modules/**', '**/.nuxt/**', '**/.output/**'],
   },

@@ -220,6 +220,12 @@ Admin (requer sessão Supabase com `is_admin`):
   mídias da relíquia, pela nova ordem
 - `PUT /api/admin/relics/:id/cover` — `{ "media_id": "…" }` ou `null`; aceita
   imagem ou vídeo
+- `GET|POST /api/admin/relics/:id/quiz` — lista as perguntas **com**
+  `correct_index` ou adiciona uma (máximo 5 por relíquia)
+- `PATCH|DELETE /api/admin/quiz/:id` — edita/remove uma pergunta (as traduções
+  seguem em cascata)
+- `PUT /api/admin/relics/:id/quiz/order` — `{ "ids": [...] }` com **todas** as
+  perguntas da relíquia, pela nova ordem
 - `GET|PUT /api/admin/relics/:id/translations/:lang` — lê/grava uma língua
   (`en`, `pt-BR`, …); ver [Idiomas](#idiomas-be-12)
 
@@ -243,6 +249,11 @@ O detalhe inclui `steps` (introdução + um passo por mídia, pela ordem) e
 `media_id`, `src`, `poster` e `credit`. Uma relíquia sem mídias devolve apenas o
 passo de introdução. Respostas admin incluem ainda `warnings` (por exemplo,
 mídia sem áudio ou sem legenda) — avisos, nunca erros de validação.
+
+O quiz público (`Relic.quiz`) devolve `id`, `position`, `question`, `options` e
+`explanation`, mas **nunca** `correct_index`. As respostas admin incluem o
+índice correto; o `POST` valida que ele aponta para uma opção existente e o
+limite é de 5 perguntas por relíquia.
 
 ### Idiomas (BE-12)
 

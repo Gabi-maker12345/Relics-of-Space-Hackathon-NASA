@@ -10,7 +10,7 @@ import {
   toRelicPatch,
   validateCover,
 } from '../../../utils/relicInput'
-import { loadRelicDto } from '../../../utils/relicMapper'
+import { ADMIN_RELIC_OPTIONS, loadRelicDto } from '../../../utils/relicMapper'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
@@ -77,5 +77,5 @@ export default defineEventHandler(async (event) => {
     relic = withCover
   }
 
-  return loadRelicDto(supabase, relic, { includeWarnings: true })
+  return loadRelicDto(supabase, relic, ADMIN_RELIC_OPTIONS)
 })

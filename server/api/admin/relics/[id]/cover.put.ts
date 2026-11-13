@@ -4,7 +4,7 @@ import type { Database } from '~/types/database.types'
 import { requireAdmin } from '../../../../utils/auth'
 import { findRelic } from '../../../../utils/relicInput'
 import { mediaCoverSchema, setCover } from '../../../../utils/media'
-import { loadRelicDto } from '../../../../utils/relicMapper'
+import { ADMIN_RELIC_OPTIONS, loadRelicDto } from '../../../../utils/relicMapper'
 
 /**
  * Sets (or clears) the relic cover. Accepts image and video media: for a
@@ -29,5 +29,5 @@ export default defineEventHandler(async (event) => {
   if (result.error) throw createError({ statusCode: 400, message: result.error })
 
   const fresh = await findRelic(supabase, relic.id)
-  return loadRelicDto(supabase, fresh ?? relic, { includeWarnings: true })
+  return loadRelicDto(supabase, fresh ?? relic, ADMIN_RELIC_OPTIONS)
 })

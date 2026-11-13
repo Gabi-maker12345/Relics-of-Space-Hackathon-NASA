@@ -167,6 +167,23 @@ valid without a translation and makes the fallback a read-time concern.
 
 RLS exposes translations to `anon` only when the parent relic is published.
 
+## Quiz (BE-13)
+
+`quiz_questions` stores one row per question, ordered by `position`. The
+database already enforces 2–5 options and `correct_index < jsonb_array_length(options)`;
+the API validates the same rules before writing so callers receive a clear 400
+instead of a Postgres constraint error.
+
+- `GET|POST /api/admin/relics/:id/quiz` — read the quiz with answers, or append a
+  question (max 5 per relic; `position` shifts the following rows).
+- `PATCH|DELETE /api/admin/quiz/:id` — edit or remove one question. Changing
+  `options` re-validates the existing `correct_index`; translations cascade on
+  delete.
+- `PUT /api/admin/relics/:id/quiz/order` — full ordered id list, like media.
+- The public detail returns `quiz` **without** `correct_index`; only admin
+  responses include the answer. Admin relic responses use
+  `ADMIN_RELIC_OPTIONS` in `server/utils/relicMapper.ts`.
+
 ## Migrations
 
 ```bash
