@@ -1,20 +1,14 @@
-import { defineEventHandler, createError, getRouterParam } from 'h3'
+import { defineEventHandler } from 'h3'
 import { serverSupabaseClient } from '#supabase/server'
 import type { Database } from '~/types/database.types'
-import { findRelic } from '../../../utils/relicInput'
-import { loadRelicDto } from '../../../utils/relicMapper'
+import { getPublicRelicDetail } from '../../../utils/publicRelics'
 
-/** Public detail by slug (UUIDs still work so old links do not 404). */
+/**
+ * Public detail by slug (or UUID for backward compatibility) (BE-08).
+ * Returns the full technical sheet, steps, scenes, and quiz questions.
+ * Returns 404 for nonexistent or draft relics.
+ */
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
-  if (!id) throw createError({ statusCode: 400, message: 'Missing id' })
-
   const supabase = await serverSupabaseClient<Database>(event)
-  const relic = await findRelic(supabase, id)
-
-  if (!relic || !relic.published) {
-    throw createError({ statusCode: 404, message: 'Relic not found' })
-  }
-
-  return loadRelicDto(supabase, relic)
+  return getPublicRelicDetail(supabase, event)
 })

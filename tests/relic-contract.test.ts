@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { Database } from '../app/types/database.types'
-import { buildSteps, buildWarnings, mapDbToRelic } from '../server/utils/relicMapper'
+import {
+  PUBLIC_CACHE_CONTROL,
+  buildSteps,
+  buildWarnings,
+  mapDbToRelic,
+  mapDbToRelicPanel,
+} from '../server/utils/relicMapper'
 import {
   pickCoverId,
   relicInputSchema,
@@ -13,6 +19,20 @@ import {
 type RelicRow = Database['public']['Tables']['relics']['Row']
 type FactRow = Database['public']['Tables']['relic_facts']['Row']
 type MediaRow = Database['public']['Tables']['relic_media']['Row']
+type QuizRow = Database['public']['Tables']['quiz_questions']['Row']
+
+const quizQuestion = (overrides: Partial<QuizRow> = {}): QuizRow => ({
+  id: '33333333-3333-4333-8333-333333333333',
+  relic_id: '11111111-1111-4111-8111-111111111111',
+  position: 0,
+  question: 'Em que ano pousou na Lua?',
+  options: ['1968', '1969', '1970'],
+  correct_index: 1,
+  explanation: 'Apollo 11 pousou em 20 de julho de 1969.',
+  created_at: '2026-01-01T00:00:00Z',
+  updated_at: '2026-01-01T00:00:00Z',
+  ...overrides,
+})
 
 const relic = (overrides: Partial<RelicRow> = {}): RelicRow => ({
   id: '11111111-1111-4111-8111-111111111111',
@@ -313,5 +333,101 @@ describe('narration steps (BE-07)', () => {
 
   it('does not warn when every step is complete', () => {
     expect(buildWarnings([media({ audio_url: '/media/i.mp3', caption: 'Pronta' })])).toEqual([])
+  })
+})
+
+describe('public reading endpoints (BE-08)', () => {
+  it('maps a relic to lightweight panel fields only', () => {
+    const row = relic({
+      slug: 'apollo-lunar-module',
+      name: 'Módulo Lunar Apollo',
+      summary: 'Seis pousos.',
+      story_text: 'História longa...',
+      status: 'silent',
+      location: 'moon',
+    })
+    const imageMedia = media({ id: 'img-1', type: 'image', url: '/images/relics/apollo.jpg' })
+
+    const panel = mapDbToRelicPanel(row, imageMedia)
+
+    expect(panel).toEqual({
+      id: 'apollo-lunar-module',
+      slug: 'apollo-lunar-module',
+      name: 'Módulo Lunar Apollo',
+      summary: 'Seis pousos.',
+      tagline: 'Seis pousos.',
+      status: 'silent',
+      location: 'moon',
+      mission: 'Apollo 11–17',
+      ratio: '1376 / 768',
+      image: '/images/relics/apollo.jpg',
+      cover_type: 'image',
+      cover: {
+        type: 'image',
+        url: '/images/relics/apollo.jpg',
+        poster_url: null,
+      },
+      facts: [],
+    })
+
+    // Confirms heavy fields are NOT exposed on the panel item
+    expect((panel as Record<string, unknown>).story_text).toBeUndefined()
+    expect((panel as Record<string, unknown>).scenes).toBeUndefined()
+    expect((panel as Record<string, unknown>).steps).toBeUndefined()
+    expect((panel as Record<string, unknown>).total_steps).toBeUndefined()
+    expect((panel as Record<string, unknown>).warnings).toBeUndefined()
+  })
+
+  it('maps a video cover using its poster frame', () => {
+    const row = relic({ slug: 'video-relic' })
+    const videoMedia = media({
+      id: 'vid-1',
+      type: 'video',
+      url: '/media/video.mp4',
+      poster_url: '/images/poster.jpg',
+    })
+
+    const panel = mapDbToRelicPanel(row, videoMedia)
+
+    expect(panel.cover_type).toBe('video')
+    expect(panel.image).toBe('/images/poster.jpg')
+    expect(panel.cover).toEqual({
+      type: 'video',
+      url: '/media/video.mp4',
+      poster_url: '/images/poster.jpg',
+    })
+  })
+
+  it('handles a relic without media gracefully', () => {
+    const panel = mapDbToRelicPanel(relic(), null)
+
+    expect(panel.cover).toBeNull()
+    expect(panel.cover_type).toBeNull()
+    expect(panel.image).toBe('')
+  })
+
+  it('maps quiz questions into the full detail DTO ordered by position', () => {
+    const q1 = quizQuestion({ position: 1, question: 'Pergunta 2' })
+    const q0 = quizQuestion({ position: 0, question: 'Pergunta 1' })
+
+    const dto = mapDbToRelic(relic(), [], [], {}, [q1, q0])
+
+    expect(dto.quiz).toHaveLength(2)
+    expect(dto.quiz![0]).toMatchObject({
+      position: 0,
+      question: 'Pergunta 1',
+      options: ['1968', '1969', '1970'],
+      explanation: 'Apollo 11 pousou em 20 de julho de 1969.',
+    })
+    expect(dto.quiz![1]).toMatchObject({
+      position: 1,
+      question: 'Pergunta 2',
+    })
+  })
+
+  it('exposes standard Cache-Control headers constant for CDN and browser caching', () => {
+    expect(PUBLIC_CACHE_CONTROL).toContain('public')
+    expect(PUBLIC_CACHE_CONTROL).toContain('max-age=')
+    expect(PUBLIC_CACHE_CONTROL).toContain('stale-while-revalidate=')
   })
 })
