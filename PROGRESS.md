@@ -567,3 +567,15 @@ diário aberto pelo cartão.
 - **Frontend progressivo:** `ProjectModal.vue` carrega o detalhe completo via `/api/public/relics/:slug` quando o utilizador abre um modal se as cenas completas ainda não estiverem em memória.
 - **Rotas diretas:** disponibilizados aliases diretos em `/public/relics` e `/public/relics/:slug` em `server/routes/public/`.
 - **Testes:** 92 unitários verdes (`tests/relic-contract.test.ts`) + 12 de integração verdes (`tests/integration/public-relics.test.ts`, `relics.test.ts`, `rls.test.ts`).
+
+## Iteração 28 — filtros e pesquisa na listagem pública (BE-09)
+
+- **Parâmetros de query em `GET /public/relics` (e `/api/public/relics`):**
+  - `location`: filtra por localidade (`moon`, `mars`, `deep_space`).
+  - `status`: filtra por estado (`active`, `silent`, `lost`).
+  - `q`: pesquisa textual por nome de relíquia (`ilike`), com sanitização contra injeção de wildcards PostgREST (`%` e `_`).
+  - `sort` & `order`: ordenação por `name` ou por data (`created_at`), ascendente ou descendente.
+- **Interseção correta:** a combinação de parâmetros aplica filtros compostos de forma estrita.
+- **Respostas vazias elegantes:** quando os filtros não encontram correspondência, o endpoint devolve `[]` (código HTTP 200, com cabeçalhos de cache) sem lançar erro.
+- **Testes:** 92 testes unitários verdes + 18 testes de integração verdes cobrindo filtragem por local, estado, pesquisa por nome, combinação de filtros, ordenação e listas vazias.
+

@@ -182,7 +182,7 @@ formulário envia um `RelicInput` no mesmo dialeto.
 
 Público (cliente anon + RLS; rascunhos nunca aparecem; cache `public, max-age=60, s-maxage=300, stale-while-revalidate=600`):
 
-- `GET /api/public/relics` (e `/public/relics`) — lista leve com apenas os campos do painel (`slug`, `name`, `summary`, `status`, `location`, capa e seu tipo)
+- `GET /api/public/relics` (e `/public/relics`) — lista leve com apenas os campos do painel (`slug`, `name`, `summary`, `status`, `location`, capa e seu tipo). Suporta filtros `location`, `status`, pesquisa `q` por nome e ordenação `sort` (`name` | `created_at`) e `order` (`asc` | `desc`).
 - `GET /api/public/relics/:slug` (e `/public/relics/:slug`) — detalhe completo (ficha técnica, `steps`, mídias, quiz; UUID ainda aceite para links antigos)
 
 Admin (requer sessão Supabase com `is_admin`):
