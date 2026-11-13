@@ -17,5 +17,5 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: 'Failed to load relics' })
   }
 
-  return Promise.all(relics.map(relic => loadRelicDto(supabase, relic)))
+  return Promise.all(relics.map(relic => loadRelicDto(supabase, relic, { includeWarnings: true })))
 })

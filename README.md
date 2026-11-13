@@ -218,6 +218,13 @@ formulário atual envia). Para preservar ids e áudio por item, usa os endpoints
 de mídia; `PATCH` rejeita `position` e a ordem altera-se só pelo endpoint
 `media/order`.
 
+O detalhe inclui `steps` (introdução + um passo por mídia, pela ordem) e
+`total_steps`, prontos para o executor de scroll: cada passo tem `index`,
+`type` (`intro`/`image`/`video`), `title`, `caption`, `audio_url` e, nas mídias,
+`media_id`, `src`, `poster` e `credit`. Uma relíquia sem mídias devolve apenas o
+passo de introdução. Respostas admin incluem ainda `warnings` (por exemplo,
+mídia sem áudio ou sem legenda) — avisos, nunca erros de validação.
+
 ### Uploads
 
 O browser nunca envia ficheiros grandes pela API: pede uma assinatura a

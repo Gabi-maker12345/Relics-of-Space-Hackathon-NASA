@@ -26,5 +26,5 @@ export default defineEventHandler(async (event) => {
   if (result.error) throw createError({ statusCode: 400, message: result.error })
 
   const fresh = await findRelic(supabase, relic.id)
-  return loadRelicDto(supabase, fresh ?? relic)
+  return loadRelicDto(supabase, fresh ?? relic, { includeWarnings: true })
 })

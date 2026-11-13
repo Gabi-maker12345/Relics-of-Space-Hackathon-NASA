@@ -77,5 +77,5 @@ export default defineEventHandler(async (event) => {
     relic = withCover
   }
 
-  return loadRelicDto(supabase, relic)
+  return loadRelicDto(supabase, relic, { includeWarnings: true })
 })

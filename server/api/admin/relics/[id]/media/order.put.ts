@@ -28,5 +28,5 @@ export default defineEventHandler(async (event) => {
   const result = await reorderMedia(supabase, relic, parsed.data.ids)
   if (result.error) throw createError({ statusCode: 400, message: result.error })
 
-  return loadRelicDto(supabase, relic)
+  return loadRelicDto(supabase, relic, { includeWarnings: true })
 })

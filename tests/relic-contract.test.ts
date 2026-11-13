@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Database } from '../app/types/database.types'
-import { mapDbToRelic } from '../server/utils/relicMapper'
+import { buildSteps, buildWarnings, mapDbToRelic } from '../server/utils/relicMapper'
 import {
   pickCoverId,
   relicInputSchema,
@@ -241,5 +241,77 @@ describe('cover rules', () => {
     expect(pickCoverId(media, '/b.jpg')).toBe('v')
     expect(pickCoverId(media)).toBe('i')
     expect(pickCoverId([media[0]])).toBeNull()
+  })
+})
+
+describe('narration steps (BE-07)', () => {
+  it('starts with the intro step and then one step per media, in order', () => {
+    const dto = mapDbToRelic(relic(), [], [
+      media({ id: 'v', type: 'video', url: '/media/loop.mp4', poster_url: '/images/p.jpg', title: 'Descida', caption: 'A descida final.', audio_url: '/media/v.mp3', position: 1 }),
+      media({ id: 'i', position: 0, audio_url: '/media/i.mp3' }),
+    ])
+
+    expect(dto.total_steps).toBe(3)
+    expect(dto.steps.map(step => step.index)).toEqual([0, 1, 2])
+    expect(dto.steps.map(step => step.type)).toEqual(['intro', 'image', 'video'])
+    expect(dto.steps[0]).toMatchObject({
+      title: 'Módulo Lunar Apollo',
+      caption: 'Seis pousos.',
+      audio_url: '/media/intro.mp3',
+    })
+    expect(dto.steps[1]).toMatchObject({
+      media_id: 'i',
+      title: 'Fotografia',
+      caption: 'A história da cena.',
+      audio_url: '/media/i.mp3',
+      src: '/images/relics/apollo-lunar-module.jpg',
+      poster: undefined,
+      credit: 'NASA',
+    })
+    expect(dto.steps[2]).toMatchObject({
+      media_id: 'v',
+      title: 'Descida',
+      caption: 'A descida final.',
+      audio_url: '/media/v.mp3',
+      src: '/media/loop.mp4',
+      poster: '/images/p.jpg',
+    })
+  })
+
+  it('returns only the intro step when the relic has no media', () => {
+    const dto = mapDbToRelic(relic(), [], [])
+
+    expect(dto.steps).toHaveLength(1)
+    expect(dto.steps[0]).toMatchObject({ index: 0, type: 'intro' })
+    expect(dto.total_steps).toBe(1)
+  })
+
+  it('falls back to the story or the name for the intro caption', () => {
+    expect(buildSteps(relic({ summary: '' }), [])[0].caption).toBe('Ficou na superfície.')
+    expect(buildSteps(relic({ summary: '', story_text: '' }), [])[0].caption).toBe('Módulo Lunar Apollo')
+  })
+
+  it('builds warnings per media without audio or caption', () => {
+    const warnings = buildWarnings([
+      media({ id: 'a', title: 'Sem áudio', audio_url: null }),
+      media({ id: 'b', title: 'Sem legenda', caption: '', audio_url: '/media/b.mp3' }),
+      media({ id: 'c', title: 'Completa', caption: 'Ok', audio_url: '/media/c.mp3' }),
+    ])
+
+    expect(warnings).toEqual([
+      { code: 'media_missing_audio', media_id: 'a', message: '"Sem áudio" não tem áudio próprio.' },
+      { code: 'media_missing_caption', media_id: 'b', message: '"Sem legenda" não tem legenda/narração escrita.' },
+    ])
+  })
+
+  it('only exposes warnings on admin DTOs', () => {
+    expect(mapDbToRelic(relic(), [], [media()]).warnings).toBeUndefined()
+    expect(mapDbToRelic(relic(), [], [media()], { includeWarnings: true }).warnings).toEqual([
+      { code: 'media_missing_audio', media_id: media().id, message: '"Fotografia" não tem áudio próprio.' },
+    ])
+  })
+
+  it('does not warn when every step is complete', () => {
+    expect(buildWarnings([media({ audio_url: '/media/i.mp3', caption: 'Pronta' })])).toEqual([])
   })
 })
