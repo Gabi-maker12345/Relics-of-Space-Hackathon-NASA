@@ -147,6 +147,26 @@ The detail endpoint builds a deterministic list:
 A relic without media returns only the intro step. Missing audio/caption is a
 warning in the admin, not a database error.
 
+## Translations (BE-12)
+
+The base columns are the Portuguese source of truth; a translation is an
+optional row in `relic_translations`, `media_translations` or
+`quiz_question_translations`, keyed by `(id, lang)`. This keeps existing content
+valid without a translation and makes the fallback a read-time concern.
+
+- Translatable relic fields: `name`, `mission`, `summary`, `story_text`, `alt`,
+  `intro_audio_url`.
+- Translatable media fields: `kicker`, `title`, `caption`, `audio_url`.
+- Translatable quiz fields: `question`, `options`, `explanation`.
+- The public endpoints accept `?lang=` and overlay each field independently;
+  missing or empty fields fall back to the base row. An invalid code resolves to
+  `pt` instead of failing.
+- The admin `PUT .../translations/:lang` merges with the existing row, so saving
+  one tab does not erase fields managed elsewhere. An explicit `null` clears an
+  audio URL.
+
+RLS exposes translations to `anon` only when the parent relic is published.
+
 ## Migrations
 
 ```bash

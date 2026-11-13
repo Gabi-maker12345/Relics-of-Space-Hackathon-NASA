@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import type { Database } from '../app/types/database.types'
 import {
   PUBLIC_CACHE_CONTROL,
+  applyMediaTranslations,
+  applyQuizTranslations,
+  applyRelicTranslation,
   buildSteps,
   buildWarnings,
   mapDbToRelic,
@@ -20,6 +23,9 @@ type RelicRow = Database['public']['Tables']['relics']['Row']
 type FactRow = Database['public']['Tables']['relic_facts']['Row']
 type MediaRow = Database['public']['Tables']['relic_media']['Row']
 type QuizRow = Database['public']['Tables']['quiz_questions']['Row']
+type RelicTranslationRow = Database['public']['Tables']['relic_translations']['Row']
+type MediaTranslationRow = Database['public']['Tables']['media_translations']['Row']
+type QuizTranslationRow = Database['public']['Tables']['quiz_question_translations']['Row']
 
 const quizQuestion = (overrides: Partial<QuizRow> = {}): QuizRow => ({
   id: '33333333-3333-4333-8333-333333333333',
@@ -429,5 +435,134 @@ describe('public reading endpoints (BE-08)', () => {
     expect(PUBLIC_CACHE_CONTROL).toContain('public')
     expect(PUBLIC_CACHE_CONTROL).toContain('max-age=')
     expect(PUBLIC_CACHE_CONTROL).toContain('stale-while-revalidate=')
+  })
+})
+
+describe('internationalization and translation fallback (BE-12)', () => {
+  it('overlays relic translation fields and falls back to base Portuguese when empty', () => {
+    const base = relic({
+      name: 'Módulo Lunar Apollo',
+      summary: 'Seis pousos.',
+      story_text: 'História em português.',
+      intro_audio_url: '/media/pt-intro.mp3',
+    })
+
+    const trans: RelicTranslationRow = {
+      relic_id: base.id,
+      lang: 'en',
+      name: 'Apollo Lunar Module',
+      summary: 'Six landings.',
+      story_text: '', // Empty: should fall back to base story_text
+      mission: null, // Null: should fall back to base mission
+      alt: null,
+      intro_audio_url: '/media/en-intro.mp3',
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+    }
+
+    const localized = applyRelicTranslation(base, trans)
+
+    expect(localized.name).toBe('Apollo Lunar Module')
+    expect(localized.summary).toBe('Six landings.')
+    expect(localized.story_text).toBe('História em português.') // fallback
+    expect(localized.mission).toBe('Apollo 11–17') // fallback
+    expect(localized.intro_audio_url).toBe('/media/en-intro.mp3')
+  })
+
+  it('overlays media translations per item and keeps base values when missing', () => {
+    const item1 = media({ id: 'm-1', caption: 'Legenda 1 em PT', audio_url: '/media/pt-1.mp3' })
+    const item2 = media({ id: 'm-2', caption: 'Legenda 2 em PT', audio_url: '/media/pt-2.mp3' })
+
+    const trans: MediaTranslationRow[] = [
+      {
+        media_id: 'm-1',
+        lang: 'en',
+        title: 'Descent Stage',
+        kicker: 'Photo',
+        caption: 'Caption 1 in English',
+        audio_url: '/media/en-1.mp3',
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+      },
+    ]
+
+    const localized = applyMediaTranslations([item1, item2], trans)
+
+    expect(localized[0].caption).toBe('Caption 1 in English')
+    expect(localized[0].audio_url).toBe('/media/en-1.mp3')
+    expect(localized[0].title).toBe('Descent Stage')
+
+    // item2 had no translation: fallback to PT
+    expect(localized[1].caption).toBe('Legenda 2 em PT')
+    expect(localized[1].audio_url).toBe('/media/pt-2.mp3')
+  })
+
+  it('overlays quiz translations with fallback', () => {
+    const q1 = quizQuestion({ id: 'q-1', question: 'Qual o ano?', options: ['1969', '1970'] })
+    const trans: QuizTranslationRow[] = [
+      {
+        question_id: 'q-1',
+        lang: 'en',
+        question: 'Which year?',
+        options: ['1969', '1970'],
+        explanation: 'Apollo 11 landed in 1969.',
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+      },
+    ]
+
+    const localized = applyQuizTranslations([q1], trans)
+
+    expect(localized[0].question).toBe('Which year?')
+    expect(localized[0].explanation).toBe('Apollo 11 landed in 1969.')
+  })
+
+  it('generates narration steps using the localized titles, captions, and audio URLs', () => {
+    const base = relic({
+      name: 'Módulo Lunar',
+      summary: 'Resumo PT',
+      intro_audio_url: '/media/pt-intro.mp3',
+    })
+    const item = media({
+      id: 'm-1',
+      caption: 'Legenda PT',
+      audio_url: '/media/pt-item.mp3',
+    })
+
+    const transRelic = applyRelicTranslation(base, {
+      relic_id: base.id,
+      lang: 'en',
+      name: 'Lunar Module',
+      summary: 'English summary',
+      story_text: null,
+      mission: null,
+      alt: null,
+      intro_audio_url: '/media/en-intro.mp3',
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+    })
+    const transMedia = applyMediaTranslations([item], [{
+      media_id: 'm-1',
+      lang: 'en',
+      title: 'Descent Engine',
+      kicker: null,
+      caption: 'English scene caption',
+      audio_url: '/media/en-item.mp3',
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+    }])
+
+    const dto = mapDbToRelic(transRelic, [], transMedia)
+
+    expect(dto.steps[0]).toMatchObject({
+      title: 'Lunar Module',
+      caption: 'English summary',
+      audio_url: '/media/en-intro.mp3',
+    })
+    expect(dto.steps[1]).toMatchObject({
+      title: 'Descent Engine',
+      caption: 'English scene caption',
+      audio_url: '/media/en-item.mp3',
+    })
   })
 })

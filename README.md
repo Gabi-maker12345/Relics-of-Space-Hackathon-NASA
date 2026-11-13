@@ -182,8 +182,8 @@ formulário envia um `RelicInput` no mesmo dialeto.
 
 Público (cliente anon + RLS; rascunhos nunca aparecem; cache `public, max-age=60, s-maxage=300, stale-while-revalidate=600`):
 
-- `GET /api/public/relics` (e `/public/relics`) — lista leve com apenas os campos do painel (`slug`, `name`, `summary`, `status`, `location`, capa e seu tipo). Suporta filtros `location`, `status`, pesquisa `q` por nome e ordenação `sort` (`name` | `created_at`) e `order` (`asc` | `desc`).
-- `GET /api/public/relics/:slug` (e `/public/relics/:slug`) — detalhe completo (ficha técnica, `steps`, mídias, quiz; UUID ainda aceite para links antigos)
+- `GET /api/public/relics` (e `/public/relics`) — lista leve com apenas os campos do painel (`slug`, `name`, `summary`, `status`, `location`, capa e seu tipo). Suporta filtros `location`, `status`, pesquisa `q` por nome, ordenação `sort` (`name` | `created_at`) e `order` (`asc` | `desc`) e `lang` (`pt` por omissão, ou `en`).
+- `GET /api/public/relics/:slug` (e `/public/relics/:slug`) — detalhe completo (ficha técnica, `steps`, mídias, quiz; UUID ainda aceite para links antigos). `?lang=en` devolve textos e áudios traduzidos quando existirem.
 
 Admin (requer sessão Supabase com `is_admin`):
 
@@ -203,6 +203,8 @@ Admin (requer sessão Supabase com `is_admin`):
   mídias da relíquia, pela nova ordem
 - `PUT /api/admin/relics/:id/cover` — `{ "media_id": "…" }` ou `null`; aceita
   imagem ou vídeo
+- `GET|PUT /api/admin/relics/:id/translations/:lang` — lê/grava uma língua
+  (`en`, `pt-BR`, …); ver [Idiomas](#idiomas-be-12)
 
 `PUT` só altera os campos enviados (publicar/despublicar é `{ "published": true }`)
 e o slug só muda quando o identificador é editado. `POST/PUT` devolvem sempre o
@@ -224,6 +226,22 @@ O detalhe inclui `steps` (introdução + um passo por mídia, pela ordem) e
 `media_id`, `src`, `poster` e `credit`. Uma relíquia sem mídias devolve apenas o
 passo de introdução. Respostas admin incluem ainda `warnings` (por exemplo,
 mídia sem áudio ou sem legenda) — avisos, nunca erros de validação.
+
+### Idiomas (BE-12)
+
+As colunas base da tabela são português; uma tradução vive nas tabelas
+`relic_translations`, `media_translations` e `quiz_question_translations`. Os
+endpoints públicos aceitam `?lang=` (código de duas letras, opcionalmente com
+região: `en`, `pt-BR`). Cada campo é sobreposto individualmente e, quando falta
+ou está vazio, cai para o valor português — nunca devolve 404 por falta de
+tradução. Um `lang` inválido é ignorado e resolve para `pt`.
+
+`GET /api/admin/relics/:id/translations/:lang` devolve `{ relic, media, quiz }`
+com as linhas existentes (ou `null`/listas vazias). `PUT` aceita campos
+parciais (`name`, `mission`, `summary`, `story_text`, `alt`, `intro_audio_url`,
+`media[]`, `quiz[]`): os campos omitidos mantêm o valor anterior, `null` limpa
+um URL e os ids de mídia/pergunta têm de pertencer à relíquia (400 caso
+contrário).
 
 ### Uploads
 

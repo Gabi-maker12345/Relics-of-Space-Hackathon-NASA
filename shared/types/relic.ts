@@ -182,3 +182,39 @@ export interface MediaCoverInput {
   /** Media id, or `null` to leave the relic without an explicit cover. */
   media_id: string | null
 }
+
+/** A media translation inside `PUT /api/admin/relics/:id/translations/:lang`. */
+export interface MediaTranslationInput {
+  media_id: string
+  kicker?: string
+  title?: string
+  caption?: string
+  /** Localized narration for this item; `null` clears it. */
+  audio_url?: string | null
+}
+
+/** A quiz translation inside `PUT /api/admin/relics/:id/translations/:lang`. */
+export interface QuizTranslationInput {
+  question_id: string
+  question?: string
+  options?: string[]
+  explanation?: string
+}
+
+/**
+ * Body accepted by `PUT /api/admin/relics/:id/translations/:lang`.
+ *
+ * Every field is optional and missing fields keep their previous value, so the
+ * admin can save one language tab at a time without erasing the others.
+ */
+export interface RelicTranslationInput {
+  name?: string
+  mission?: string
+  summary?: string
+  story_text?: string
+  alt?: string
+  /** `null` clears the localized intro audio. */
+  intro_audio_url?: string | null
+  media?: MediaTranslationInput[]
+  quiz?: QuizTranslationInput[]
+}

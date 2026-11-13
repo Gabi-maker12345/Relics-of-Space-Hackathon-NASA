@@ -104,14 +104,43 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 & BE-09
       position: 0,
     })
 
-    await admin.from('quiz_questions').insert({
+    const { data: quizData } = await admin.from('quiz_questions').insert({
       relic_id: marsId,
       position: 0,
       question: 'Qual é o destino desta missão?',
       options: ['Lua', 'Marte', 'Vênus'],
       correct_index: 1,
       explanation: 'A missão foi enviada para Marte.',
+    }).select().single()
+
+    // Translations for BE-12
+    await admin.from('relic_translations').insert({
+      relic_id: marsId,
+      lang: 'en',
+      name: 'Curiosity Mars Rover (EN)',
+      summary: 'Active rover on Mars (EN)',
+      intro_audio_url: '/media/en-intro.mp3',
     })
+
+    const firstMedia = mediaData?.[0]
+    if (firstMedia) {
+      await admin.from('media_translations').insert({
+        media_id: firstMedia.id,
+        lang: 'en',
+        title: 'Martian Landscape',
+        caption: 'English caption for the first scene',
+        audio_url: '/media/en-scene-1.mp3',
+      })
+    }
+
+    if (quizData) {
+      await admin.from('quiz_question_translations').insert({
+        question_id: quizData.id,
+        lang: 'en',
+        question: 'What is the destination of this mission?',
+        explanation: 'The mission was sent to Mars.',
+      })
+    }
 
     // 2. Insert silent Moon relic
     const { data: moonData, error: moonErr } = await admin
@@ -315,5 +344,69 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 & BE-09
     const sortedByNameDesc = await getPublicRelicsList(anon, event, { sort: 'name', order: 'desc' })
     const namesDesc = sortedByNameDesc.map(r => r.name)
     expect(namesDesc).toEqual([...sortedNames].reverse())
+  })
+
+  // BE-12 Tests: i18n and Fallback
+  it('returns translated names and summaries on the public list when lang=en (BE-12)', async () => {
+    const event = createMockEvent('/api/public/relics')
+    const list = await getPublicRelicsList(anon, event, { lang: 'en' })
+
+    const mars = list.find(r => r.slug === marsSlug)
+    expect(mars).toBeDefined()
+    expect(mars!.name).toBe('Curiosity Mars Rover (EN)')
+    expect(mars!.summary).toBe('Active rover on Mars (EN)')
+
+    // Moon relic had no EN translation: falls back to base Portuguese
+    const moon = list.find(r => r.slug === moonSlug)
+    expect(moon).toBeDefined()
+    expect(moon!.name).toBe('Surveyor Moon Lander Beta')
+    expect(moon!.summary).toBe('Pousador na Lua inativo')
+  })
+
+  it('returns full translated detail (texts, audio, steps, quiz) when lang=en (BE-12)', async () => {
+    const event = createMockEvent(`/api/public/relics/${marsSlug}?lang=en`, { slug: marsSlug })
+    const detail = await getPublicRelicDetail(anon, event, marsSlug, 'en')
+
+    expect(detail.name).toBe('Curiosity Mars Rover (EN)')
+    expect(detail.tagline).toBe('Active rover on Mars (EN)')
+    expect(detail.intro_audio_url).toBe('/media/en-intro.mp3')
+
+    // Scene 1 has English translation
+    expect(detail.scenes[0]).toMatchObject({
+      title: 'Martian Landscape',
+      body: 'English caption for the first scene',
+      audio_url: '/media/en-scene-1.mp3',
+    })
+
+    // Scene 2 had no translation: falls back to PT caption
+    expect(detail.scenes[1].body).toBe('Vídeo da relíquia')
+
+    // Steps reflect the English narration
+    expect(detail.steps[0]).toMatchObject({
+      title: 'Curiosity Mars Rover (EN)',
+      caption: 'Active rover on Mars (EN)',
+      audio_url: '/media/en-intro.mp3',
+    })
+    expect(detail.steps[1]).toMatchObject({
+      title: 'Martian Landscape',
+      caption: 'English caption for the first scene',
+      audio_url: '/media/en-scene-1.mp3',
+    })
+
+    // Quiz is translated
+    expect(detail.quiz).toHaveLength(1)
+    expect(detail.quiz![0].question).toBe('What is the destination of this mission?')
+    expect(detail.quiz![0].explanation).toBe('The mission was sent to Mars.')
+  })
+
+  it('falls back seamlessly to Portuguese when requesting a missing language (BE-12)', async () => {
+    const event = createMockEvent(`/api/public/relics/${marsSlug}?lang=fr`, { slug: marsSlug })
+    const detail = await getPublicRelicDetail(anon, event, marsSlug, 'fr')
+
+    // Everything falls back to base PT values without error
+    expect(detail.name).toBe('Curiosity Mars Rover Alpha')
+    expect(detail.tagline).toBe('Rover em Marte ativo')
+    expect(detail.steps[0].title).toBe('Curiosity Mars Rover Alpha')
+    expect(detail.quiz![0].question).toBe('Qual é o destino desta missão?')
   })
 })

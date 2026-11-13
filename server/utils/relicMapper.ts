@@ -11,11 +11,15 @@ import type {
   RelicWarning,
   SceneKind,
 } from '#shared/types/relic'
+import { DEFAULT_LANG, normalizeLang } from './i18n'
 
 type RelicRow = Database['public']['Tables']['relics']['Row']
 type FactRow = Database['public']['Tables']['relic_facts']['Row']
 type MediaRow = Database['public']['Tables']['relic_media']['Row']
 type QuizRow = Database['public']['Tables']['quiz_questions']['Row']
+type RelicTranslationRow = Database['public']['Tables']['relic_translations']['Row']
+type MediaTranslationRow = Database['public']['Tables']['media_translations']['Row']
+type QuizTranslationRow = Database['public']['Tables']['quiz_question_translations']['Row']
 
 export const PUBLIC_CACHE_CONTROL = 'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
 
@@ -87,6 +91,80 @@ export function buildWarnings(media: MediaRow[]): RelicWarning[] {
 export interface MapRelicOptions {
   /** Admin responses carry warnings; public ones do not need them. */
   includeWarnings?: boolean
+  /** Language requested (e.g. 'en'). Defaults to 'pt' (base columns). */
+  lang?: string
+}
+
+/**
+ * Overlays localized fields over the base relic row, falling back to the base values (PT)
+ * when a localized field is missing or empty.
+ */
+export function applyRelicTranslation(
+  relic: RelicRow,
+  translation?: RelicTranslationRow | null,
+): RelicRow {
+  if (!translation) return relic
+
+  return {
+    ...relic,
+    name: translation.name?.trim() || relic.name,
+    mission: translation.mission?.trim() || relic.mission,
+    summary: translation.summary?.trim() || relic.summary,
+    story_text: translation.story_text?.trim() || relic.story_text,
+    alt: translation.alt?.trim() || relic.alt,
+    intro_audio_url: translation.intro_audio_url?.trim() || relic.intro_audio_url,
+  }
+}
+
+/**
+ * Overlays localized captions, titles, and audio URLs over media rows, falling back to the base items.
+ */
+export function applyMediaTranslations(
+  media: MediaRow[],
+  translations: MediaTranslationRow[] = [],
+): MediaRow[] {
+  if (!translations.length) return media
+
+  const transByMedia = new Map(translations.map(t => [t.media_id, t]))
+
+  return media.map((item) => {
+    const trans = transByMedia.get(item.id)
+    if (!trans) return item
+
+    return {
+      ...item,
+      caption: trans.caption?.trim() || item.caption,
+      title: trans.title?.trim() || item.title,
+      kicker: trans.kicker?.trim() || item.kicker,
+      audio_url: trans.audio_url?.trim() || item.audio_url,
+    }
+  })
+}
+
+/**
+ * Overlays localized questions, options, and explanations over quiz questions.
+ */
+export function applyQuizTranslations(
+  quiz: QuizRow[],
+  translations: QuizTranslationRow[] = [],
+): QuizRow[] {
+  if (!translations.length) return quiz
+
+  const transByQuestion = new Map(translations.map(t => [t.question_id, t]))
+
+  return quiz.map((item) => {
+    const trans = transByQuestion.get(item.id)
+    if (!trans) return item
+
+    return {
+      ...item,
+      question: trans.question?.trim() || item.question,
+      explanation: trans.explanation?.trim() || item.explanation,
+      options: (trans.options && Array.isArray(trans.options) && trans.options.length > 0)
+        ? trans.options
+        : item.options,
+    }
+  })
 }
 
 /**
@@ -206,7 +284,7 @@ export function mapDbToRelicPanel(
   }
 }
 
-/** Loads facts, media and quiz questions for a relic and returns the mapped object. */
+/** Loads facts, media, quiz questions and optional translations for a relic and returns the mapped object. */
 export async function loadRelicDto(
   supabase: SupabaseClient<Database>,
   relic: RelicRow,
@@ -218,5 +296,29 @@ export async function loadRelicDto(
     supabase.from('quiz_questions').select('*').eq('relic_id', relic.id).order('position'),
   ])
 
-  return mapDbToRelic(relic, factsRes.data ?? [], mediaRes.data ?? [], options, quizRes.data ?? [])
+  let effectiveRelic = relic
+  let effectiveMedia = mediaRes.data ?? []
+  let effectiveQuiz = quizRes.data ?? []
+
+  const requestedLang = options.lang === undefined ? undefined : normalizeLang(options.lang)
+  if (requestedLang && requestedLang !== DEFAULT_LANG) {
+    const mediaIds = effectiveMedia.map(m => m.id)
+    const quizIds = effectiveQuiz.map(q => q.id)
+
+    const [relicTransRes, mediaTransRes, quizTransRes] = await Promise.all([
+      supabase.from('relic_translations').select('*').eq('relic_id', relic.id).eq('lang', requestedLang).maybeSingle(),
+      mediaIds.length > 0
+        ? supabase.from('media_translations').select('*').in('media_id', mediaIds).eq('lang', requestedLang)
+        : Promise.resolve({ data: [] }),
+      quizIds.length > 0
+        ? supabase.from('quiz_question_translations').select('*').in('question_id', quizIds).eq('lang', requestedLang)
+        : Promise.resolve({ data: [] }),
+    ])
+
+    effectiveRelic = applyRelicTranslation(effectiveRelic, relicTransRes.data)
+    effectiveMedia = applyMediaTranslations(effectiveMedia, (mediaTransRes.data ?? []) as MediaTranslationRow[])
+    effectiveQuiz = applyQuizTranslations(effectiveQuiz, (quizTransRes.data ?? []) as QuizTranslationRow[])
+  }
+
+  return mapDbToRelic(effectiveRelic, factsRes.data ?? [], effectiveMedia, options, effectiveQuiz)
 }

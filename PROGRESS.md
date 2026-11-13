@@ -579,3 +579,26 @@ diário aberto pelo cartão.
 - **Respostas vazias elegantes:** quando os filtros não encontram correspondência, o endpoint devolve `[]` (código HTTP 200, com cabeçalhos de cache) sem lançar erro.
 - **Testes:** 92 testes unitários verdes + 18 testes de integração verdes cobrindo filtragem por local, estado, pesquisa por nome, combinação de filtros, ordenação e listas vazias.
 
+## Iteração 29 — suporte a idiomas (BE-12)
+
+- **Contrato partilhado (`shared/types/relic.ts`):** `RelicTranslationInput`,
+  `MediaTranslationInput` e `QuizTranslationInput`, para o formulário de admin
+  usar o mesmo dialeto do endpoint.
+- **Leitura pública (`?lang=`):** lista e detalhe aceitam `en`, `pt-BR`, etc. Cada
+  campo é sobreposto individualmente (`name`, `mission`, `summary`,
+  `story_text`, `alt`, `intro_audio_url`, legendas/títulos/áudios por mídia e
+  quiz), com fallback para o valor PT quando a tradução falta ou está vazia.
+  Códigos inválidos resolvem para `pt` em vez de falharem (`server/utils/i18n.ts`).
+- **Admin (`GET|PUT /api/admin/relics/:id/translations/:lang`):** devolve
+  `{ relic, media, quiz }`; o `PUT` faz merge com o que já existe (campos
+  omitidos não são apagados, `null` limpa um URL) e valida que as mídias e
+  perguntas pertencem à relíquia antes de escrever.
+- **Testes:** 103 unitários verdes (`tests/i18n.test.ts` + contrato) e 26 de
+  integração verdes, incluindo o novo `relic-translations.test.ts` (merge parcial,
+  limpeza de áudio e rejeição de ids de outra relíquia).
+- **Docs:** README (endpoints e secção “Idiomas”), `docs/database.md` e
+  `docs/testing.md` atualizados.
+- **Verificação:** `npm run typecheck`, `npm run lint` (0 erros), `npm run test`
+  e `npm run test:integration` verdes.
+
+

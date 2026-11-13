@@ -15,6 +15,7 @@ Unit tests are pure Node tests — no Supabase stack required:
 | `tests/auth.test.ts` | Login schema, session/token extraction, `requireAdmin`, the `/api/admin` middleware and auth endpoints. |
 | `tests/upload.test.ts` | Upload rules: kind/MIME/size validation, extension by MIME, `relicId` normalisation, storage path safety, and a guard that the bucket `allowed_mime_types` matches the rules in `server/utils/upload.ts`. |
 | `tests/relic-contract.test.ts` | The front↔API contract: mapper (`id` = slug, cover only from images, no audio fallback), input schema, column mapping (`tagline`→`summary`, `body`→`story_text`), one-field publish patch and the cover-must-be-a-scene rule. |
+| `tests/i18n.test.ts` | Language normalization (`en`, `pt-BR`, invalid → `pt`) and the translation payload schema (partial saves, UUIDs, quiz options, safe URLs). |
 
 ## Integration tests (local Supabase required)
 
@@ -39,6 +40,12 @@ Current coverage:
 - `tests/integration/relics.test.ts` — facts/media belong to a relic, the cover must
   be one of its media, renaming keeps the slug and the children, drafts stay hidden
   from anon until published, and deleting a relic cascades.
+- `tests/integration/public-relics.test.ts` — public list/detail filters, cache headers,
+  localized fields via `?lang=en`, per-field PT fallback and graceful fallback for an
+  unsupported language.
+- `tests/integration/relic-translations.test.ts` — saving/reading relic, media and quiz
+  translations, partial merges that keep other fields, explicit `null` clearing an audio
+  URL, and rejection of media/questions that belong to another relic.
 
 `db reset` wipes `admin_users` — run `npm run setup:admin` afterwards before
 using the admin endpoints.
