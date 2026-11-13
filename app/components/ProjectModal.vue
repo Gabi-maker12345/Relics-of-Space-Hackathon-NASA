@@ -81,7 +81,7 @@ function clearGlitch(): void {
   glitching.value = false
 }
 
-const sceneCount = computed(() => relic.value?.scenes.length ?? 1)
+const sceneCount = computed(() => relic.value?.scenes?.length ?? 1)
 const progress = computed(() => (index.value + 1) / sceneCount.value)
 
 const step = (direction: number): void => {

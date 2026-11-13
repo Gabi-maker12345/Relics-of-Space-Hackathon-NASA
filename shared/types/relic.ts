@@ -119,6 +119,8 @@ export interface RelicPanelItem {
   location: RelicLocation
   mission: string
   image: string
+  /** Story text; the home ring renders it under the mission line. */
+  body: string
   cover_type: SceneKind | null
   cover: RelicPanelCover | null
   ratio: string

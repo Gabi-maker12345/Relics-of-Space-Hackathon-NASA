@@ -14,6 +14,7 @@ export default defineConfig({
       'tests/seed.test.ts',
       'tests/quiz.test.ts',
       'tests/nasa.test.ts',
+      'tests/relic-filters.test.ts',
     ],
     exclude: ['**/node_modules/**', '**/.nuxt/**', '**/.output/**'],
   },

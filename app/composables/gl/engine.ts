@@ -615,6 +615,19 @@ export class GlEngine {
   /** scan idempotente: vincula novo [data-gl] / [data-title] ao engine; ignora .sr-only. */
   scan(): void {
     if (this.disposed || !this.renderer) return
+
+    // Cartões filtrados saem do DOM: sem isto as malhas antigas continuam a
+    // ser desenhadas (e sobrepõem-se às novas).
+    const stale = this.planes.filter((p) => !p.el.isConnected)
+    if (stale.length > 0) {
+      for (const plane of stale) {
+        this.carrier.remove(plane.mesh)
+        plane.mesh.geometry.dispose()
+        plane.mesh.material.dispose()
+      }
+      this.planes = this.planes.filter((p) => p.el.isConnected)
+    }
+
     const nodes = document.querySelectorAll<HTMLElement>(
       '[data-gl="card"],[data-gl="bar"],[data-gl="text"],[data-gl="pill"],[data-title]',
     )
@@ -632,7 +645,6 @@ export class GlEngine {
               : 'text'
       this.planes.push(this.createPlane(el, kind))
     })
-    this.planes = this.planes.filter((p) => p.el.isConnected)
     // texto mudou no DOM (Profile→Close, input do email, status) → redesenha
     for (const plane of this.planes) {
       if (plane.kind !== 'text') continue

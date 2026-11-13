@@ -45,7 +45,7 @@ const typeScene = (delay = 220) => {
   typeTimer = window.setTimeout(tick, delay)
 }
 
-const scenes = computed(() => props.relic.scenes)
+const scenes = computed(() => props.relic.scenes ?? [])
 const emptyScene: RelicScene = { kind: 'image', src: '', kicker: '', body: '' }
 const current = computed<RelicScene>(() => scenes.value[props.index] ?? scenes.value[0] ?? emptyScene)
 

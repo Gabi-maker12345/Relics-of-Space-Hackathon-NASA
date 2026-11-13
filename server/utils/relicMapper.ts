@@ -243,16 +243,18 @@ export function mapDbToRelic(
 
 export type RelicPanelSource = Pick<
   RelicRow,
-  'slug' | 'name' | 'summary' | 'status' | 'location' | 'mission' | 'ratio'
+  'slug' | 'name' | 'summary' | 'story_text' | 'status' | 'location' | 'mission' | 'ratio'
 >
 
 /**
- * Maps a relic row and its resolved cover media into the lightweight shape
- * used by the public home panels.
+ * Maps a relic row, its resolved cover media and its facts into the shape used
+ * by the public home panels. Scenes and steps stay out: the ring only needs the
+ * copy, and FE-05 filters the list by these same fields.
  */
 export function mapDbToRelicPanel(
   relic: RelicPanelSource,
   coverMedia?: Pick<MediaRow, 'type' | 'url' | 'poster_url'> | null,
+  facts: Pick<FactRow, 'label' | 'value' | 'position'>[] = [],
 ): RelicPanelItem {
   const coverType = coverMedia ? (coverMedia.type as SceneKind) : null
   const image = coverMedia
@@ -270,6 +272,7 @@ export function mapDbToRelicPanel(
     mission: relic.mission || '',
     ratio: relic.ratio || '1376 / 768',
     image,
+    body: relic.story_text || '',
     cover_type: coverType,
     cover: coverMedia
       ? {
@@ -278,7 +281,9 @@ export function mapDbToRelicPanel(
           poster_url: coverMedia.poster_url,
         }
       : null,
-    facts: [],
+    facts: [...facts]
+      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+      .map(fact => ({ label: fact.label, value: fact.value })),
   }
 }
 

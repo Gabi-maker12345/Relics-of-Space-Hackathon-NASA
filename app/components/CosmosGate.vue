@@ -43,6 +43,9 @@ const stars = Array.from({ length: 26 }, (_, i) => {
     </div>
 
     <Teleport to="body">
+      <div v-if="act === 'scene'" class="gate-filters fr">
+        <RelicFilters overlay />
+      </div>
       <div v-if="act !== 'page'" class="gate-chrome fr">
         <p v-if="act === 'scene'" class="fr-label gate__label">Relíquias</p>
         <button type="button" class="gate__back" @click="back">

@@ -464,6 +464,187 @@
   }
 }
 
+/* Filtros da home (FE-05) -------------------------------------------------
+   Chips de local/estado + pesquisa por nome. O estado vive na query string,
+   por isso nada aqui guarda seleção: só reflete `is-on`.
+   ------------------------------------------------------------------------- */
+
+.fr-filters {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--fr-space-m);
+  padding: var(--fr-space-xxl) var(--fr-gutter) var(--fr-space-l);
+  border-top: 1px solid color-mix(in srgb, var(--fr-paper) 12%, transparent);
+}
+
+.fr-filters__groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fr-space-m) var(--fr-space-xl);
+}
+
+.fr-filters__group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.fr-filters__group > .fr-label {
+  margin-bottom: var(--fr-space-s);
+  color: color-mix(in srgb, var(--fr-paper) 52%, transparent);
+}
+
+.fr-filters__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fr-space-s);
+}
+
+.fr-chip {
+  appearance: none;
+  border: 1px solid color-mix(in srgb, var(--fr-paper) 24%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: color-mix(in srgb, var(--fr-paper) 80%, transparent);
+  padding: 6px 14px;
+  font-family: var(--fr-sans);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    color 0.25s var(--fr-ease-2),
+    border-color 0.25s var(--fr-ease-2),
+    background-color 0.25s var(--fr-ease-2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fr-chip:hover {
+    border-color: color-mix(in srgb, var(--fr-paper) 55%, transparent);
+    color: var(--fr-paper);
+  }
+}
+
+.fr-chip.is-on {
+  background: var(--fr-paper);
+  border-color: var(--fr-paper);
+  color: var(--fr-ink);
+}
+
+.fr-chip:focus-visible,
+.fr-filters__input:focus-visible,
+.fr-filters__clear:focus-visible {
+  outline: 2px solid var(--fr-gold);
+  outline-offset: 3px;
+}
+
+.fr-filters__search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--fr-space-s);
+}
+
+.fr-filters__search > .fr-label {
+  flex-basis: 100%;
+  margin-bottom: var(--fr-space-s);
+  color: color-mix(in srgb, var(--fr-paper) 52%, transparent);
+}
+
+.fr-filters__input {
+  appearance: none;
+  min-width: 220px;
+  padding: 6px 2px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--fr-paper) 30%, transparent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--fr-paper);
+  font-family: var(--fr-sans);
+  font-size: 16px;
+}
+
+.fr-filters__input::placeholder {
+  color: color-mix(in srgb, var(--fr-paper) 38%, transparent);
+}
+
+.fr-filters__clear {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--fr-gold);
+  font-family: var(--fr-sans);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.fr-filters__count {
+  margin: 0 0 6px auto;
+  color: color-mix(in srgb, var(--fr-paper) 55%, transparent);
+  font-family: var(--fr-sans);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  transition: opacity 0.2s var(--fr-ease-2);
+}
+
+.fr-filters__count.is-pending {
+  opacity: 0.45;
+}
+
+.fr-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Variante sobre a cena 3D do carrossel: sem divisória, tudo numa linha. */
+.fr-filters--overlay {
+  border-top: 0;
+  padding: 0 clamp(16px, 2vw, 28px);
+  align-items: center;
+  gap: var(--fr-space-sm);
+}
+
+.gate-filters {
+  position: fixed;
+  top: clamp(96px, 12vh, 120px);
+  left: 0;
+  right: 0;
+  z-index: 81;
+  pointer-events: none;
+}
+
+.gate-filters > * {
+  pointer-events: auto;
+}
+
+.gate__empty {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--fr-space-s);
+  padding: var(--fr-gutter);
+  text-align: center;
+}
+
 /* Painéis -----------------------------------------------------------------
    Estrutura do original: a mídia e o cartão ficam sticky e trocam por
    crossfade; só a coluna de texto (3 × 100vh) rola.
@@ -472,6 +653,23 @@
 .fr-panels {
   position: relative;
   z-index: 1;
+}
+
+.fr-panels.is-pending {
+  min-height: 60vh;
+}
+
+.fr-panels__state {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  gap: var(--fr-space-s);
+  justify-items: start;
+  padding: var(--fr-space-massive) var(--fr-gutter);
+}
+
+.fr-panels__state .fr-label {
+  color: color-mix(in srgb, var(--fr-paper) 52%, transparent);
 }
 
 .fr-panels__media {

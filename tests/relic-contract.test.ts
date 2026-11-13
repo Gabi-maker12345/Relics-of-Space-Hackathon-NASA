@@ -367,6 +367,7 @@ describe('public reading endpoints (BE-08)', () => {
       mission: 'Apollo 11–17',
       ratio: '1376 / 768',
       image: '/images/relics/apollo.jpg',
+      body: 'História longa...',
       cover_type: 'image',
       cover: {
         type: 'image',

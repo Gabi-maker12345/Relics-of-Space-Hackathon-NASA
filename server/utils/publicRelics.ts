@@ -42,7 +42,7 @@ export async function getPublicRelicsList(
 
   let dbQuery = supabase
     .from('relics')
-    .select('id, slug, name, summary, mission, status, location, ratio, alt, cover_media_id, created_at')
+    .select('id, slug, name, summary, story_text, mission, status, location, ratio, alt, cover_media_id, created_at')
     .eq('published', true)
 
   if (location) {
@@ -82,7 +82,7 @@ export async function getPublicRelicsList(
   if (lang !== DEFAULT_LANG) {
     const { data: translations } = await supabase
       .from('relic_translations')
-      .select('relic_id, name, summary, mission, alt')
+      .select('relic_id, name, summary, story_text, mission, alt')
       .in('relic_id', relicIds)
       .eq('lang', lang)
 
@@ -95,6 +95,7 @@ export async function getPublicRelicsList(
           ...r,
           name: trans.name?.trim() || r.name,
           summary: trans.summary?.trim() || r.summary,
+          story_text: trans.story_text?.trim() || r.story_text,
           mission: trans.mission?.trim() || r.mission,
           alt: trans.alt?.trim() || r.alt,
         }
@@ -114,11 +115,24 @@ export async function getPublicRelicsList(
     mediaRows = media as Database['public']['Tables']['relic_media']['Row'][]
   }
 
+  const { data: facts } = await supabase
+    .from('relic_facts')
+    .select('relic_id, label, value, position')
+    .in('relic_id', relicIds)
+    .order('position', { ascending: true })
+
   const mediaByRelic = new Map<string, Database['public']['Tables']['relic_media']['Row'][]>()
   for (const item of mediaRows) {
     const list = mediaByRelic.get(item.relic_id) || []
     list.push(item)
     mediaByRelic.set(item.relic_id, list)
+  }
+
+  const factsByRelic = new Map<string, Pick<Database['public']['Tables']['relic_facts']['Row'], 'label' | 'value' | 'position'>[]>()
+  for (const fact of (facts ?? []) as Pick<Database['public']['Tables']['relic_facts']['Row'], 'relic_id' | 'label' | 'value' | 'position'>[]) {
+    const list = factsByRelic.get(fact.relic_id) || []
+    list.push(fact)
+    factsByRelic.set(fact.relic_id, list)
   }
 
   setHeader(event, 'Cache-Control', PUBLIC_CACHE_CONTROL)
@@ -130,7 +144,7 @@ export async function getPublicRelicsList(
       ?? relicMedia[0]
       ?? null
 
-    return mapDbToRelicPanel(relic, coverMedia)
+    return mapDbToRelicPanel(relic, coverMedia, factsByRelic.get(relic.id) ?? [])
   })
 }
 

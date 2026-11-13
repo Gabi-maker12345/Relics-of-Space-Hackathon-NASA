@@ -211,6 +211,8 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 & BE-09
       location: 'mars',
       cover_type: 'image',
       image: '/images/mars-rover.jpg',
+      body: 'História longa em Marte.',
+      facts: [{ label: 'Velocidade', value: '20.000 km/h' }],
     })
 
     // Panel item must NOT have heavy fields

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const { relics } = useRelics()
+const { filters, hasFilters, clear } = useRelicFilters()
+const { relics, pending } = usePublicRelics(filters)
 
 const { open } = useProjectModal()
 const track = ref<HTMLElement | null>(null)
@@ -40,6 +41,18 @@ onMounted(() => {
 
 watch(copies, () => nextTick(() => useGlEngine().resetCarousel()))
 
+// Filtrar troca os cartões no DOM: o engine tem de medir a faixa outra vez.
+watch(() => relics.value.map(relic => relic.id).join('|'), async () => {
+  await nextTick()
+  const el = track.value
+  if (!el) return
+  const engine = useGlEngine()
+  engine.scan()
+  engine.attachTrack(el)
+  engine.resetCarousel()
+  engine.enterAll()
+})
+
 function openRelic(id: string): void {
   if (!import.meta.client) return
   // arrastar o carrossel não deve abrir a relíquia
@@ -49,7 +62,13 @@ function openRelic(id: string): void {
 </script>
 
 <template>
+  <div v-if="!pending && relics.length === 0" class="gate__empty fr" role="status">
+    <p class="fr-label">Sem relíquias com estes filtros</p>
+    <p class="fr-body">Ajusta o local, o estado ou a pesquisa.</p>
+    <button v-if="hasFilters" type="button" class="fr-chip is-on" @click="clear">Limpar filtros</button>
+  </div>
   <div
+    v-else
     ref="track"
     data-carousel
     data-infinite
