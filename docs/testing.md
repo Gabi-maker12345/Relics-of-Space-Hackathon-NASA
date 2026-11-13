@@ -18,6 +18,7 @@ Unit tests are pure Node tests — no Supabase stack required:
 | `tests/i18n.test.ts` | Language normalization (`en`, `pt-BR`, invalid → `pt`) and the translation payload schema (partial saves, UUIDs, quiz options, safe URLs). |
 | `tests/seed.test.ts` | The demo catalogue: 12 relics, unique ids/slugs, fact sheets, official media with credits/sources, every image present as a 1600×900 JPEG, and the SSR fallback matching `data/relics.json` (cover, scenes, steps). |
 | `tests/quiz.test.ts` | Quiz input/patch schemas (2–5 options, answer index in range, UUIDs for ordering) and the DTO guarantee: the public mapper omits `correct_index`, the admin mapper includes it. |
+| `tests/nasa.test.ts` | NASA client: credit normalization (`JPL` → `NASA/JPL-Caltech`, unknown creators preserved), image/video/poster selection, search normalization that filters audio, and clear 400/502 errors. |
 
 ## Integration tests (local Supabase required)
 
@@ -60,6 +61,9 @@ Current coverage:
   and deleting questions; the five-question cap; out-of-range answers after shrinking the
   options; partial/duplicate/foreign order lists; translations cascade on delete; and the
   public detail omits `correct_index` while the admin payload includes it.
+- `tests/integration/nasa-import.test.ts` — importing an image and a video from fake NASA
+  responses: the medium/mobile asset is referenced, the poster/credit/source are filled,
+  the video is muted by default and audio items are rejected.
 
 `db reset` wipes `admin_users` — run `npm run setup:admin` afterwards before
 using the admin endpoints.
