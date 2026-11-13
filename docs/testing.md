@@ -16,6 +16,7 @@ Unit tests are pure Node tests — no Supabase stack required:
 | `tests/upload.test.ts` | Upload rules: kind/MIME/size validation, extension by MIME, `relicId` normalisation, storage path safety, and a guard that the bucket `allowed_mime_types` matches the rules in `server/utils/upload.ts`. |
 | `tests/relic-contract.test.ts` | The front↔API contract: mapper (`id` = slug, cover only from images, no audio fallback), input schema, column mapping (`tagline`→`summary`, `body`→`story_text`), one-field publish patch and the cover-must-be-a-scene rule. |
 | `tests/i18n.test.ts` | Language normalization (`en`, `pt-BR`, invalid → `pt`) and the translation payload schema (partial saves, UUIDs, quiz options, safe URLs). |
+| `tests/seed.test.ts` | The demo catalogue: 12 relics, unique ids/slugs, fact sheets, official media with credits/sources, every image present as a 1600×900 JPEG, and the SSR fallback matching `data/relics.json` (cover, scenes, steps). |
 
 ## Integration tests (local Supabase required)
 
@@ -25,6 +26,8 @@ Prerequisites:
 - Docker running
 - Supabase CLI available (`npx supabase`)
 - `.env` configured for local Supabase (`npx supabase status`)
+- `psql` (optional, but required to exercise the second seed run that proves
+  idempotency; on Debian/Ubuntu: `sudo apt install postgresql-client`)
 
 Run:
 ```bash
@@ -32,8 +35,11 @@ npm run supabase:start
 npm run test:integration
 ```
 
-`test:integration` runs `supabase db reset` (applies migrations + seed) and then
-`vitest run tests/integration`.
+`test:integration` first runs `npm run seed:check`, then `supabase db reset`
+(applies migrations + seed), applies `supabase/seed.sql` a second time through
+`psql` when available, and finally runs `vitest run tests/integration`. If
+`SUPABASE_DB_URL` is not set it uses the default local URL
+`postgresql://postgres:postgres@127.0.0.1:54322/postgres`.
 
 Current coverage:
 - `tests/integration/rls.test.ts` — anon can read published relics; anon cannot insert.
@@ -46,6 +52,9 @@ Current coverage:
 - `tests/integration/relic-translations.test.ts` — saving/reading relic, media and quiz
   translations, partial merges that keep other fields, explicit `null` clearing an audio
   URL, and rejection of media/questions that belong to another relic.
+- `tests/integration/seed.test.ts` — after the reset and a second seed run, the 12 demo
+  relics exist exactly once, with their covers, fact sheets, media counts, credits and
+  sources; anon can read all published relics.
 
 `db reset` wipes `admin_users` — run `npm run setup:admin` afterwards before
 using the admin endpoints.

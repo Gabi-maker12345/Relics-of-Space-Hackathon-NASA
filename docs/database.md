@@ -192,7 +192,25 @@ matches migration `20261109000100_core_schema.sql`.
 
 ## Seed
 
-[`supabase/seed.sql`](../supabase/seed.sql) inserts the three demo relics
-(Apollo LM, Opportunity, Viking 1). It is idempotent: relics are upserted by
-slug, then their facts and media are replaced. BE-14 expands the seed to the
-full nine-relic catalogue.
+[`data/relics.json`](../data/relics.json) is the single source of truth for the
+demo catalogue. [`scripts/generate-seed.mjs`](../scripts/generate-seed.mjs)
+turns it into [`supabase/seed.sql`](../supabase/seed.sql), and the front reads
+the same JSON for its SSR fallback (`app/data/relics.ts`).
+
+- **12 relics:** Apollo LM, Opportunity, Viking 1, Spirit, Sojourner, Ingenuity,
+  Apollo Lunar Roving Vehicle, Lunokhod 1, Voyager 1, Voyager 2, Pioneer 10 and
+  Pioneer 11.
+- Every relic has a fact sheet and 1–2 official NASA media items, each with a
+  `credit` and a `source_url` (`https://images.nasa.gov/details/<nasa_id>`).
+- **Idempotent:** the script deletes the demo rows by `slug` and reinserts them;
+  facts, media and translations follow the `on delete cascade`. Running it twice
+  leaves exactly 12 relics, 48 facts and 23 media rows.
+- Local images live in `public/images/relics/` and are normalised to 1600×900
+  (16:9) so the carousel and the modal share the same ratio.
+
+Regenerate after editing the JSON:
+
+```bash
+npm run seed:generate
+npm run seed:check      # CI fails if seed.sql is stale
+```

@@ -82,6 +82,19 @@ npm run supabase:reset    # recria a BD + migrações + seed
 npm run supabase:stop     # pára os containers
 ```
 
+O seed de demonstração é gerado a partir de
+[`data/relics.json`](data/relics.json), a fonte única partilhada com o fallback
+SSR do front (`app/data/relics.ts`). Depois de editar o JSON:
+
+```bash
+npm run seed:generate     # regenera supabase/seed.sql
+npm run seed:check        # falha se o SQL estiver desatualizado (corre na CI)
+```
+
+O seed é idempotente: apaga as relíquias de demonstração por `slug` e volta a
+inseri-las com factos e mídias (o `on delete cascade` limpa os filhos). Correr
+duas vezes deixa exatamente as mesmas 12 relíquias, 48 factos e 23 mídias.
+
 Depois de alterar o esquema, gera os tipos:
 
 ```bash
@@ -155,6 +168,8 @@ Supabase Auth e garante a linha correspondente em `admin_users`.
 | `npm run test:watch` | testes em watch |
 | `npm run setup:admin` | cria o administrador inicial |
 | `npm run smoke` | valida login, sessão, guarda admin e RLS |
+| `npm run seed:generate` | regenera `supabase/seed.sql` a partir de `data/relics.json` |
+| `npm run seed:check` | verifica que o seed gerado está atualizado |
 | `npm run supabase:start` | arranca o Supabase local |
 | `npm run supabase:reset` | recria a BD, migrações e seed |
 | `npm run supabase:stop` | pára o Supabase local |
@@ -167,10 +182,12 @@ Supabase Auth e garante a linha correspondente em `admin_users`.
 app/                  front (páginas, componentes, GL)
 server/               endpoints Nitro e repositórios (a partir da BE-03)
 tests/                testes unitários
+data/
+  relics.json         fonte única das relíquias do seed
 supabase/
   config.toml         configuração do CLI / stack local
   migrations/         esquema + RLS + storage policies
-  seed.sql            dados de demonstração (idempotente)
+  seed.sql            seed de demonstração gerado (idempotente)
 docs/                 arquitetura e esquema
 ```
 

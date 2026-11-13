@@ -1,0 +1,486 @@
+{
+  "relics": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "slug": "apollo-lunar-module",
+      "name": "Módulo Lunar Apollo",
+      "mission": "Apollo 11–17 · 1969–1972",
+      "summary": "Seis pousos, seis módulos deixados para trás.",
+      "story_text": "O estágio de descida do módulo lunar nunca voltou para casa: ficou na superfície depois de servir de plataforma de lançamento para o estágio de subida. Seis deles continuam onde pousaram, do Mar da Tranquilidade a Taurus-Littrow — os únicos veículos tripulados que a humanidade deixou em outro mundo.",
+      "status": "silent",
+      "location": "moon",
+      "published": true,
+      "alt": "Módulo lunar Apollo 11 na superfície da Lua, com o estágio de descida dourado e as pernas de pouso",
+      "ratio": "16 / 9",
+      "facts": [
+        { "label": "Primeiro pouso", "value": "20 jul 1969" },
+        { "label": "Massa (descida)", "value": "~10 t" },
+        { "label": "Locais", "value": "6 na Lua" },
+        { "label": "Última visita", "value": "dez 1972" }
+      ],
+      "media": [
+        {
+          "id": "00000000-0000-4000-8000-000000001001",
+          "file": "apollo-lunar-module-1.jpg",
+          "type": "image",
+          "kicker": "Fotografia",
+          "title": "O Águia na superfície",
+          "caption": "O estágio de descida do Águia, fotografado por Neil Armstrong a 20 de julho de 1969. A película dourada é isolamento térmico; as pernas continuam apoiadas no regolito.",
+          "credit": "NASA / JSC",
+          "source_url": "https://images.nasa.gov/details/as11-40-5927"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000001002",
+          "file": "apollo-lunar-module-2.jpg",
+          "type": "image",
+          "kicker": "Fotografia",
+          "title": "O reflexo do Águia",
+          "caption": "Buzz Aldrin junto ao módulo lunar. No visor do capacete refletem-se o próprio Águia e o fotógrafo, Neil Armstrong.",
+          "credit": "NASA / JSC",
+          "source_url": "https://images.nasa.gov/details/as11-40-5903"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "slug": "opportunity",
+      "name": "Opportunity",
+      "mission": "Mars Exploration Rover · 2004–2018",
+      "summary": "Uma maratona de 45 km em outro mundo.",
+      "story_text": "Pousou em Meridiani Planum em janeiro de 2004, contratado para 90 dias. Encontrou provas de água líquida no passado, percorreu 45,16 km — mais do que qualquer outro veículo em outro planeta — e ficou em silêncio quando uma tempestade de poeira cobriu o Sol, em junho de 2018.",
+      "status": "lost",
+      "location": "mars",
+      "published": true,
+      "alt": "Autorretrato do rover Opportunity em Marte, com os painéis solares cobertos de poeira",
+      "ratio": "16 / 9",
+      "facts": [
+        { "label": "Pouso", "value": "25 jan 2004" },
+        { "label": "Distância", "value": "45,16 km" },
+        { "label": "Tempo ativo", "value": "14 anos" },
+        { "label": "Último sinal", "value": "10 jun 2018" }
+      ],
+      "media": [
+        {
+          "id": "00000000-0000-4000-8000-000000002001",
+          "file": "opportunity-1.jpg",
+          "type": "image",
+          "kicker": "Fotografia",
+          "title": "Autorretrato em Perseverance Valley",
+          "caption": "Mosaico de imagens tirado pelo próprio rover em janeiro de 2014. A poeira cobre os painéis solares; o mastro da câmara ergue-se acima do corpo.",
+          "credit": "NASA/JPL-Caltech/Cornell Univ./Arizona State Univ.",
+          "source_url": "https://images.nasa.gov/details/PIA17759"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000002002",
+          "file": "opportunity-2.jpg",
+          "type": "image",
+          "kicker": "Registo orbital",
+          "title": "A cratera Endeavour",
+          "caption": "Vista orbital do caminho percorrido pelo Opportunity na borda da cratera Endeavour, o destino final da maratona de 45 km. A linha clara é a rota do rover.",
+          "credit": "NASA/JPL-Caltech/University of Arizona",
+          "source_url": "https://images.nasa.gov/details/PIA14537"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000003",
+      "slug": "viking-1",
+      "name": "Viking 1",
+      "mission": "Viking · 1976–1982",
+      "summary": "A primeira nave a trabalhar em Marte.",
+      "story_text": "Pousou em Chryse Planitia a 20 de julho de 1976 e operou durante seis anos, enviando as primeiras imagens da superfície marciana e procurando sinais de vida. Continua em Marte, em silêncio desde 1982.",
+      "status": "lost",
+      "location": "mars",
+      "published": true,
+      "alt": "Modelo em escala do lander Viking 1 sobre uma superfície marciana simulada",
+      "ratio": "16 / 9",
+      "facts": [
+        { "label": "Pouso", "value": "20 jul 1976" },
+        { "label": "Operação", "value": "6 anos" },
+        { "label": "Marco", "value": "1.ª missão a operar em Marte" },
+        { "label": "Último contacto", "value": "11 nov 1982" }
+      ],
+      "media": [
+        {
+          "id": "00000000-0000-4000-8000-000000003001",
+          "file": "viking-1-1.jpg",
+          "type": "image",
+          "kicker": "Modelo",
+          "title": "O lander Viking 1",
+          "caption": "Modelo em escala do lander, fotografado no laboratório. O corpo hexagonal, os três painéis solares e a antena de alto ganho foram projetados para sobreviver ao pouso e operar durante anos.",
+          "credit": "NASA/JPL-Caltech/University of Arizona",
+          "source_url": "https://images.nasa.gov/details/PIA09703"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000003002",
+          "file": "viking-1-2.jpg",
+          "type": "image",
+          "kicker": "Panorama",
+          "title": "O primeiro panorama de Marte",
+          "caption": "Primeira vista panorâmica da superfície marciana, enviada pelo Viking 1 em julho de 1976. O solo é coberto de rochas e o céu tem a cor da poeira em suspensão.",
+          "credit": "NASA/JPL",
+          "source_url": "https://images.nasa.gov/details/PIA00383"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "slug": "spirit",
+      "name": "Spirit",
+      "mission": "Mars Exploration Rover · 2004–2010",
+      "summary": "O gémeo que ficou preso na areia e continuou a fazer ciência.",
+      "story_text": "Pousou em Gusev Crater a 4 de janeiro de 2004, três semanas antes do Opportunity. Encontrou provas de que a cratera já teve água e subiu as Columbia Hills. Em 2009 ficou preso em areia solta; continuou a trabalhar como estação fixa até perder o contacto, a 22 de março de 2010.",
+      "status": "lost",
+      "location": "mars",
+      "published": true,
+      "alt": "Ilustração do rover Spirit nas Columbia Hills, em Marte",
+      "ratio": "16 / 9",
+      "facts": [
+        { "label": "Pouso", "value": "4 jan 2004" },
+        { "label": "Distância", "value": "7,73 km" },
+        { "label": "Columbia Hills", "value": "2004–2009" },
+        { "label": "Último sinal", "value": "22 mar 2010" }
+      ],
+      "media": [
+        {
+          "id": "00000000-0000-4000-8000-000000004001",
+          "file": "spirit-1.jpg",
+          "type": "image",
+          "kicker": "Ilustração",
+          "title": "Spirit nas Columbia Hills",
+          "caption": "Imagem produzida com a tecnologia Virtual Presence in Space, da NASA, para mostrar o rover no terreno acidentado das Columbia Hills.",
+          "credit": "NASA/JPL-Solar System Visualization Team",
+          "source_url": "https://images.nasa.gov/details/PIA03230"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000004002",
+          "file": "spirit-2.jpg",
+          "type": "image",
+          "kicker": "Registo orbital",
+          "title": "O Spirit visto de cima",
+          "caption": "A câmara do Mars Global Surveyor encontrou o Spirit em janeiro de 2004: o ponto claro no centro é o rover, com as marcas do pouso à volta.",
+          "credit": "NASA/JPL/Malin Space Science Systems",
+          "source_url": "https://images.nasa.gov/details/PIA05248"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000005",
+      "slug": "sojourner",
+      "name": "Sojourner",
+      "mission": "Mars Pathfinder · 1997",
+      "summary": "O primeiro rover a rodar noutro planeta.",
+      "story_text": "Chegou a Marte a 4 de julho de 1997, dentro da missão Pathfinder. Com 10,6 kg, percorreu cerca de 100 metros em 83 sols, tirou imagens da superfície e analisou rochas. O último contacto foi a 27 de setembro de 1997.",
+      "status": "lost",
+      "location": "mars",
+      "published": true,
+      "alt": "Rover Sojourner recém-implantado na superfície de Marte",
+      "ratio": "16 / 9",
+      "facts": [
+        { "label": "Pouso", "value": "4 jul 1997" },
+        { "label": "Massa", "value": "10,6 kg" },
+        { "label": "Distância", "value": "~100 m" },
+        { "label": "Último sinal", "value": "27 set 1997" }
+      ],
+      "media": [
+        {
+          "id": "00000000-0000-4000-8000-000000005001",
+          "file": "sojourner-1.jpg",
+          "type": "image",
+          "kicker": "Fotografia",
+          "title": "Sojourner em Ares Vallis",
+          "caption": "O rover de 10,6 kg depois de descer da Pathfinder. As rodas e o painel solar plano foram desenhados para um veículo do tamanho de um micro-ondas.",
+          "credit": "NASA/JPL",
+          "source_url": "https://images.nasa.gov/details/PIA01551"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000005002",
+          "file": "sojourner-2.jpg",
+          "type": "image",
+          "kicker": "Fotografia",
+          "title": "Três gerações de rovers",
+          "caption": "Sojourner posa ao lado dos gémeos Spirit e Opportunity no laboratório do JPL, em 2003. O pequeno antepassado abriu o caminho aos rover marcianos que se seguiram.",
+          "credit": "NASA/JPL",
+          "source_url": "https://images.nasa.gov/details/PIA04422"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000006",
+      "slug": "ingenuity",
+      "name": "Ingenuity",
+      "mission": "Mars 2020 · 2021–2024",
+      "summary": "O primeiro helicóptero a voar noutro mundo.",
+      "story_text": "Chegou a Marte com a Perseverance em fevereiro de 2021. O primeiro voo, a 19 de abril de 2021, foi o primeiro voo motorizado e controlado noutro planeta. Planeado para cinco voos, fez 72 e acumulou quase 129 minutos no ar. O último voo, em janeiro de 2024, danificou uma pá do rotor.",
+      "status": "silent",
+      "location": "mars",
+      "published": true,
+      "alt": "Ilustração do helicóptero Ingenuity na superfície de Marte",
+      "ratio": "16 / 9",
+      "facts": [
+        { "label": "Primeiro voo", "value": "19 abr 2021" },
+        { "label": "Voos", "value": "72" },
+        { "label": "Tempo no ar", "value": "~129 min" },
+        { "label": "Último voo", "value": "18 jan 2024" }
+      ],
+      "media": [
+        {
+          "id": "00000000-0000-4000-8000-000000006001",
+          "file": "ingenuity-1.jpg",
+          "type": "image",
+          "kicker": "Ilustração",
+          "title": "Ingenuity em Marte",
+          "caption": "Conceito artístico do helicóptero de 1,8 kg na superfície marciana, com a Perseverance parcialmente visível ao fundo.",
+          "credit": "NASA/JPL-Caltech",
+          "source_url": "https://images.nasa.gov/details/PIA23720"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000006002",
+          "file": "ingenuity-2.jpg",
+          "type": "image",
+          "kicker": "Registo aéreo",
+          "title": "A primeira imagem aérea a cores",
+          "caption": "Imagem captada pelo Ingenuity enquanto voava, a 22 de abril de 2021: a primeira fotografia aérea a cores da superfície de Marte.",
+          "credit": "NASA/JPL-Caltech",
+          "source_url": "https://images.nasa.gov/details/PIA24593"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000007",
+      "slug": "apollo-lunar-roving-vehicle",
+      "name": "Rover Lunar Apollo",
+      "mission": "Apollo 15–17 · 1971–1972",
+      "summary": "O carro que levou astronautas a quilómetros do módulo lunar.",
+      "story_text": "Três rovers lunares foram usados nas últimas missões Apollo. Dobravam-se para caber no módulo lunar e eram movidos por baterias. Em conjunto, percorreram cerca de 90 km e permitiram aos astronautas explorar terrenos a vários quilómetros do local de pouso. Os três continuam na Lua.",
+      "status": "silent",
+      "location": "moon",
+      "published": true,
+      "alt": "Rover lunar Apollo 15 sozinho na superfície da Lua",
+      "ratio": "16 / 9",
+      "facts": [
+        { "label": "Missões", "value": "3 (Apollo 15–17)" },
+        { "label": "Distância total", "value": "~90 km" },
+        { "label": "Massa", "value": "210 kg" },
+        { "label": "Última utilização", "value": "dez 1972" }
+      ],
+      "media": [
+        {
+          "id": "00000000-0000-4000-8000-000000007001",
+          "file": "apollo-lunar-roving-vehicle-1.jpg",
+          "type": "image",
+          "kicker": "Fotografia",
+          "title": "O LRV sozinho",
+          "caption": "O rover lunar do Apollo 15 fotografado contra a paisagem lunar durante a terceira caminhada espacial. As rodas independentes e o assento duplo permitiam explorar a superfície em segurança.",
+          "credit": "NASA / JSC",
+          "source_url": "https://images.nasa.gov/details/as15-88-11901"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000007002",
+          "file": "apollo-lunar-roving-vehicle-2.jpg",
+          "type": "image",
+          "kicker": "Fotografia",
+          "title": "James Irwin ao volante",
+          "caption": "O astronauta James Irwin trabalha junto ao rover durante a primeira EVA do Apollo 15, em julho de 1971.",
+          "credit": "NASA / JSC",
+          "source_url": "https://images.nasa.gov/details/as15-86-11603"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000008",
+      "slug": "lunokhod-1",
+      "name": "Lunokhod 1",
+      "mission": "Luna 17 · 1970–1971",
+      "summary": "O primeiro rover controlado à distância noutro mundo.",
+      "story_text": "Pousou em Mare Imbrium a 17 de novembro de 1970, transportado pela sonda soviética Luna 17. Com oito rodas e 756 kg, percorreu 10,54 km em 322 dias e enviou mais de 20 mil imagens. O último contacto foi a 14 de setembro de 1971. Em 2010, a sonda LRO encontrou o lander e as marcas do rover no mesmo local.",
+      "status": "lost",
+      "location": "moon",
+      "published": true,
+      "alt": "Vista orbital do lander Luna 17 e das marcas do Lunokhod 1 em Mare Imbrium",
+      "ratio": "16 / 9",
+      "facts": [
+        { "label": "Pouso", "value": "17 nov 1970" },
+        { "label": "Distância", "value": "10,54 km" },
+        { "label": "Operação", "value": "322 dias" },
+        { "label": "Último sinal", "value": "14 set 1971" }
+      ],
+      "media": [
+        {
+          "id": "00000000-0000-4000-8000-000000008001",
+          "file": "lunokhod-1-1.jpg",
+          "type": "image",
+          "kicker": "Registo orbital",
+          "title": "O local do Lunokhod 1",
+          "caption": "Imagem da Lunar Reconnaissance Orbiter, de 2010, com o lander Luna 17 e o rasto deixado pelo Lunokhod 1 em Mare Imbrium. A seta aponta para o lander.",
+          "credit": "NASA/GSFC/Arizona State University",
+          "source_url": "https://images.nasa.gov/details/PIA12967"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000009",
+      "slug": "voyager-1",
+      "name": "Voyager 1",
+      "mission": "Voyager · 1977–presente",
+      "summary": "O objeto humano mais distante.",
+      "story_text": "Lançada a 5 de setembro de 1977, passou por Júpiter em 1979 e por Saturno em 1980. Em 2012 tornou-se a primeira nave a entrar no espaço interestelar. Leva a bordo o Disco de Ouro, com sons e imagens da Terra, e continua a afastar-se a mais de 24 mil milhões de quilómetros.",
+      "status": "active",
+      "location": "deep_space",
+      "published": true,
+      "alt": "Ilustração da Voyager 1 com a antena apontada para a Terra",
+      "ratio": "16 / 9",
+      "facts": [
+        { "label": "Lançamento", "value": "5 set 1977" },
+        { "label": "Júpiter", "value": "1979" },
+        { "label": "Saturno", "value": "1980" },
+        { "label": "Espaço interestelar", "value": "2012" }
+      ],
+      "media": [
+        {
+          "id": "00000000-0000-4000-8000-000000009001",
+          "file": "voyager-1-1.jpg",
+          "type": "image",
+          "kicker": "Ilustração",
+          "title": "A Voyager 1",
+          "caption": "Conceito artístico da nave com a antena de alto ganho apontada para a Terra. A Voyager 1 é o objeto construído pelo homem que está mais longe do planeta.",
+          "credit": "NASA/JPL",
+          "source_url": "https://images.nasa.gov/details/PIA04495"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000009002",
+          "file": "voyager-1-2.jpg",
+          "type": "image",
+          "kicker": "Fotografia",
+          "title": "O Disco de Ouro",
+          "caption": "Técnicos preparam o Disco de Ouro para ser instalado na Voyager 1, em 1977. O disco contém saudações em 55 línguas, música e imagens da Terra.",
+          "credit": "NASA/JPL-Caltech",
+          "source_url": "https://images.nasa.gov/details/PIA21741"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000010",
+      "slug": "voyager-2",
+      "name": "Voyager 2",
+      "mission": "Voyager · 1977–presente",
+      "summary": "A única nave a visitar os quatro gigantes gasosos.",
+      "story_text": "Lançada a 20 de agosto de 1977, passou por Júpiter em 1979, Saturno em 1981, Urano em 1986 e Neptuno em 1989. É a única nave a visitar os quatro gigantes gasosos e entrou no espaço interestelar em novembro de 2018. Continua a comunicar com a Terra.",
+      "status": "active",
+      "location": "deep_space",
+      "published": true,
+      "alt": "Fotografia da Voyager 2 numa sala limpa do JPL, em 1977",
+      "ratio": "16 / 9",
+      "facts": [
+        { "label": "Lançamento", "value": "20 ago 1977" },
+        { "label": "Gigantes visitados", "value": "4" },
+        { "label": "Urano", "value": "1986" },
+        { "label": "Espaço interestelar", "value": "2018" }
+      ],
+      "media": [
+        {
+          "id": "00000000-0000-4000-8000-000000010001",
+          "file": "voyager-2-1.jpg",
+          "type": "image",
+          "kicker": "Fotografia",
+          "title": "A Voyager 2 no laboratório",
+          "caption": "Engenheiros trabalham na Voyager 2 numa sala limpa do JPL, em março de 1977. A nave foi lançada cinco meses depois.",
+          "credit": "NASA/JPL-Caltech",
+          "source_url": "https://images.nasa.gov/details/PIA21736"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000010002",
+          "file": "voyager-2-2.jpg",
+          "type": "image",
+          "kicker": "Registo",
+          "title": "Urano visto pela Voyager 2",
+          "caption": "Imagem de Urano obtida pela Voyager 2 em 1986. A nave revelou um mundo gelado, com anéis ténues e uma inclinação extrema.",
+          "credit": "NASA/JPL-Caltech",
+          "source_url": "https://images.nasa.gov/details/PIA18182"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000011",
+      "slug": "pioneer-10",
+      "name": "Pioneer 10",
+      "mission": "Pioneer · 1972–2003",
+      "summary": "A primeira nave a atravessar o cinturão de asteroides e a chegar a Júpiter.",
+      "story_text": "Lançada a 2 de março de 1972, foi a primeira nave a atravessar o cinturão de asteroides e a primeira a sobrevoar Júpiter, em dezembro de 1973. Levava uma placa gravada com a figura de um homem e de uma mulher, um mapa da Terra e a posição do Sol. O último sinal chegou a 23 de janeiro de 2003.",
+      "status": "lost",
+      "location": "deep_space",
+      "published": true,
+      "alt": "Ilustração da Pioneer 10 a passar por Júpiter, por Rick Guidice",
+      "ratio": "16 / 9",
+      "facts": [
+        { "label": "Lançamento", "value": "2 mar 1972" },
+        { "label": "Júpiter", "value": "dez 1973" },
+        { "label": "Placa gravada", "value": "1972" },
+        { "label": "Último sinal", "value": "23 jan 2003" }
+      ],
+      "media": [
+        {
+          "id": "00000000-0000-4000-8000-000000011001",
+          "file": "pioneer-10-1.jpg",
+          "type": "image",
+          "kicker": "Ilustração",
+          "title": "Pioneer 10 em Júpiter",
+          "caption": "Ilustração de Rick Guidice para a NASA: a Pioneer 10 passa por Júpiter em dezembro de 1973, a primeira nave a chegar ao planeta.",
+          "credit": "NASA/Ames Research Center · Rick Guidice",
+          "source_url": "https://images.nasa.gov/details/ARC-1973-AC73-4247"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000011002",
+          "file": "pioneer-10-2.jpg",
+          "type": "image",
+          "kicker": "Ilustração",
+          "title": "A caminho do espaço interestelar",
+          "caption": "Pintura de Don Moore usada numa animação sobre a missão Pioneer. A nave levava a bordo a placa com a localização da Terra.",
+          "credit": "NASA/Ames Research Center · Don Moore",
+          "source_url": "https://images.nasa.gov/details/ARC-1969-AC72-1353"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000012",
+      "slug": "pioneer-11",
+      "name": "Pioneer 11",
+      "mission": "Pioneer · 1973–1995",
+      "summary": "A primeira nave a visitar Saturno.",
+      "story_text": "Lançada a 5 de abril de 1973, passou por Júpiter em dezembro de 1974 e tornou-se a primeira nave a sobrevoar Saturno, em setembro de 1979. Seguiu depois para o espaço interestelar. O último contacto foi a 30 de setembro de 1995.",
+      "status": "lost",
+      "location": "deep_space",
+      "published": true,
+      "alt": "Ilustração da Pioneer 11 a passar por Saturno, por Wilson Hurley",
+      "ratio": "16 / 9",
+      "facts": [
+        { "label": "Lançamento", "value": "5 abr 1973" },
+        { "label": "Júpiter", "value": "1974" },
+        { "label": "Saturno", "value": "1979" },
+        { "label": "Último sinal", "value": "30 set 1995" }
+      ],
+      "media": [
+        {
+          "id": "00000000-0000-4000-8000-000000012001",
+          "file": "pioneer-11-1.jpg",
+          "type": "image",
+          "kicker": "Ilustração",
+          "title": "Pioneer 11 em Saturno",
+          "caption": "Pintura de Wilson Hurley para a NASA: a Pioneer 11 aproxima-se de Saturno em 1979, antes do primeiro sobrevoo da nave pelo planeta.",
+          "credit": "NASA/Ames Research Center · Wilson Hurley",
+          "source_url": "https://images.nasa.gov/details/ARC-2000-80-HC-251"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000012002",
+          "file": "pioneer-11-2.jpg",
+          "type": "image",
+          "kicker": "Ilustração",
+          "title": "A família Pioneer",
+          "caption": "Composição de Fornalski com as sondas Pioneer 6 a 11. A Pioneer 11 foi a primeira a visitar Saturno e a segunda a deixar o sistema solar.",
+          "credit": "NASA/Ames Research Center · Fornalski",
+          "source_url": "https://images.nasa.gov/details/ARC-1982-AC82-0178"
+        }
+      ]
+    }
+  ]
+}

@@ -73,7 +73,7 @@ const media = (overrides: Partial<MediaRow> = {}): MediaRow => ({
   id: '22222222-2222-4222-8222-222222222222',
   relic_id: relic().id,
   type: 'image',
-  url: '/images/relics/apollo-lunar-module.jpg',
+  url: '/images/relics/apollo-lunar-module-1.jpg',
   poster_url: null,
   kicker: 'Fotografia',
   title: '',
@@ -124,7 +124,7 @@ describe('mapDbToRelic', () => {
       {
         id: 'i',
         kind: 'image',
-        src: '/images/relics/apollo-lunar-module.jpg',
+        src: '/images/relics/apollo-lunar-module-1.jpg',
         poster: undefined,
         kicker: 'Fotografia',
         title: '',
@@ -193,12 +193,12 @@ describe('relicInputSchema', () => {
       mission: 'Apollo 11–17',
       tagline: 'Seis pousos.',
       body: 'Ficou na superfície.',
-      image: '/images/relics/apollo-lunar-module.jpg',
+      image: '/images/relics/apollo-lunar-module-1.jpg',
       alt: 'Módulo lunar',
       ratio: '1376 / 768',
       published: true,
       facts: [{ label: 'Primeiro pouso', value: '20 jul 1969' }],
-      scenes: [{ kind: 'image', src: '/images/relics/apollo-lunar-module.jpg', kicker: 'Fotografia', body: 'A história.' }],
+      scenes: [{ kind: 'image', src: '/images/relics/apollo-lunar-module-1.jpg', kicker: 'Fotografia', body: 'A história.' }],
     })
     expect(parsed.success).toBe(true)
   })
@@ -290,7 +290,7 @@ describe('narration steps (BE-07)', () => {
       title: 'Fotografia',
       caption: 'A história da cena.',
       audio_url: '/media/i.mp3',
-      src: '/images/relics/apollo-lunar-module.jpg',
+      src: '/images/relics/apollo-lunar-module-1.jpg',
       poster: undefined,
       credit: 'NASA',
     })
