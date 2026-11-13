@@ -14,5 +14,5 @@ export default defineEventHandler(async (event) => {
   const relic = await findRelic(supabase, id)
   if (!relic) throw createError({ statusCode: 404, message: 'Relic not found' })
 
-  return loadRelicDto(supabase, relic)
+  return loadRelicDto(supabase, relic, { includeWarnings: true })
 })

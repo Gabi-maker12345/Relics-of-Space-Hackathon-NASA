@@ -541,3 +541,19 @@ diário aberto pelo cartão.
   editar, reordenar, capa imagem/vídeo, fallback, payloads inválidos, 401 e
   limpeza). `smoke` 12/12.
 - **Docs:** README com as rotas e o contrato de mídia.
+
+## Iteração 26 — passos de narração e avisos (BE-07)
+
+- **`steps` no detalhe:** cada resposta passa a trazer a introdução seguida de um passo por
+  mídia, pela ordem de `position`, com `index`, `type` (`intro`/`image`/`video`), `title`,
+  `caption`, `audio_url` e, nas mídias, `media_id`, `src`, `poster` e `credit`.
+- **`total_steps`:** número de passos, para o front calcular `100 / total_steps`.
+- **Relíquia sem mídias:** devolve exatamente um passo (`intro`), como pedido.
+- **Avisos no admin:** respostas admin incluem `warnings` para mídias sem `audio_url` e/ou
+  sem legenda. São avisos — nunca bloqueiam gravação, publicação ou leitura pública.
+- **Seed coerente:** `app/data/relics.ts` deriva `steps`/`total_steps` das cenas, para o SSR
+  não ficar com um contrato diferente do da API.
+- **Testes:** casos novos em `tests/relic-contract.test.ts` (ordem, intro, fallback de
+  legenda, avisos e ausência de avisos públicos). Total: 87 unitários verdes.
+- **Validação ao vivo:** 27 verificações no Supabase local, incluindo detalhe admin com
+  avisos, detalhe público com `steps` e sem `warnings`, e relíquia vazia com um só passo.

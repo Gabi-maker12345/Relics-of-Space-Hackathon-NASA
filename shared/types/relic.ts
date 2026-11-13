@@ -42,6 +42,34 @@ export interface RelicScene {
 export type RelicStatus = 'active' | 'silent' | 'lost'
 export type RelicLocation = 'moon' | 'mars' | 'deep_space'
 
+export type StepType = 'intro' | SceneKind
+
+/**
+ * One scroll step of the narration executor: the intro followed by one step
+ * per media item, in display order.
+ */
+export interface RelicStep {
+  /** Zero-based position; `100 / total_steps` gives the scroll percentage. */
+  index: number
+  type: StepType
+  title: string
+  caption: string
+  audio_url: string | null
+  /** Media id, absent on the intro step. */
+  media_id?: string
+  /** Asset to display for media steps. */
+  src?: string
+  poster?: string
+  credit?: string
+}
+
+/** Non-blocking admin hint (the relic can still be published). */
+export interface RelicWarning {
+  code: 'media_missing_audio' | 'media_missing_caption'
+  message: string
+  media_id?: string
+}
+
 export interface Relic {
   /** Stable public identifier — the slug, never the database UUID. */
   id: string
@@ -55,6 +83,12 @@ export interface Relic {
   alt: string
   ratio: string
   scenes: RelicScene[]
+  /** Ordered narration script: intro + one step per media item. */
+  steps: RelicStep[]
+  /** `steps.length`, for `100 / total_steps`. */
+  total_steps: number
+  /** Only present on admin responses. */
+  warnings?: RelicWarning[]
   /** Narration played before the first step. */
   intro_audio_url?: string | null
   published: boolean

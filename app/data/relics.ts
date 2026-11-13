@@ -1,8 +1,36 @@
-import type { Relic } from '#shared/types/relic'
+import type { Relic, RelicStep } from '#shared/types/relic'
 
 export type { Relic, RelicFact, RelicScene, SceneKind } from '#shared/types/relic'
 
-export const relics: Relic[] = [
+type SeedRelic = Omit<Relic, 'steps' | 'total_steps'>
+
+/** Mirrors the API mapper so the SSR shell already has a narration script. */
+function withSteps(relic: SeedRelic): Relic {
+  const steps: RelicStep[] = [
+    {
+      index: 0,
+      type: 'intro',
+      title: relic.name,
+      caption: relic.tagline || relic.body || relic.name,
+      audio_url: relic.intro_audio_url ?? null,
+    },
+    ...relic.scenes.map((scene, position) => ({
+      index: position + 1,
+      type: scene.kind,
+      media_id: scene.id,
+      title: scene.title || scene.kicker || relic.name,
+      caption: scene.body,
+      audio_url: scene.audio_url ?? null,
+      src: scene.src,
+      poster: scene.poster,
+      credit: scene.credit || '',
+    })),
+  ]
+
+  return { ...relic, steps, total_steps: steps.length }
+}
+
+const seed: SeedRelic[] = [
   {
     id: 'apollo-lunar-module',
     published: true,
@@ -100,6 +128,8 @@ export const relics: Relic[] = [
     ],
   },
 ]
+
+export const relics: Relic[] = seed.map(withSteps)
 
 export const missionMarquee = [
   'Apollo 11',
