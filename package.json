@@ -18,6 +18,8 @@
     "test:watch": "vitest",
     "setup:admin": "node scripts/setup-admin.mjs",
     "smoke": "node scripts/smoke.mjs",
+    "seed:generate": "node scripts/generate-seed.mjs",
+    "seed:check": "node scripts/generate-seed.mjs --check",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",

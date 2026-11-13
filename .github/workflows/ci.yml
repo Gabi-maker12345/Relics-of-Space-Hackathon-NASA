@@ -44,6 +44,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Seed is up to date
+        run: npm run seed:check
+
       - name: Typecheck
         run: npm run typecheck
 

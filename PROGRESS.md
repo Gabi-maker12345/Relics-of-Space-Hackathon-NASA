@@ -601,4 +601,30 @@ diário aberto pelo cartão.
 - **Verificação:** `npm run typecheck`, `npm run lint` (0 erros), `npm run test`
   e `npm run test:integration` verdes.
 
+## Iteração 30 — seed real (BE-14)
+
+- **Fonte única:** `data/relics.json` descreve as 12 relíquias (Apollo LM,
+  Opportunity, Viking 1, Spirit, Sojourner, Ingenuity, Rover Lunar Apollo,
+  Lunokhod 1, Voyager 1/2 e Pioneer 10/11), com textos PT, ficha técnica,
+  mídias, `credit` e `source_url` da NASA.
+- **Gerador:** `scripts/generate-seed.mjs` valida o dataset e escreve
+  `supabase/seed.sql`; `npm run seed:generate` regenera e `npm run seed:check`
+  falha se o SQL estiver desatualizado (novo passo na CI).
+- **Seed idempotente:** apaga as relíquias de demonstração por `slug` e
+  reinsere-as; factos, mídias e traduções seguem por `on delete cascade`. Duas
+  execuções deixam exatamente 12 relíquias, 48 factos e 23 mídias.
+- **Mídia oficial:** 23 imagens NASA normalizadas para 1600×900 (16:9) em
+  `public/images/relics/`, com créditos (JPL, JSC, GSFC/ASU, Ames/Rick Guidice,
+  Wilson Hurley, Don Moore, Fornalski) e link para `images.nasa.gov`. As três
+  ilustrações sintéticas antigas e os respetivos loops de vídeo foram removidos
+  para não serem servidos como arquivo oficial; a manifest de texturas passa a
+  pré-carregar as 12 capas novas.
+- **Front:** `app/data/relics.ts` lê o mesmo JSON e gera o fallback SSR com
+  capa, cenas e `steps`; a marquee passa a incluir todas as relíquias.
+- **Testes:** 109 unitários verdes (novo `tests/seed.test.ts`: ids/slugs, fichas,
+  créditos/fontes, ficheiros 1600×900 e sincronização com o front) e 29 de
+  integração verdes (novo `tests/integration/seed.test.ts`; o script de
+  integração aplica o seed uma segunda vez com `psql`).
+- **Docs:** README, `docs/database.md` e `docs/testing.md` atualizados.
+
 

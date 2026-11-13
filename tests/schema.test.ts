@@ -80,17 +80,29 @@ describe('database migrations', () => {
 
 describe('demo seed', () => {
   it('is idempotent for relics', () => {
-    expect(seedSql).toMatch(/on conflict \(slug\) do update/i)
+    expect(seedSql).toMatch(/delete from public\.relics\s+where slug in/i)
+    expect(seedSql).toMatch(/insert into public\.relics/i)
   })
 
-  it('seeds the three demo relics', () => {
-    for (const slug of ['apollo-lunar-module', 'opportunity', 'viking-1']) {
+  it('seeds the relics planned for the demo', () => {
+    for (const slug of [
+      'spirit',
+      'opportunity',
+      'sojourner',
+      'ingenuity',
+      'apollo-lunar-roving-vehicle',
+      'lunokhod-1',
+      'voyager-1',
+      'voyager-2',
+      'pioneer-10',
+      'pioneer-11',
+    ]) {
       expect(seedSql).toContain(`'${slug}'`)
     }
   })
 
-  it('replaces facts and media instead of duplicating them', () => {
-    expect(seedSql).toMatch(/delete from public\.relic_facts/i)
-    expect(seedSql).toMatch(/delete from public\.relic_media/i)
+  it('replaces facts and media by cascading from the relic rows', () => {
+    expect(seedSql).toMatch(/delete from public\.relics/i)
+    expect(migrationSql).toMatch(/references public\.relics\s*\(id\)[^,;]*on delete cascade/i)
   })
 })
