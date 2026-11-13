@@ -647,4 +647,24 @@ diário aberto pelo cartão.
   verdes (`tests/integration/quiz.test.ts`, com o detalhe público sem resposta).
 - **Docs:** README, `docs/database.md` e `docs/testing.md` atualizados.
 
+## Iteração 32 — importação da NASA (BE-11)
+
+- **Pesquisa:** `GET /api/admin/nasa/search?q=…` faz proxy à biblioteca oficial
+  (`images-api.nasa.gov`), normaliza `nasa_id`, título, descrição, tipo,
+  miniatura, crédito, `source_url`, data e centro; filtra áudio e aceita
+  `media_type`, `page` e `page_size`.
+- **Importação:** `POST /api/admin/relics/:id/media/import` recebe
+  `{ nasa_id }` e cria a mídia a referenciar o asset oficial (`~medium.jpg` ou
+  `~mobile.mp4`, com poster `~large.jpg`), sem copiar ficheiros para o Storage.
+- **Créditos:** normalização de `secondary_creator`/`center` (`JPL` →
+  `NASA/JPL-Caltech`, `ARC` → `NASA/Ames Research Center`, criadores
+  desconhecidos preservados) e fonte em `images.nasa.gov/details/<id>`.
+- **Erros:** áudio recusado com 400; falhas da NASA/rede devolvem 502 com
+  mensagem clara; o cliente tem timeout de 10 s.
+- **Testes:** 127 unitários verdes (`tests/nasa.test.ts`) e 38 de integração
+  verdes (`tests/integration/nasa-import.test.ts`, com respostas NASA
+  simuladas). Smoke real com login admin: pesquisa de Ingenuity (355 resultados)
+  e import de `PIA23720` com crédito/fonte, seguido de limpeza.
+- **Docs:** README, `docs/database.md` e `docs/testing.md` atualizados.
+
 

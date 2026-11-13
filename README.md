@@ -213,6 +213,12 @@ Admin (requer sessão Supabase com `is_admin`):
   enviar ficheiros grandes (até 50 MB) diretamente para o Storage
 - `POST /api/admin/storage/delete` — remove objetos do bucket, apenas dentro do
   prefixo `relics/`
+- `GET /api/admin/nasa/search?q=…` — pesquisa a biblioteca oficial de imagens e
+  vídeos da NASA e devolve `nasa_id`, título, tipo, miniatura, crédito e
+  `source_url`; aceita `media_type`, `page` e `page_size`
+- `POST /api/admin/relics/:id/media/import` — `{ "nasa_id": "…" }` importa um
+  resultado da NASA como mídia da relíquia, com `credit` e `source_url`
+  preenchidos e sem copiar o ficheiro para o Storage
 - `POST /api/admin/relics/:id/media` — adiciona uma mídia (capa opcional via
   `is_cover`); sem `position` fica no fim
 - `PATCH|DELETE /api/admin/media/:id` — edita/remove uma mídia
@@ -254,6 +260,13 @@ O quiz público (`Relic.quiz`) devolve `id`, `position`, `question`, `options` e
 `explanation`, mas **nunca** `correct_index`. As respostas admin incluem o
 índice correto; o `POST` valida que ele aponta para uma opção existente e o
 limite é de 5 perguntas por relíquia.
+
+A importação da NASA guarda apenas a URL oficial do asset (`~medium.jpg` para
+imagens, `~mobile.mp4` para vídeos) e o respetivo `poster`, em vez de copiar o
+ficheiro para o Storage. O `credit` é normalizado a partir de
+`secondary_creator`/`center` (por exemplo `JPL` → `NASA/JPL-Caltech`) e o
+`source_url` aponta para `images.nasa.gov/details/<nasa_id>`. Itens de áudio são
+recusados com 400; falhas da NASA devolvem 502 com uma mensagem clara.
 
 ### Idiomas (BE-12)
 

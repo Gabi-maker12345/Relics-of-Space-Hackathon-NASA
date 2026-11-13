@@ -184,6 +184,24 @@ instead of a Postgres constraint error.
   responses include the answer. Admin relic responses use
   `ADMIN_RELIC_OPTIONS` in `server/utils/relicMapper.ts`.
 
+## NASA import (BE-11)
+
+The admin can search the official NASA Image and Video Library and import a
+result into a relic. No new table is needed: the item becomes a normal
+`relic_media` row.
+
+- `GET /api/admin/nasa/search` proxies `images-api.nasa.gov/search` and
+  normalises the result to `nasa_id`, `title`, `description`, `media_type`,
+  `thumbnail`, `credit`, `source_url`, `date_created` and `center`. Audio
+  results are filtered out.
+- `POST /api/admin/relics/:id/media/import` takes `{ nasa_id }` and writes a
+  media row that **references** the official asset URL instead of copying it:
+  `~medium.jpg` for images, `~mobile.mp4` for videos, with a `~large.jpg`
+  poster. `credit` comes from `secondary_creator`/`center` (known centers are
+  expanded, e.g. `JPL` → `NASA/JPL-Caltech`) and `source_url` points to
+  `https://images.nasa.gov/details/<nasa_id>`.
+- Audio items are rejected with 400; NASA/network failures return 502.
+
 ## Migrations
 
 ```bash

@@ -13,6 +13,7 @@ export default defineConfig({
       'tests/i18n.test.ts',
       'tests/seed.test.ts',
       'tests/quiz.test.ts',
+      'tests/nasa.test.ts',
     ],
     exclude: ['**/node_modules/**', '**/.nuxt/**', '**/.output/**'],
   },
