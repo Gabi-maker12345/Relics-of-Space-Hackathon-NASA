@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import gsap from 'gsap'
-import type { RelicScene } from '~/data/relics'
+import type { Relic, RelicScene } from '~/data/relics'
 
 const { relics } = useRelics()
 const { activeSlug, close } = useProjectModal()
@@ -8,7 +8,34 @@ const frame = ref<{ focusSelf: () => void } | null>(null)
 const sheet = ref<{ goTo: (index: number) => void } | null>(null)
 let lastFocus: HTMLElement | null = null
 
-const relic = computed(() => relics.value.find(r => r.id === activeSlug.value) ?? null)
+const detail = ref<Relic | null>(null)
+const relic = computed(() => {
+  if (detail.value && detail.value.id === activeSlug.value) return detail.value
+  return relics.value.find(r => r.id === activeSlug.value) ?? null
+})
+
+watch(
+  () => activeSlug.value,
+  async (slug) => {
+    if (!slug) {
+      detail.value = null
+      return
+    }
+    const current = relics.value.find(r => r.id === slug)
+    if (!current?.scenes || current.scenes.length === 0) {
+      try {
+        const full = await $fetch<Relic>(`/api/public/relics/${encodeURIComponent(slug)}`)
+        if (full && activeSlug.value === slug) {
+          detail.value = full
+          relics.value = relics.value.map(r => (r.id === slug ? { ...r, ...full } : r))
+        }
+      } catch {
+        // preserve current
+      }
+    }
+  },
+  { immediate: true },
+)
 const index = ref(0)
 const lightbox = ref<RelicScene | null>(null)
 const glitching = ref(false)

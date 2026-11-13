@@ -1,10 +1,23 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '~/types/database.types'
-import type { Relic, RelicScene, RelicStep, RelicWarning, SceneKind } from '#shared/types/relic'
+import type {
+  QuizQuestion,
+  Relic,
+  RelicLocation,
+  RelicPanelItem,
+  RelicScene,
+  RelicStatus,
+  RelicStep,
+  RelicWarning,
+  SceneKind,
+} from '#shared/types/relic'
 
 type RelicRow = Database['public']['Tables']['relics']['Row']
 type FactRow = Database['public']['Tables']['relic_facts']['Row']
 type MediaRow = Database['public']['Tables']['relic_media']['Row']
+type QuizRow = Database['public']['Tables']['quiz_questions']['Row']
+
+export const PUBLIC_CACHE_CONTROL = 'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
 
 /** Sorts media rows by their stored position, stably. */
 function sortMedia(media: MediaRow[]): MediaRow[] {
@@ -88,9 +101,11 @@ export function mapDbToRelic(
   facts: FactRow[] = [],
   media: MediaRow[] = [],
   options: MapRelicOptions = {},
+  quiz: QuizRow[] = [],
 ): Relic {
   const sortedFacts = [...facts].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
   const sortedMedia = sortMedia(media)
+  const sortedQuiz = [...quiz].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
 
   // The cover may be any media type. Only fall back to the first item when the
   // stored cover was deleted or never set.
@@ -115,12 +130,26 @@ export function mapDbToRelic(
 
   const steps = buildSteps(relic, sortedMedia)
 
+  const quizQuestions: QuizQuestion[] = sortedQuiz.map(q => ({
+    id: q.id,
+    position: q.position,
+    question: q.question,
+    options: Array.isArray(q.options)
+      ? (q.options as string[])
+      : typeof q.options === 'string'
+        ? JSON.parse(q.options)
+        : [],
+    explanation: q.explanation || '',
+  }))
+
   return {
     id: relic.slug,
     name: relic.name,
     mission: relic.mission || '',
     tagline: relic.summary || '',
     body: relic.story_text || relic.summary || '',
+    status: (relic.status || 'active') as RelicStatus,
+    location: (relic.location || 'moon') as RelicLocation,
     facts: sortedFacts.map(f => ({ label: f.label, value: f.value })),
     // A video cover is represented by its poster frame: `<img>` cannot play it.
     image: coverMedia ? (coverMedia.type === 'video' ? coverMedia.poster_url ?? '' : coverMedia.url) : '',
@@ -129,22 +158,65 @@ export function mapDbToRelic(
     scenes,
     steps,
     total_steps: steps.length,
+    quiz: quizQuestions,
     warnings: options.includeWarnings ? buildWarnings(sortedMedia) : undefined,
     intro_audio_url: relic.intro_audio_url,
     published: relic.published,
   }
 }
 
-/** Loads facts and media for a relic and returns the mapped object. */
+export type RelicPanelSource = Pick<
+  RelicRow,
+  'slug' | 'name' | 'summary' | 'status' | 'location' | 'mission' | 'ratio'
+>
+
+/**
+ * Maps a relic row and its resolved cover media into the lightweight shape
+ * used by the public home panels.
+ */
+export function mapDbToRelicPanel(
+  relic: RelicPanelSource,
+  coverMedia?: Pick<MediaRow, 'type' | 'url' | 'poster_url'> | null,
+): RelicPanelItem {
+  const coverType = coverMedia ? (coverMedia.type as SceneKind) : null
+  const image = coverMedia
+    ? (coverMedia.type === 'video' ? coverMedia.poster_url ?? '' : coverMedia.url)
+    : ''
+
+  return {
+    id: relic.slug,
+    slug: relic.slug,
+    name: relic.name,
+    summary: relic.summary || '',
+    tagline: relic.summary || '',
+    status: (relic.status || 'active') as RelicStatus,
+    location: (relic.location || 'moon') as RelicLocation,
+    mission: relic.mission || '',
+    ratio: relic.ratio || '1376 / 768',
+    image,
+    cover_type: coverType,
+    cover: coverMedia
+      ? {
+          type: coverType!,
+          url: coverMedia.url,
+          poster_url: coverMedia.poster_url,
+        }
+      : null,
+    facts: [],
+  }
+}
+
+/** Loads facts, media and quiz questions for a relic and returns the mapped object. */
 export async function loadRelicDto(
   supabase: SupabaseClient<Database>,
   relic: RelicRow,
   options: MapRelicOptions = {},
 ): Promise<Relic> {
-  const [factsRes, mediaRes] = await Promise.all([
+  const [factsRes, mediaRes, quizRes] = await Promise.all([
     supabase.from('relic_facts').select('*').eq('relic_id', relic.id).order('position'),
     supabase.from('relic_media').select('*').eq('relic_id', relic.id).order('position'),
+    supabase.from('quiz_questions').select('*').eq('relic_id', relic.id).order('position'),
   ])
 
-  return mapDbToRelic(relic, factsRes.data ?? [], mediaRes.data ?? [], options)
+  return mapDbToRelic(relic, factsRes.data ?? [], mediaRes.data ?? [], options, quizRes.data ?? [])
 }

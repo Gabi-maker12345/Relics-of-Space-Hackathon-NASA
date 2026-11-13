@@ -70,6 +70,37 @@ export interface RelicWarning {
   media_id?: string
 }
 
+export interface QuizQuestion {
+  id: string
+  position: number
+  question: string
+  options: string[]
+  explanation?: string
+}
+
+export interface RelicPanelCover {
+  type: SceneKind
+  url: string
+  poster_url?: string | null
+}
+
+export interface RelicPanelItem {
+  /** Stable public identifier — the slug, never the database UUID. */
+  id: string
+  slug: string
+  name: string
+  summary: string
+  tagline: string
+  status: RelicStatus
+  location: RelicLocation
+  mission: string
+  image: string
+  cover_type: SceneKind | null
+  cover: RelicPanelCover | null
+  ratio: string
+  facts: RelicFact[]
+}
+
 export interface Relic {
   /** Stable public identifier — the slug, never the database UUID. */
   id: string
@@ -92,6 +123,9 @@ export interface Relic {
   /** Narration played before the first step. */
   intro_audio_url?: string | null
   published: boolean
+  status?: RelicStatus
+  location?: RelicLocation
+  quiz?: QuizQuestion[]
 }
 
 export interface RelicInput {

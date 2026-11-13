@@ -557,3 +557,13 @@ diário aberto pelo cartão.
   legenda, avisos e ausência de avisos públicos). Total: 87 unitários verdes.
 - **Validação ao vivo:** 27 verificações no Supabase local, incluindo detalhe admin com
   avisos, detalhe público com `steps` e sem `warnings`, e relíquia vazia com um só passo.
+
+## Iteração 27 — endpoints públicos de leitura (BE-08)
+
+- **`GET /public/relics` (e `/api/public/relics`):** lista pública leve com apenas os campos do painel (`id`/`slug`, `name`, `summary`, `status`, `location`, `cover`, `cover_type`, `image`, `mission`, `ratio`). Evita o carregamento relacional pesado de todas as cenas, áudios, legendas e passos de narração na home.
+- **`GET /public/relics/:slug` (e `/api/public/relics/:slug`):** detalhe completo por slug, trazendo ficha técnica (`facts`), passos de narração ordenados (`steps` e `total_steps`), cenas de mídia (`scenes`) e quiz (`quiz` via `quiz_questions`).
+- **Apenas publicadas & 404 em rascunho/inexistente:** relíquias em rascunho (`published: false`) ou inexistentes devolvem 404.
+- **Cabeçalhos de cache:** cabeçalho `Cache-Control: public, max-age=60, s-maxage=300, stale-while-revalidate=600` adicionado às respostas públicas.
+- **Frontend progressivo:** `ProjectModal.vue` carrega o detalhe completo via `/api/public/relics/:slug` quando o utilizador abre um modal se as cenas completas ainda não estiverem em memória.
+- **Rotas diretas:** disponibilizados aliases diretos em `/public/relics` e `/public/relics/:slug` em `server/routes/public/`.
+- **Testes:** 92 unitários verdes (`tests/relic-contract.test.ts`) + 12 de integração verdes (`tests/integration/public-relics.test.ts`, `relics.test.ts`, `rls.test.ts`).
