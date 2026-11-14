@@ -4,6 +4,10 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-01',
   devtools: { enabled: false },
+  // Nuxt 4.6.4 resolves an unset `devServer.host` to `{}`, which crashes
+  // `nuxt dev` in @nuxt/cli 4.0.1. Pinning the loopback string keeps the
+  // default bind; `nuxt dev --host 0.0.0.0` still overrides it.
+  devServer: { host: '127.0.0.1' },
   modules: ['@nuxtjs/supabase', '@nuxt/eslint'],
   css: ['~/assets/css/main.css'],
   vite: { plugins: [tailwindcss()] },

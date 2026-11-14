@@ -823,3 +823,12 @@ diário aberto pelo cartão.
 - **i18n:** novas chaves PT/EN `form.nasa*` e `nasa.*`.
 - **QA real (cloud):** login admin, pesquisa «apollo 11» (1617 resultados), carregar mais (24 cartões), importação de imagem e vídeo com crédito/fonte, cena no rascunho, save e limpeza da BD; botão desativado em relíquia nova; sem erros de consola.
 - **Testes:** 152 unitários verdes; typecheck, lint, build e `seed:check` limpos.
+
+## Iteração 41 — auditoria de dependências (SEC #71)
+
+- **Upgrades:** Nuxt **4.6.4** (fecha os avisos do Nitro/middleware e resolve `node-forge` 1.4.3) e happy-dom **21.0.4** (elimina o high dos testes).
+- **Overrides:** `readdir-glob@4` para o `archiver`/`nitropack` e `minimatch@11` apenas em `@typescript-eslint/typescript-estree` e `eslint-plugin-import-x`; o `minimatch@3` do ESLint mantém-se.
+- **Resultado:** `npm audit` e `npm audit --omit=dev` passam de 20/14 vulnerabilidades (com 1 high) para **7 low, 0 moderate, 0 high, 0 critical**.
+- **Risco residual:** `deepmerge@4.3.1` (prototype poisoning) no build via `@rollup/plugin-node-resolve`; sem versão corrigida, com configuração de confiança e documentado no `deploy-checklist` §7.
+- **Regressão do Nuxt 4.6.4:** `devServer.host` vazio resolvia para `{}` e rebentava `nuxt dev`; fixado `127.0.0.1` no `nuxt.config.ts` (override com `--host`).
+- **Verificação:** `npm ci` limpo; lint, typecheck, 152 unitários, 38 integração e build verdes em Node 22.23.4 e 24.22.3; dev server e fluxo público/admin (login + diálogo NASA) sem erros de consola.

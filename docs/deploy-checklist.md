@@ -198,9 +198,26 @@ curl -s -r 0-1023 "$BASE/media/narration/spirit-intro.mp3" -o /tmp/part
 - 0 quiz, 0 traduções EN, 0 vídeos no seed.
 - 5 categorias oficiais em falta (ALSEP, Phoenix/InSight, Dawn, NEAR, Kepler) e
   Viking 2.
-- FE-15 (upload/player/aviso de áudio), FE-16 (preview), FE-17 (NASA no admin),
-  FE-18 (conteúdo EN), FE-19 (quiz UI), FE-20 (passaporte), FE-21 (a11y) e
-  FE-24 (QA) continuam abertas.
+- FE-20 (passaporte) e FE-24 (QA da demo) continuam abertas; FE-15, FE-16,
+  FE-17, FE-18 e FE-19 já estão mergeadas.
 - Edge TTS é um endpoint não oficial da Microsoft; o áudio é gerado antes do
   deploy e fica no repositório. O fallback `speechSynthesis` continua ativo.
 - `master` (Next.js) não é a base do deploy.
+
+## 7. Auditoria de dependências (SEC #71)
+
+Estado depois do upgrade (nov 2026): `npm audit` e `npm audit --omit=dev`
+devolvem **7 low, 0 moderate, 0 high, 0 critical**.
+
+- **Upgrades:** Nuxt **4.6.4** (corrige os avisos do Nitro/middleware e leva
+  `node-forge` a 1.4.3) e happy-dom **21.0.4** (fecha o high dos testes).
+- **Overrides:** `readdir-glob@4` (archiver/nitropack) e `minimatch@11` só nos
+  consumidores de dev (`@typescript-eslint/typescript-estree` e
+  `eslint-plugin-import-x`); o `minimatch@3` do ESLint fica intacto.
+- **Risco residual:** `deepmerge@4.3.1` (GHSA-gcqx-w48m-w2h4, prototype
+  poisoning) via `@rollup/plugin-node-resolve` → `nitropack`. Só corre no build,
+  com configuração de confiança, e ainda não existe versão corrigida; os 7
+  avisos `low` derivam todos desta cadeia.
+- **Nuxt 4.6.4 / @nuxt/cli 4.0.1:** um `devServer.host` vazio resolve para `{}`
+  e rebenta `nuxt dev`; o `nuxt.config.ts` fixa `127.0.0.1` (podes expor com
+  `nuxt dev --host 0.0.0.0`).

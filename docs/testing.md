@@ -95,6 +95,22 @@ the admin guard, publish/unpublish visibility and that anon cannot insert.
 
 ## CI
 
-The main CI workflow runs lint, typecheck and unit tests. Integration tests are
+The main CI workflow runs `npm ci`, the runtime audit (`--audit-level=high`),
+lint, seed/narration checks, typecheck and unit tests. Integration tests are
 opt-in in CI (set `RUN_INTEGRATION_TESTS=1`) because they require Docker and a
 Supabase stack.
+
+## Dependency audit (SEC #71)
+
+```bash
+npm audit --omit=dev   # runtime tree
+npm audit              # includes dev/test tooling
+```
+
+Both should report **7 low, 0 moderate, 0 high, 0 critical**. The only root
+finding is `deepmerge@4.3.1` (prototype poisoning) pulled in by
+`@rollup/plugin-node-resolve` → `nitropack` at build time; there is no fixed
+release yet, and the remaining entries derive from that chain. Run the audit
+after any dependency bump; the full audit also covers happy-dom and the
+TypeScript ESLint packages. See `docs/deploy-checklist.md` §7 for the residual
+risk.
