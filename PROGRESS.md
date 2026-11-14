@@ -840,3 +840,17 @@ diário aberto pelo cartão.
 - **Primeiro clique:** o motor do carrossel mexia a faixa a qualquer píxel e o `openRelic` descartava cliques com >=6 px de tremura. Agora há um limiar de **10 px** (`DRAG_THRESHOLD_PX`), o arrasto só começa depois dele e `dragDistance()` devolve 0 para gestos curtos.
 - **QA (desktop 1440×900 e mobile 390×844):** clique com 3–9 px abre o diário à primeira; 12–40 px só arrasta; cena → Painel → admin limpo; Arquivo/logo voltam sem overlay; 0 erros de consola.
 - **Testes:** 152 unitários, typecheck, lint e build verdes.
+
+## FE-20 — passaporte espacial + anel de progresso
+
+- **Anel do modal**: o SVG com `stroke-dasharray` deixava o anel vazio (dash a igualar o
+  comprimento não pintava e o full-turn também não). Passou a `conic-gradient` com furo sólido
+  (sem `mask`, cujo segundo stop transparente também não pintava), escala 0.9999 no fim e
+  transição do `--progress` registado com `@property`.
+- **Passaporte** (`usePassport`): exploradas guardadas em `localStorage` (`space-relics:passport:v1`),
+  marcadas ao chegar ao **último degrau** do diário. Carimbo “Explorado/Explored” no canto superior
+  esquerdo do modal, selo nos cartões do carrossel e indicador “X de Y exploradas” sob o título de
+  “As relíquias”.
+- **Idioma único**: removido o seletor próprio do admin (`useAdminLocale`/`provideI18nLang`); o botão
+  do cabeçalho muda **todo** o sistema, incluindo o painel. A secção de traduções do formulário
+  continua independente (é conteúdo, não idioma de UI).

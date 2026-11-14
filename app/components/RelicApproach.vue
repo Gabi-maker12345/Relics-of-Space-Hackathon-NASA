@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { missionMarquee } from '~/data/relics'
+import { isPublished } from '~/utils/relics'
 const { t } = useI18n()
+const { relics } = useRelics()
+const { count: exploredCount } = usePassport()
+const total = computed(() => relics.value.filter(isPublished).length)
 
 const wrap = ref<HTMLElement | null>(null)
 const title = ref<HTMLElement | null>(null)
@@ -105,10 +109,13 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
 </script>
 
 <template>
-  <section ref="wrap" class="fr-approach" aria-labelledby="relics-approach-title">
+  <section id="relics" ref="wrap" class="fr-approach" aria-labelledby="relics-approach-title">
     <div class="fr-approach__stage">
       <header class="fr-approach__head">
         <h2 id="relics-approach-title" ref="title" class="fr-serif fr-approach__title">{{ t('approach.title') }}</h2>
+        <p v-if="total > 0" class="fr-label fr-approach__passport">
+          {{ t('passport.progress', { count: exploredCount, total }) }}
+        </p>
       </header>
 
       <svg class="fr-orbit__lines" aria-hidden="true">

@@ -107,7 +107,7 @@
 
                 <AudioField
                   v-model="draft.intro_audio_url"
-                  label="Áudio de introdução (opcional)"
+                  :label="t('form.introAudio')"
                   :relic-id="draft.id"
                   :text="draft.body"
                   placeholder="/media/intro.mp3"
@@ -340,7 +340,7 @@
 
                       <AudioField
                         v-model="scene.audio_url"
-                        label="Áudio narrado (opcional)"
+                        :label="t('form.narration')"
                         :relic-id="draft.id"
                         :text="scene.body"
                         placeholder="/media/narracao.mp3"

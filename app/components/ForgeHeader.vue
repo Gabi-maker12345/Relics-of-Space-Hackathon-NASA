@@ -1,5 +1,7 @@
 <script setup lang="ts">
-const { active, toggle } = usePanels()
+import { scrollToElement, setSmoothScrollEnabled } from '~/composables/useSmoothScroll'
+
+const { toggle: togglePanel } = usePanels()
 const { act, reset } = useAct()
 const { user } = useAuth()
 const { lang, toggle: toggleLang } = useLocale()
@@ -7,8 +9,47 @@ const { muted, toggle: toggleSound } = useSound()
 const { t } = useI18n()
 const route = useRoute()
 
+const menuOpen = ref(false)
+const contactOpen = ref(false)
+const burger = ref<HTMLButtonElement | null>(null)
+const menu = ref<HTMLElement | null>(null)
+
+/** Um item por secção da landing; a ordem segue a leitura da página. */
+const sections = [
+  { key: 'nav.home', id: 'top' },
+  { key: 'nav.relics', id: 'relics' },
+  { key: 'nav.missions', id: 'missions' },
+  { key: 'nav.archive', id: 'archive' },
+] as const
+
+/**
+ * Os antigos ícones do header vivem agora dentro de "contacto": três canais em
+ * grande escala. O email fica como linha discreta — era o quarto canal e não
+ * justifica um quarto ícone.
+ */
+const channels = [
+  {
+    label: 'Instagram',
+    href: 'https://www.instagram.com/jesperlandberg222/',
+    path: 'M4.6 1.8h6.8a2.8 2.8 0 0 1 2.8 2.8v6.8a2.8 2.8 0 0 1-2.8 2.8H4.6a2.8 2.8 0 0 1-2.8-2.8V4.6a2.8 2.8 0 0 1 2.8-2.8Zm0 1.3a1.5 1.5 0 0 0-1.5 1.5v6.8a1.5 1.5 0 0 0 1.5 1.5h6.8a1.5 1.5 0 0 0 1.5-1.5V4.6a1.5 1.5 0 0 0-1.5-1.5H4.6ZM8 5.1a2.9 2.9 0 1 1 0 5.8 2.9 2.9 0 0 1 0-5.8Zm0 1.3a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2Zm3.4-1.9a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5Z',
+  },
+  {
+    label: 'X',
+    href: 'https://x.com/jesper_alpacka',
+    path: 'M2.2 2h3.3l3 4.1L12 2h1.8L9.2 7.7 14 14h-3.3L7.5 9.6 3.9 14H2.1l4.8-5.9L2.2 2Zm1.6 1.1 8 9.8h1.1l-8-9.8H3.8Z',
+  },
+  {
+    label: 'LinkedIn',
+    href: 'https://www.linkedin.com/in/jesper-landberg-ba2984256/',
+    path: 'M3.1 2.3a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5ZM2 5.7h2.2V14H2V5.7Zm3.7 0h2.1v1.1h.03c.3-.56 1.03-1.15 2.12-1.15 2.27 0 2.69 1.5 2.69 3.44V14H10.5V9.6c0-1.05-.02-2.4-1.46-2.4-1.46 0-1.68 1.14-1.68 2.32V14H5.7V5.7Z',
+  },
+] as const
+
+const email = 'jesper@alpacka.studio'
+
 /** Na landing, o logo fecha o segundo acto e volta ao topo em vez de "não fazer nada". */
 function onLogoClick(event: MouseEvent): void {
+  closeMenu()
   if (route.path !== '/') return
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return
   event.preventDefault()
@@ -16,95 +57,261 @@ function onLogoClick(event: MouseEvent): void {
   window.scrollTo({ top: 0 })
 }
 
-const socials = [
-  {
-    label: 'Instagram',
-    href: 'https://www.instagram.com/jesperlandberg222/',
-    path: 'M4.6 1.8h6.8a2.8 2.8 0 0 1 2.8 2.8v6.8a2.8 2.8 0 0 1-2.8 2.8H4.6a2.8 2.8 0 0 1-2.8-2.8V4.6a2.8 2.8 0 0 1 2.8-2.8Zm0 1.3a1.5 1.5 0 0 0-1.5 1.5v6.8a1.5 1.5 0 0 0 1.5 1.5h6.8a1.5 1.5 0 0 0 1.5-1.5V4.6a1.5 1.5 0 0 0-1.5-1.5H4.6ZM8 5.1a2.9 2.9 0 1 1 0 5.8 2.9 2.9 0 0 1 0-5.8Zm0 1.3a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2Zm3.4-1.9a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5Z',
-    stroke: false,
-  },
-  {
-    label: 'X',
-    href: 'https://x.com/jesper_alpacka',
-    path: 'M2.2 2h3.3l3 4.1L12 2h1.8L9.2 7.7 14 14h-3.3L7.5 9.6 3.9 14H2.1l4.8-5.9L2.2 2Zm1.6 1.1 8 9.8h1.1l-8-9.8H3.8Z',
-    stroke: false,
-  },
-  {
-    label: 'LinkedIn',
-    href: 'https://www.linkedin.com/in/jesper-landberg-ba2984256/',
-    path: 'M3.1 2.3a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5ZM2 5.7h2.2V14H2V5.7Zm3.7 0h2.1v1.1h.03c.3-.56 1.03-1.15 2.12-1.15 2.27 0 2.69 1.5 2.69 3.44V14H10.5V9.6c0-1.05-.02-2.4-1.46-2.4-1.46 0-1.68 1.14-1.68 2.32V14H5.7V5.7Z',
-    stroke: false,
-  },
-  {
-    label: 'Email',
-    href: 'mailto:jesper@alpacka.studio',
-    path: 'M1.4 3.6h13.2v8.8H1.4V3.6Zm1.3 1.2v6.3h10.6V4.8L8 8.4 2.7 4.8Zm1.4-.1L8 7.3l4-2.6H4.1Z',
-    stroke: false,
-  },
-]
+function toggleMenu(): void {
+  menuOpen.value = !menuOpen.value
+}
+
+function closeMenu(): void {
+  menuOpen.value = false
+}
+
+/** Fecha o menu, garante o primeiro acto e desliza até à secção pedida. */
+function goTo(id: string): void {
+  closeMenu()
+  if (act.value !== 'page') reset()
+  void nextTick(() => {
+    const section = document.getElementById(id)
+    if (section) scrollToElement(section)
+  })
+}
+
+function openProfile(): void {
+  closeMenu()
+  togglePanel('profile')
+}
+
+/**
+ * O contacto abre ao pairar (rato) e ao tocar (telemóvel). O `pointerType`
+ * decide: só o rato ganha revelação por hover, senão o toque revelaria e
+ * fechava no mesmo gesto. Como os ícones ficam centrados no ecrã, a saída do
+ * botão não os esconde de imediato: há uma janela para o ponteiro os alcançar.
+ */
+let hideContactTimer: ReturnType<typeof setTimeout> | null = null
+
+function showContact(): void {
+  if (hideContactTimer) {
+    clearTimeout(hideContactTimer)
+    hideContactTimer = null
+  }
+  contactOpen.value = true
+}
+
+function onContactEnter(event: PointerEvent): void {
+  if (event.pointerType === 'mouse') showContact()
+}
+
+function onContactLeave(event: PointerEvent): void {
+  if (event.pointerType !== 'mouse') return
+  if (hideContactTimer) clearTimeout(hideContactTimer)
+  hideContactTimer = setTimeout(() => {
+    contactOpen.value = false
+    hideContactTimer = null
+  }, 350)
+}
+
+function toggleContact(): void {
+  if (contactOpen.value) {
+    contactOpen.value = false
+    return
+  }
+  showContact()
+}
+
+/**
+ * No rato o clique só confirma o que o hover já revelou (fechar é sair da
+ * área); no toque não há hover, por isso o toque alterna.
+ */
+function onContactClick(event: PointerEvent): void {
+  if (event.pointerType === 'touch' || event.pointerType === 'pen') {
+    toggleContact()
+    return
+  }
+  showContact()
+}
+
+watch(menuOpen, async (open) => {
+  if (!import.meta.client) return
+  document.documentElement.classList.toggle('is-menu-open', open)
+  setSmoothScrollEnabled(!open)
+  if (open) {
+    await nextTick()
+    menu.value?.querySelector<HTMLElement>('.fr-menu__link')?.focus()
+    return
+  }
+  contactOpen.value = false
+  if (hideContactTimer) {
+    clearTimeout(hideContactTimer)
+    hideContactTimer = null
+  }
+  if (menu.value?.contains(document.activeElement)) burger.value?.focus()
+})
+
+watch(() => route.path, () => closeMenu())
+
+/** Escape em camadas (contacto → menu) e Tab preso ao diálogo enquanto aberto. */
+function onKeydown(event: KeyboardEvent): void {
+  if (!menuOpen.value) return
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    if (contactOpen.value) contactOpen.value = false
+    else closeMenu()
+    return
+  }
+  if (event.key !== 'Tab' || !menu.value) return
+  const focusables = Array.from(
+    menu.value.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'),
+  )
+  if (focusables.length === 0) return
+  const first = focusables[0]!
+  const last = focusables[focusables.length - 1]!
+  const active = document.activeElement
+  if (event.shiftKey && (active === first || !menu.value.contains(active))) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  if (hideContactTimer) clearTimeout(hideContactTimer)
+})
 </script>
 
 <template>
   <header class="fr-header fr">
-    <nav class="fr-header__social" aria-label="Redes sociais">
-      <a
-        v-for="social in socials"
-        :key="social.label"
-        :href="social.href"
-        :aria-label="social.label"
-        :target="social.href.startsWith('http') ? '_blank' : undefined"
-        :rel="social.href.startsWith('http') ? 'noopener noreferrer' : undefined"
-      >
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <path :d="social.path" />
-        </svg>
-      </a>
-    </nav>
-
     <NuxtLink to="/" class="fr-logo" :aria-label="`Space Relics — ${t('nav.home')}`" @click="onLogoClick">
       <img src="/images/nasa-logo.png" alt="NASA" width="2625" height="765" />
     </NuxtLink>
 
-    <div class="fr-header__controls">
+    <div class="fr-nav">
       <button
         type="button"
-        class="fr-control fr-label"
+        class="fr-lang"
         :aria-label="t('nav.langTo')"
         @click="toggleLang"
       >{{ lang === 'pt' ? 'PT' : 'EN' }}</button>
 
       <button
+        ref="burger"
         type="button"
-        class="fr-control fr-control--sound"
-        :aria-pressed="!muted"
-        :aria-label="muted ? t('nav.soundOn') : t('nav.soundOff')"
-        @click="toggleSound"
+        class="fr-burger"
+        :class="{ 'is-open': menuOpen }"
+        :aria-expanded="menuOpen"
+        aria-controls="site-menu"
+        :aria-label="menuOpen ? t('nav.closeMenu') : t('nav.menu')"
+        @click="toggleMenu"
       >
-        <svg viewBox="0 0 20 16" aria-hidden="true">
-          <path d="M2 6h3l4.5-3.4v10.8L5 10H2z" />
-          <path v-if="muted" d="M13 5.5l4 5M17 5.5l-4 5" />
-          <path v-else d="M13.4 5.2a3.6 3.6 0 0 1 0 5.6M15.6 3.2a6.4 6.4 0 0 1 0 9.6" />
-        </svg>
+        <span class="fr-burger__line" />
+        <span class="fr-burger__line" />
       </button>
+    </div>
 
-      <NuxtLink
-        v-if="user && route.path !== '/admin'"
-        to="/admin"
-        class="fr-profile fr-label"
-      >{{ t('nav.panel') }}</NuxtLink>
-      <NuxtLink
-        v-else-if="user"
-        to="/"
-        class="fr-profile fr-label"
-      >{{ t('nav.archive') }}</NuxtLink>
-      <button
-        v-else
-        type="button"
-        class="fr-profile fr-label"
-        :aria-expanded="active === 'profile'"
-        aria-controls="profile-panel"
-        @click="toggle('profile')"
-      >{{ t('nav.enter') }}</button>
+    <div
+      id="site-menu"
+      ref="menu"
+      class="fr-menu"
+      :class="{ 'is-open': menuOpen, 'is-contact': contactOpen }"
+      role="dialog"
+      :aria-label="t('nav.menu')"
+      @pointerdown.self="closeMenu"
+    >
+      <nav class="fr-menu__nav" :aria-label="t('nav.menu')">
+        <ul class="fr-menu__list">
+          <li
+            v-for="(item, index) in sections"
+            :key="item.id"
+            class="fr-menu__item"
+            :style="{ '--i': index }"
+          >
+            <a class="fr-menu__link" :href="`#${item.id}`" @click.prevent="goTo(item.id)">{{ t(item.key) }}</a>
+          </li>
+          <li class="fr-menu__item fr-menu__item--contact" :style="{ '--i': sections.length }">
+            <button
+              type="button"
+              class="fr-menu__link fr-menu__contact"
+              aria-controls="contact-layer"
+              :aria-expanded="contactOpen"
+              @pointerenter="onContactEnter"
+              @pointerleave="onContactLeave"
+              @focus="showContact"
+              @click="onContactClick"
+            >{{ t('nav.contact') }}</button>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="fr-menu__utils">
+        <button
+          type="button"
+          class="fr-menu__util"
+          :aria-pressed="!muted"
+          :aria-label="muted ? t('nav.soundOn') : t('nav.soundOff')"
+          @click="toggleSound"
+        >
+          <svg viewBox="0 0 20 16" aria-hidden="true">
+            <path d="M2 6h3l4.5-3.4v10.8L5 10H2z" />
+            <path v-if="muted" d="M13 5.5l4 5M17 5.5l-4 5" />
+            <path v-else d="M13.4 5.2a3.6 3.6 0 0 1 0 5.6M15.6 3.2a6.4 6.4 0 0 1 0 9.6" />
+          </svg>
+          <span>{{ t('nav.sound') }}</span>
+        </button>
+
+        <NuxtLink
+          v-if="user && route.path !== '/admin'"
+          to="/admin"
+          class="fr-menu__util"
+          @click="closeMenu"
+        >{{ t('nav.panel') }}</NuxtLink>
+        <NuxtLink
+          v-else-if="user"
+          to="/"
+          class="fr-menu__util"
+          @click="closeMenu"
+        >{{ t('nav.archive') }}</NuxtLink>
+        <button
+          v-else
+          type="button"
+          class="fr-menu__util"
+          :aria-expanded="false"
+          aria-controls="profile-panel"
+          @click="openProfile"
+        >{{ t('nav.enter') }}</button>
+      </div>
+    </div>
+
+    <div
+      id="contact-layer"
+      class="fr-contact-layer"
+      :class="{ 'is-open': contactOpen }"
+      :aria-hidden="!contactOpen"
+    >
+      <div
+        class="fr-contact-layer__cluster"
+        @pointerenter="onContactEnter"
+        @pointerleave="onContactLeave"
+      >
+        <div class="fr-contact-layer__row" :aria-label="t('nav.contactChannels')">
+          <a
+            v-for="(channel, index) in channels"
+            :key="channel.label"
+            class="fr-contact-layer__link"
+            :href="channel.href"
+            :aria-label="channel.label"
+            target="_blank"
+            rel="noopener noreferrer"
+            :style="{ '--i': index }"
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path :d="channel.path" />
+            </svg>
+          </a>
+        </div>
+        <a class="fr-contact-layer__mail" :href="`mailto:${email}`">{{ email }}</a>
+      </div>
     </div>
   </header>
 </template>

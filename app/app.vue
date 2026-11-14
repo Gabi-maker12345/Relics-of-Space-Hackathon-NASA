@@ -43,6 +43,7 @@ watch(() => route.path, (path) => {
 onMounted(async () => {
   useSound().load()
   useLocale().load()
+  usePassport().load()
   await useAuth().restore()
   await useRelics().load(true)
   initSmoothScroll()

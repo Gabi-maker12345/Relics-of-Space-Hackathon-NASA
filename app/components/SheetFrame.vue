@@ -10,18 +10,15 @@
       :aria-modal="overlay ? 'true' : undefined"
       :aria-label="label"
     >
+      <p v-if="stamp" class="sheet__stamp" aria-hidden="true">{{ stamp }}</p>
       <div class="sheet__body" data-lenis-prevent>
         <slot />
       </div>
-      <svg
+      <div
         class="sheet__progress"
-        viewBox="0 0 28 28"
         aria-hidden="true"
-        :style="{ '--progress': String(progress) }"
-      >
-        <circle class="track" cx="14" cy="14" r="13" />
-        <circle class="fill" cx="14" cy="14" r="13" />
-      </svg>
+        :style="{ '--progress': String(Math.min(progress, 0.9999)) }"
+      />
       <NuxtLink
         v-if="closeTo"
         ref="closeRef"
@@ -54,6 +51,8 @@ withDefaults(
     label?: string
     progress?: number
     glitch?: boolean
+    /** Selo de carimbo no canto superior esquerdo (passaporte). */
+    stamp?: string
   }>(),
   { progress: 0, glitch: false },
 )

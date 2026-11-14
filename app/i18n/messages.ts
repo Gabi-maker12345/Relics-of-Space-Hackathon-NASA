@@ -24,6 +24,13 @@ export const messages = {
     'nav.langTo': 'Mudar para inglês',
     'nav.soundOn': 'Ligar som',
     'nav.soundOff': 'Desligar som',
+    'nav.menu': 'Menu',
+    'nav.closeMenu': 'Fechar menu',
+    'nav.relics': 'Relíquias',
+    'nav.missions': 'Missões',
+    'nav.contact': 'Contacto',
+    'nav.contactChannels': 'Canais de contacto',
+    'nav.sound': 'Som',
 
     'status.active': 'Ativo',
     'status.silent': 'Silencioso',
@@ -38,6 +45,9 @@ export const messages = {
     'hero.phaseTwoDeck': 'Cada relíquia guarda um diário de missão. Desça para ouvir o que elas têm para contar.',
 
     'approach.title': 'As relíquias',
+
+    'passport.stamp': 'Explorado',
+    'passport.progress': '{count} de {total} exploradas',
 
     'panels.empty': 'Arquivo vazio',
     'panels.emptyTitle': 'Ainda não há relíquias publicadas.',
@@ -247,6 +257,13 @@ export const messages = {
     'nav.langTo': 'Switch to Portuguese',
     'nav.soundOn': 'Turn sound on',
     'nav.soundOff': 'Turn sound off',
+    'nav.menu': 'Menu',
+    'nav.closeMenu': 'Close menu',
+    'nav.relics': 'Relics',
+    'nav.missions': 'Missions',
+    'nav.contact': 'Contact',
+    'nav.contactChannels': 'Contact channels',
+    'nav.sound': 'Sound',
 
     'status.active': 'Active',
     'status.silent': 'Silent',
@@ -261,6 +278,9 @@ export const messages = {
     'hero.phaseTwoDeck': 'Every relic keeps a mission log. Scroll down to hear what they have to say.',
 
     'approach.title': 'The relics',
+
+    'passport.stamp': 'Explored',
+    'passport.progress': '{count} of {total} explored',
 
     'panels.empty': 'Empty archive',
     'panels.emptyTitle': 'No published relics yet.',

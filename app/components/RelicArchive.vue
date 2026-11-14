@@ -50,7 +50,7 @@ const startFlip = () => open()
 </script>
 
 <template>
-  <section ref="section" class="fr-archive" aria-labelledby="archive-title">
+  <section id="archive" ref="section" class="fr-archive" aria-labelledby="archive-title">
     <div class="fr-archive__stage">
       <div class="fr-archive__plane">
         <p :ref="el => setEl(el, 0)" class="fr-label fr-archive__eyebrow">{{ t('archive.eyebrow') }}</p>

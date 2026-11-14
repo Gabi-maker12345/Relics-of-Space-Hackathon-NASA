@@ -1,27 +1,14 @@
-import { messages, type Lang, type MessageKey } from '~/i18n/messages'
-import type { Ref } from 'vue'
+import { messages, type MessageKey } from '~/i18n/messages'
 
 export type TranslateParams = Record<string, string | number>
 
-const I18N_LANG: InjectionKey<Ref<Lang>> = Symbol('i18n-lang')
-
 /**
- * O painel fornece o seu próprio idioma: tudo o que estiver dentro do subtree
- * do admin (lista, formulário, pré-visualização, badges) traduz nesse idioma,
- * e o resto do site usa o idioma público do cabeçalho.
+ * Interface translations (FE-18). Há **um** idioma para todo o sistema,
+ * escolhido no cabeçalho (`useLocale`, persistido). Uma chave em falta cai no
+ * português, tal como a API faz para conteúdo sem tradução.
  */
-export function provideI18nLang(lang: Ref<Lang>): void {
-  provide(I18N_LANG, lang)
-}
-
-/**
- * Interface translations (FE-18). Missing keys fall back to Portuguese, which
- * is also what the API does for content without a translation.
- */
-export function useI18n(explicit?: Ref<Lang>) {
-  const override = inject(I18N_LANG, null)
-  const { lang: publicLang } = useLocale()
-  const lang = computed(() => explicit?.value ?? override?.value ?? publicLang.value)
+export function useI18n() {
+  const { lang } = useLocale()
 
   function t(key: MessageKey, params?: TranslateParams): string {
     const dict = messages[lang.value] ?? messages.pt

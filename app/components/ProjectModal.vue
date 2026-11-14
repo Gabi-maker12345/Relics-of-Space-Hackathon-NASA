@@ -3,7 +3,8 @@ import gsap from 'gsap'
 import type { Relic, RelicScene } from '~/data/relics'
 
 const { relics } = useRelics()
-const { lang } = useI18n()
+const { lang, t } = useI18n()
+const { mark, isExplored } = usePassport()
 const { activeSlug, open, close } = useProjectModal()
 const route = useRoute()
 const frame = ref<{ focusSelf: () => void } | null>(null)
@@ -127,6 +128,11 @@ const sceneCount = computed(() => Math.max(1, relic.value?.scenes?.length ?? 1))
 const progress = computed(() => (index.value + 1) / sceneCount.value)
 const hasQuiz = computed(() => (relic.value?.quiz?.length ?? 0) > 0)
 const atLastScene = computed(() => index.value >= sceneCount.value - 1)
+
+// FE-20: chegar ao último degrau do diário marca a relíquia no passaporte
+watch([atLastScene, relic], ([last, current]) => {
+  if (last && current) mark(current.id)
+}, { immediate: true })
 
 const step = (direction: number): void => {
   const next = Math.min(sceneCount.value - 1, Math.max(0, index.value + direction))
@@ -347,6 +353,7 @@ onBeforeUnmount(() => {
           :label="relic.name"
           :progress="quizOpen ? quizProgress : progress"
           :glitch="glitching"
+          :stamp="isExplored(relic.id) ? t('passport.stamp') : undefined"
           @close="close"
         >
           <RelicQuiz

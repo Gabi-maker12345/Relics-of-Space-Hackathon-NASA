@@ -9,12 +9,6 @@
         </p>
       </div>
       <div class="admin__actions">
-        <button
-          type="button"
-          class="admin__ghost admin__lang"
-          :aria-label="adminLang === 'pt' ? 'Mudar o painel para inglês' : 'Switch admin to Portuguese'"
-          @click="toggleAdminLang"
-        >{{ adminLang === 'pt' ? 'PT' : 'EN' }}</button>
         <button type="button" class="admin__ghost" @click="signOutAndLeave">{{ t('nav.exit') }}</button>
       </div>
     </header>
@@ -88,10 +82,7 @@ import { relicStatus } from '~/utils/relics'
 
 const { relics, loadedFor, load, create, update, patch, remove, error: loadError } = useRelics()
 const { user, restore, signOut } = useAuth()
-const { lang: adminLang, toggle: toggleAdminLang, load: loadAdminLang } = useAdminLocale()
-const { t } = useI18n(adminLang)
-provideI18nLang(adminLang)
-useHead(() => ({ htmlAttrs: { lang: adminLang.value === 'pt' ? 'pt-PT' : 'en' } }))
+const { t } = useI18n()
 const { open: openPanel } = usePanels()
 
 const formOpen = ref(false)
@@ -112,7 +103,6 @@ function flash(message: string): void {
 }
 
 onMounted(async () => {
-  loadAdminLang()
   await restore()
   if (!user.value) {
     openPanel('profile')
@@ -244,10 +234,6 @@ function requestLogin(): void {
 }
 
 .admin__actions { display: flex; gap: 10px; }
-
-.admin__lang {
-  letter-spacing: 0.14em;
-}
 
 .admin__ghost,
 .admin__primary {
