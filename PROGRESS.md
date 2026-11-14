@@ -668,3 +668,26 @@ diário aberto pelo cartão.
 - **Docs:** README, `docs/database.md` e `docs/testing.md` atualizados.
 
 
+## Iteração 33 — consolidação da UI do master (Nuxt)
+
+- **Port do commit `6919d94`** (última linha Nuxt antes da migração para Next)
+  para o contrato atual da API, sem tocar em `master`:
+  - **Badges e local:** `StatusBadge` e `LOCATION_LABEL` nos painéis, na sheet e
+    nos cartões do admin (`Activo`/`Silencioso`/`Perdido`).
+  - **Capa vídeo:** `RelicCover` renderiza `<video>` com `poster` quando a capa é
+    vídeo e pausa os inativos; os painéis usam `cover`/`scenes` da API.
+  - **Link direto:** `/#slug` abre o diário; fechar limpa o hash; `router.options`
+    evita scroll para hashes sem âncora.
+  - **Narração:** áudio por passo (`audio_url`), um de cada vez, pré-carga do
+    passo seguinte, ducking da trilha e mute global persistido (`useSound`).
+  - **PT/EN de UI:** seletor no header, `<html lang>` dinâmico e escolha
+    persistida (`useLocale`); a copy continua PT (FE-18).
+  - **Admin:** estado/local, áudio de introdução e áudio por cena no formulário;
+    publicar/despublicar com `patch` parcial, toasts, cartão de rascunho e
+    redirecionamento para o login sem sessão.
+  - **Layout:** estado vazio dos painéis e sheet em ecrã inteiro no telemóvel.
+- **Robustez:** a lista pública não traz `scenes`, por isso o detalhe é carregado
+  por `loadDetail` (com retry para deep links) e a sheet tolera `scenes` vazio.
+- **Verificação:** 130 unitários verdes (`tests/relics-ui.test.ts`), typecheck,
+  lint (0 erros) e build; screenshots via Chrome/CDP da home, painel, modal
+  `/#spirit`, admin e formulário. Sem alterações a `master`.

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Relic, RelicScene } from '~/data/relics'
 import { buildWordTimings, wordIndexAt } from '~/utils/narration'
+import { LOCATION_LABEL, relicLocation, relicStatus } from '~/utils/relics'
 
 const props = defineProps<{ relic: Relic; index: number; armed?: boolean }>()
 const emit = defineEmits<{ 'update:index': [index: number]; 'open-media': [scene: RelicScene]; typing: [active: boolean] }>()
@@ -8,6 +9,7 @@ const emit = defineEmits<{ 'update:index': [index: number]; 'open-media': [scene
 const { mode: narrationMode, captions: narrationCaptions, currentTime, duration, speechWord, steps: narrationSteps, stepIndex } = useNarration()
 
 const scroller = ref<HTMLElement | null>(null)
+
 const typed = ref('')
 const typing = ref(false)
 let typeTimer = 0
@@ -122,7 +124,9 @@ const goTo = (index: number): void => {
   el.scrollTo({ top: index * el.clientHeight, behavior: 'smooth' })
 }
 
-onBeforeUnmount(() => clearTyping())
+onBeforeUnmount(() => {
+  clearTyping()
+})
 
 defineExpose({ goTo })
 </script>
@@ -130,8 +134,11 @@ defineExpose({ goTo })
 <template>
   <div class="rsheet">
     <aside class="rsheet__info">
-      <p class="rsheet__eyebrow" data-sheet-item>{{ relic.mission }}</p>
+      <p class="rsheet__eyebrow" data-sheet-item>
+        {{ relic.mission }} · {{ LOCATION_LABEL[relicLocation(relic)] }}
+      </p>
       <h2 class="sheet__title" data-sheet-item>{{ relic.name }}</h2>
+      <p class="rsheet__state" data-sheet-item><StatusBadge :status="relicStatus(relic)" /></p>
 
       <div class="rsheet__copy" data-sheet-item>
         <Transition name="swap" mode="out-in">
@@ -215,6 +222,8 @@ defineExpose({ goTo })
 </template>
 
 <style scoped>
+.rsheet__state { margin: 0; }
+
 .swap-enter-active,
 .swap-leave-active {
   transition:

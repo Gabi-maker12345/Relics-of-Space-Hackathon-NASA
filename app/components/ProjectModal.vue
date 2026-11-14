@@ -3,7 +3,8 @@ import gsap from 'gsap'
 import type { Relic, RelicScene } from '~/data/relics'
 
 const { relics } = useRelics()
-const { activeSlug, close } = useProjectModal()
+const { activeSlug, open, close } = useProjectModal()
+const route = useRoute()
 const frame = ref<{ focusSelf: () => void } | null>(null)
 const sheet = ref<{ goTo: (index: number) => void } | null>(null)
 let lastFocus: HTMLElement | null = null
@@ -14,25 +15,45 @@ const relic = computed(() => {
   return relics.value.find(r => r.id === activeSlug.value) ?? null
 })
 
+let detailRequest: Promise<void> | null = null
+let detailRequestSlug = ''
+
+/** A lista pública é leve (e o seed pode estar desatualizado): o detalhe manda. */
+async function loadDetail(slug: string): Promise<void> {
+  if (!slug) return
+  if (detailRequest && detailRequestSlug === slug) return detailRequest
+
+  detailRequestSlug = slug
+  detailRequest = (async () => {
+    try {
+      const full = await $fetch<Relic>(`/api/public/relics/${encodeURIComponent(slug)}`)
+      if (!full || activeSlug.value !== slug) return
+      detail.value = full
+      relics.value = relics.value.map(r => (r.id === slug ? { ...r, ...full } : r))
+      typedNarration.setSteps(full.steps ?? [])
+      if (armed.value) {
+        typedNarration.goTo(full.steps?.[0]?.audio_url ? 0 : Math.min(1, Math.max(0, (full.steps?.length ?? 1) - 1)))
+        if (full.steps?.[0]?.audio_url) void typedNarration.play()
+      }
+    }
+    catch {
+      // preserve current: a lista continua a renderizar
+    }
+  })().finally(() => {
+    detailRequest = null
+  })
+
+  return detailRequest
+}
+
 watch(
   () => activeSlug.value,
-  async (slug) => {
+  (slug) => {
     if (!slug) {
       detail.value = null
       return
     }
-    const current = relics.value.find(r => r.id === slug)
-    if (!current?.scenes || current.scenes.length === 0) {
-      try {
-        const full = await $fetch<Relic>(`/api/public/relics/${encodeURIComponent(slug)}`)
-        if (full && activeSlug.value === slug) {
-          detail.value = full
-          relics.value = relics.value.map(r => (r.id === slug ? { ...r, ...full } : r))
-        }
-      } catch {
-        // preserve current
-      }
-    }
+    void loadDetail(slug)
   },
   { immediate: true },
 )
@@ -47,6 +68,8 @@ const soundtrack = useSoundtrack()
 
 let glitchTimers: number[] = []
 let glitchVoice: HTMLAudioElement | null = null
+let hashTimer = 0
+let hashTries = 0
 
 /** O "diário perdido" pisca 3 vezes, cada uma com o seu som. */
 function runGlitch(): void {
@@ -81,7 +104,7 @@ function clearGlitch(): void {
   glitching.value = false
 }
 
-const sceneCount = computed(() => relic.value?.scenes?.length ?? 1)
+const sceneCount = computed(() => Math.max(1, relic.value?.scenes?.length ?? 1))
 const progress = computed(() => (index.value + 1) / sceneCount.value)
 
 const step = (direction: number): void => {
@@ -121,9 +144,75 @@ const onLeave = (el: Element, done: () => void): void => {
 }
 
 const typedNarration = useNarration()
+const sound = useSound()
 const introPlaying = computed(() => typedNarration.stepIndex.value === 0 && typedNarration.playing.value)
 
+// O mute do cabeçalho (trilha) é o mesmo da narração.
+watch(sound.muted, value => typedNarration.setMuted(value), { immediate: true })
+
+/** `/#slug` abre o diário; fechar limpa o hash (link direto partilhável). */
+function syncHash(): void {
+  if (!import.meta.client) return
+  const target = activeSlug.value ? `#${activeSlug.value}` : ''
+  if (target) {
+    if (window.location.hash !== target) window.history.replaceState(window.history.state, '', target)
+    return
+  }
+  if (!window.location.hash) return
+  window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+}
+
+function openFromHash(): void {
+  if (!import.meta.client || window.location.pathname !== '/') return
+  const id = window.location.hash.replace(/^#/, '')
+  if (!id) return
+  if (relics.value.some(item => item.id === id)) {
+    open(id)
+    void loadDetail(id)
+  }
+}
+
+/** O hash inicial pode chegar depois da hidratação; tenta durante ~3 s. */
+function scheduleHashOpen(): void {
+  if (!import.meta.client) return
+  hashTries = 0
+  const attempt = (): void => {
+    openFromHash()
+    if (!activeSlug.value && hashTries++ < 30) {
+      hashTimer = window.setTimeout(attempt, 100)
+    }
+  }
+  attempt()
+}
+
+// A lista pode chegar depois do primeiro mount (API ou hidratação); tenta de novo
+// quando os ids mudam e uma última vez no tick seguinte.
+watch(
+  () => relics.value.map(item => item.id).join('|'),
+  () => { void nextTick(openFromHash) },
+)
+
+// O router só resolve o hash depois da hidratação em alguns deep links.
+watch(
+  () => route.hash,
+  () => { void nextTick(openFromHash) },
+  { immediate: true },
+)
+
+let skipIndexSync = false
+let openedId = ''
+
 watch(relic, (value) => {
+  // O detalhe chega depois da lista: é enriquecimento, não uma nova abertura.
+  const id = value?.id ?? ''
+  if (id !== '' && id === openedId) {
+    syncHash()
+    return
+  }
+  openedId = id
+
+  // O reset abaixo não pode disparar o mapeamento cena→passo (mataria a intro).
+  if (index.value !== 0) skipIndexSync = true
   index.value = 0
   lightbox.value = null
   if (!import.meta.client) return
@@ -145,6 +234,7 @@ watch(relic, (value) => {
     lastFocus?.focus?.()
     lastFocus = null
   }
+  syncHash()
 }, { flush: 'post' })
 
 // A introdução só arranca depois do glitch (o clique que abriu já autorizou áudio).
@@ -157,6 +247,10 @@ watch(armed, (ready) => {
 
 // Cada cena corresponde ao passo seguinte (steps[0] é a introdução).
 watch(index, (next) => {
+  if (skipIndexSync) {
+    skipIndexSync = false
+    return
+  }
   if (introPlaying.value) return
   const step = next + 1
   if (typedNarration.stepIndex.value !== step) typedNarration.goTo(step)
@@ -208,9 +302,15 @@ function onKey(e: KeyboardEvent): void {
   }
 }
 
-onMounted(() => window.addEventListener('keydown', onKey))
+onMounted(() => {
+  window.addEventListener('keydown', onKey)
+  window.addEventListener('hashchange', openFromHash)
+  void nextTick(scheduleHashOpen)
+})
 onBeforeUnmount(() => {
+  window.clearTimeout(hashTimer)
   window.removeEventListener('keydown', onKey)
+  window.removeEventListener('hashchange', openFromHash)
   clearGlitch()
   typedNarration.stop()
 })

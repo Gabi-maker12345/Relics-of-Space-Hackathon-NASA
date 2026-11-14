@@ -16,6 +16,7 @@ export default defineConfig({
       'tests/nasa.test.ts',
       'tests/relic-filters.test.ts',
       'tests/narration-timing.test.ts',
+      'tests/relics-ui.test.ts',
     ],
     exclude: ['**/node_modules/**', '**/.nuxt/**', '**/.output/**'],
   },

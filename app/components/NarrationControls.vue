@@ -1,8 +1,14 @@
 <script setup lang="ts">
-const { playing, muted, captions, steps, stepIndex, toggle, setMuted, toggleCaptions, hasNarration } = useNarration()
+const { steps, stepIndex, playing, toggle: togglePlay, setMuted, toggleCaptions, captions, hasNarration } = useNarration()
+const { muted, toggle: toggleSound } = useSound()
 
 const total = computed(() => steps.value.length)
 const available = computed(() => hasNarration())
+
+function toggleMute(): void {
+  toggleSound()
+  setMuted(muted.value)
+}
 </script>
 
 <template>
@@ -13,7 +19,7 @@ const available = computed(() => hasNarration())
       :aria-label="playing ? 'Pausar narração' : 'Tocar narração'"
       :aria-pressed="playing"
       :disabled="!available"
-      @click="toggle()"
+      @click="togglePlay()"
     >
       <svg v-if="!playing" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
         <path d="M4 2.5 13 8l-9 5.5z" fill="currentColor" />
@@ -29,7 +35,7 @@ const available = computed(() => hasNarration())
       class="narr-btn"
       :aria-label="muted ? 'Ativar som da narração' : 'Silenciar narração'"
       :aria-pressed="muted"
-      @click="setMuted(!muted)"
+      @click="toggleMute()"
     >
       <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
         <path d="M2.5 6h2.2L8 3.4v9.2L4.7 10H2.5z" fill="currentColor" />

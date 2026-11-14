@@ -18,7 +18,15 @@
 // fiação dos painéis (Escape, clique fora, engine)
 usePanels()
 
+const { lang } = useLocale()
+useHead(() => ({ htmlAttrs: { lang: lang.value === 'pt' ? 'pt-PT' : 'en' } }))
+
+const { muted } = useSound()
+watch(muted, () => useSoundtrack().refresh())
+
 onMounted(async () => {
+  useSound().load()
+  useLocale().load()
   await useAuth().restore()
   await useRelics().load(true)
   initSmoothScroll()

@@ -14,7 +14,6 @@ const duration = ref(0)
 const speechWord = ref(-1)
 
 let audio: HTMLAudioElement | null = null
-let utterance: SpeechSynthesisUtterance | null = null
 
 function ensureAudio(): HTMLAudioElement {
   if (audio) return audio
@@ -63,7 +62,6 @@ function captionOf(step: RelicStep | undefined): string {
 function stopSpeech(): void {
   if (!import.meta.client || !('speechSynthesis' in window)) return
   window.speechSynthesis.cancel()
-  utterance = null
   speechWord.value = -1
 }
 
@@ -89,7 +87,6 @@ function speak(text: string): void {
     speechWord.value = -1
     useSoundtrack().duck(false)
   }
-  utterance = next
   speechWord.value = 0
   mode.value = 'speech'
   synth.speak(next)

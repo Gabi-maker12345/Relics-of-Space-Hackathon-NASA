@@ -351,6 +351,16 @@ a {
   .rsheet__body { font-size: 1.55rem; }
 }
 
+@media (max-width: 650px) {
+  .sheet {
+    width: 100%;
+    margin: 0;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rsheet__media,
   .rsheet__dot,
