@@ -61,6 +61,7 @@
    - `Project URL` → `NUXT_PUBLIC_SUPABASE_URL`
    - `anon/publishable key` → `NUXT_PUBLIC_SUPABASE_KEY`
    - `service_role/secret key` → `NUXT_SUPABASE_SECRET_KEY` (só no servidor/Vercel)
+   - `SUPABASE_STORAGE_BASE` → `https://<project-ref>.supabase.co/storage/v1/object/public/relic-media/assets` (público, usado pelo seed)
 3. Ligar o CLI ao projeto:
 
 ```bash
@@ -79,15 +80,21 @@ where table_schema = 'public' and table_name = 'relics'
   and column_name in ('reference_url', 'is_extra', 'intro_audio_url');
 ```
 
-4. Aplicar o seed de demonstração **uma vez** (atenção: substitui as relíquias
+4. Popular o bucket antes do seed (idempotente; sobe `public/images` + `public/media` para `relic-media/assets/...`):
+
+```bash
+npm run media:upload
+```
+
+5. Aplicar o seed de demonstração **uma vez** (atenção: substitui as relíquias
    de demonstração por `slug`; não correr depois de editar essas relíquias no
-   admin):
+   admin). O gerador emite URLs absolutos do Storage:
 
 ```bash
 psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/seed.sql
 ```
 
-5. Criar o admin com as variáveis cloud:
+6. Criar o admin com as variáveis cloud:
 
 ```bash
 NUXT_PUBLIC_SUPABASE_URL=... \
@@ -97,11 +104,16 @@ ADMIN_EMAIL=... ADMIN_PASSWORD=... \
 npm run setup:admin
 ```
 
-6. Verificar:
+7. Verificar:
    - bucket `relic-media` existe e é público;
    - RLS ativo em todas as tabelas;
    - `select count(*) from relics;` = 12 (ou o scope decidido);
-   - `select count(*) from relic_media where audio_url is not null;` = 24.
+   - `select count(*) from relic_media where audio_url is not null;` = 24;
+   - nenhum URL local:
+     ```sql
+     select count(*) from relic_media where url like '/%' or audio_url like '/%'; -- 0
+     select count(*) from relics where intro_audio_url like '/%'; -- 0
+     ```
 
 ## 2. Vercel (Gabi)
 

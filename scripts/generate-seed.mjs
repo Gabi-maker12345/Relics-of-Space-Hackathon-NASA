@@ -13,6 +13,15 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { loadEnvFile } from 'node:process'
+import { storageBase, toStorageUrl } from './media-paths.mjs'
+
+try {
+  loadEnvFile()
+}
+catch {
+  // No .env file: use the process environment (CI, Vercel, ...).
+}
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const datasetPath = join(root, 'data', 'relics.json')
@@ -26,6 +35,20 @@ const LOCATIONS = new Set(['moon', 'mars', 'deep_space'])
 function fail(message) {
   console.error(`seed: ${message}`)
   process.exit(1)
+}
+
+if (!storageBase()) {
+  fail('SUPABASE_STORAGE_BASE is missing. Set it to the public URL of the relic-media/assets folder.')
+}
+
+/** Maps a seed value to an absolute Storage URL (null stays null). */
+function asset(value, context) {
+  try {
+    return toStorageUrl(value)
+  }
+  catch (error) {
+    fail(`${context}: ${error instanceof Error ? error.message : error}`)
+  }
 }
 
 function sql(value) {
@@ -142,7 +165,7 @@ const relicRows = dataset.relics.map(relic => [
     sql(relic.ratio || '16 / 9'),
     sql(relic.reference_url),
     relic.is_extra ? 'true' : 'false',
-    sql(relic.intro_audio_url ?? null),
+    sql(asset(relic.intro_audio_url, `${relic.slug}.intro_audio_url`)),
   ].join(', '),
   ')',
 ].join(''))
@@ -175,14 +198,14 @@ for (const relic of dataset.relics) {
       sql(media.id),
       sql(relic.id),
       sql(media.type),
-      sql(`/images/relics/${media.file}`),
-      sql(media.poster_url ?? null),
+      sql(asset(`/images/relics/${media.file}`, `${relic.slug}.${media.file}`)),
+      sql(asset(media.poster_url, `${relic.slug}.${media.file}.poster`)),
       sql(media.kicker),
       sql(media.title),
       sql(media.caption),
       sql(media.credit),
       sql(media.source_url ?? null),
-      sql(media.audio_url ?? null),
+      sql(asset(media.audio_url, `${relic.slug}.${media.file}.audio`)),
       sqlNumber(position),
     ].join(', ')})`)
   })
@@ -203,6 +226,10 @@ push('', 'commit;', '')
 
 const output = lines.join('\n')
 const check = process.argv.includes('--check')
+
+if (/['"]\/(?:images|media)\//.test(output)) {
+  fail('seed.sql still contains relative asset paths. Set SUPABASE_STORAGE_BASE and regenerate.')
+}
 
 if (check) {
   const current = existsSync(outputPath) ? readFileSync(outputPath, 'utf8') : ''

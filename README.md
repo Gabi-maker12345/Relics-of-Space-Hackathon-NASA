@@ -84,11 +84,14 @@ npm run supabase:stop     # pára os containers
 
 O seed de demonstração é gerado a partir de
 [`data/relics.json`](data/relics.json), a fonte única partilhada com o fallback
-SSR do front (`app/data/relics.ts`). Depois de editar o JSON:
+SSR do front (`app/data/relics.ts`). O gerador escreve **URLs absolutos** do
+Storage (`relic-media/assets/...`) usando `SUPABASE_STORAGE_BASE`; o bucket tem
+de ter os ficheiros antes de servir o site:
 
 ```bash
-npm run seed:generate     # regenera supabase/seed.sql
-npm run seed:check        # falha se o SQL estiver desatualizado (corre na CI)
+npm run media:upload      # sobe public/images + public/media para o bucket
+npm run seed:generate     # regenera supabase/seed.sql com URLs do Storage
+npm run seed:check        # falha se o SQL estiver desatualizado ou tiver caminhos locais
 npm run narration:generate # gera os MP3 com Edge TTS e atualiza o JSON/seed
 npm run narration:check    # falha se faltar algum MP3 (corre na CI)
 ```
@@ -182,7 +185,8 @@ Supabase Auth e garante a linha correspondente em `admin_users`.
 | `npm run setup:admin` | cria o administrador inicial |
 | `npm run smoke` | valida login, sessão, guarda admin e RLS |
 | `npm run seed:generate` | regenera `supabase/seed.sql` a partir de `data/relics.json` |
-| `npm run seed:check` | verifica que o seed gerado está atualizado |
+| `npm run seed:check` | verifica que o seed gerado está atualizado e sem caminhos locais |
+| `npm run media:upload` | sobe `public/images` + `public/media` para o bucket e repara URLs locais |
 | `npm run narration:generate` | regenera os MP3 de narração com Edge TTS |
 | `npm run narration:check` | verifica que todos os MP3 de narração existem |
 | `npm run supabase:start` | arranca o Supabase local |

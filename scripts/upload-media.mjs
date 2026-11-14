@@ -14,6 +14,7 @@
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { join, relative, extname } from 'node:path'
+import { storageAssetPath, storageAssetUrl } from './media-paths.mjs'
 
 const BUCKET = 'relic-media'
 const ROOTS = ['public/images', 'public/media']
@@ -54,6 +55,10 @@ if (!url || !key) {
   process.exit(1)
 }
 
+// The public URL must belong to the same project we are uploading to; ignore
+// SUPABASE_STORAGE_BASE here (it may point at another environment).
+const targetEnv = { ...env, SUPABASE_STORAGE_BASE: '' }
+
 const auth = { apikey: key, Authorization: `Bearer ${key}` }
 
 function walk(dir) {
@@ -68,20 +73,6 @@ function walk(dir) {
 
 function publicUrl(objectPath) {
   return `${url}/storage/v1/object/public/${BUCKET}/${objectPath}`
-}
-
-/** O Storage só aceita chaves ASCII: normaliza cada segmento do caminho. */
-function slugifyPath(path) {
-  return path
-    .split(/[\\/]/)
-    .map(segment => segment
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9._-]+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, ''))
-    .filter(Boolean)
-    .join('/')
 }
 
 /** '/images/relics/x.jpg' → URL público do ficheiro já enviado. */
@@ -99,9 +90,9 @@ async function ensureBucket() {
 
 async function upload(file) {
   const rel = relative('public', file).split('\\').join('/')
-  const objectPath = `assets/${slugifyPath(rel)}`
+  const objectPath = storageAssetPath(rel)
   const localRef = `/${rel}`
-  localToPublic.set(localRef, publicUrl(objectPath))
+  localToPublic.set(localRef, storageAssetUrl(rel, targetEnv))
   const body = readFileSync(file)
   const type = MIME[extname(file).toLowerCase()] || 'application/octet-stream'
   if (dryRun) return objectPath

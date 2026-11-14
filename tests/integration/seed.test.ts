@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { describe, expect, it } from 'vitest'
 import type { Database } from '../../app/types/database.types'
 import dataset from '../../data/relics.json'
+import { toStorageUrl } from '../../scripts/media-paths.mjs'
 
 try {
   loadEnvFile()
@@ -36,7 +37,7 @@ describe.skipIf(!serviceKey || !anonKey)('demo seed (BE-14 integration)', () => 
       expect(row!.id).toBe(relic.id)
       expect(row!.published).toBe(true)
       expect(row!.cover_media_id).toBe(relic.media[0].id)
-      expect(row!.intro_audio_url).toBe(relic.intro_audio_url)
+      expect(row!.intro_audio_url).toBe(toStorageUrl(relic.intro_audio_url, process.env))
     }
   })
 
@@ -67,7 +68,7 @@ describe.skipIf(!serviceKey || !anonKey)('demo seed (BE-14 integration)', () => 
         expect(item.source_url, `${relic.slug}/${item.id}`).toMatch(/^https:\/\/images\.nasa\.gov\/details\//)
         const source = relic.media.find(entry => entry.id === item.id)
         expect(source, `${relic.slug}/${item.id}`).toBeDefined()
-        expect(item.audio_url, `${relic.slug}/${item.id}`).toBe(source!.audio_url)
+        expect(item.audio_url, `${relic.slug}/${item.id}`).toBe(toStorageUrl(source!.audio_url, process.env))
       }
     }
   })

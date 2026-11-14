@@ -21,6 +21,7 @@ Unit tests are pure Node tests — no Supabase stack required:
 | `tests/narration-timing.test.ts` | Word timings for captions: character offsets, punctuation pauses and the active word at a given time. |
 | `tests/relic-filters.test.ts` | FE-05 query filters: valid location/status/search, unknown values dropped, empty values removed and URL query round-trip. |
 | `tests/relics-ui.test.ts` | UI helpers: video URL detection, status/location labels, published default and extra flag. |
+| `tests/media-paths.test.ts` | Storage path conventions: `assets/...` prefix, slugification, base from env/project URL and absolute URL conversion. |
 | `tests/nasa.test.ts` | NASA client: credit normalization (`JPL` → `NASA/JPL-Caltech`, unknown creators preserved), image/video/poster selection, search normalization that filters audio, and clear 400/502 errors. |
 
 ## Integration tests (local Supabase required)
