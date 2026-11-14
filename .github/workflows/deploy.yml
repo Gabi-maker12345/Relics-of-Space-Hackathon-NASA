@@ -46,16 +46,12 @@ jobs:
       - name: Install Vercel CLI
         run: npm i -g vercel@latest
 
-      - name: Pull project settings and env
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
+      # Build no Vercel (mesmo builder do deploy nativo); evita o prebuilt
+      # local, que exige o preset Nuxt no runner.
       - name: Deploy
         id: deploy
         run: |
-          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Publicado em $url"
 
