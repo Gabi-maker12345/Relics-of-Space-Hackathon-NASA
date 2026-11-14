@@ -19,6 +19,10 @@ export function initSmoothScroll(): void {
     smoothWheel: true,
   })
 
+  if (import.meta.dev) {
+    ;(window as unknown as Record<string, unknown>).__lenis = instance
+  }
+
   const loop = (time: number) => {
     instance?.raf(time)
     raf = requestAnimationFrame(loop)

@@ -5,7 +5,9 @@ import type { RouterConfig } from '@nuxt/schema'
  * existe no DOM, o router não deve tentar rolar nem avisar.
  */
 export default <RouterConfig>{
-  scrollBehavior(to, _from, savedPosition) {
+  scrollBehavior(to, from, savedPosition) {
+    if (typeof document !== 'undefined' && document.documentElement.dataset.act) return false
+    if (to.path === from.path && to.hash === from.hash) return false
     if (savedPosition) return savedPosition
     if (to.hash) {
       if (typeof document === 'undefined') return { top: 0 }

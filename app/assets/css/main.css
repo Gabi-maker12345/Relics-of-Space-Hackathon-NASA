@@ -60,6 +60,13 @@ html[data-panel="profile"] .fr-progress {
   transition: opacity 0.3s ease;
 }
 
+/* Cena 3D isolada: enquanto o gate está aberto a página não rola. */
+html.is-gated,
+html.is-gated body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 .fr-header {
   transition: opacity 0.3s ease;
 }

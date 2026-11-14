@@ -17,8 +17,10 @@ export function useAct() {
     if (locked) {
       lenis?.stop()
       document.documentElement.classList.add('is-gated')
+      document.documentElement.style.overflow = 'hidden'
       document.body.style.overflow = 'hidden'
     } else {
+      document.documentElement.style.overflow = ''
       document.body.style.overflow = ''
       document.documentElement.classList.remove('is-gated')
       lenis?.start()
@@ -37,6 +39,7 @@ export function useAct() {
   const enter = async (): Promise<void> => {
     if (act.value !== 'cosmos') return
     act.value = 'scene'
+    lockPage(true)
     document.documentElement.dataset.act = 'scene'
     document.documentElement.dataset.scene = 'portfolio'
     await nextTick()

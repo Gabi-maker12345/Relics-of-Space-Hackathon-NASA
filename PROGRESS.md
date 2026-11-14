@@ -723,3 +723,20 @@ diário aberto pelo cartão.
   smoke tests, QA de AR, rollback e pendências).
 - **Decisão:** áudio sintético aprovado para a demo/hackathon; provider oficial
   e vozes gravadas ficam para depois.
+
+
+## FE-15 + FE-16 — áudio no CRUD e pré-visualização ao vivo
+
+- `AudioField.vue`: campo de áudio reutilizável com URL, **Carregar áudio** (upload real para o
+  storage com progresso), **Gerar áudio** (desativado, marcado TTS — fica para o BE-10), mini player
+  (play/pausa, barra, tempo) e "Limpar". `uploadToStorage` passou para `composables/useUpload.ts`.
+- Formulário: áudio de introdução na secção 01; áudio por mídia dentro do cartão da cena, opção
+  **Vídeo mudo + narração** (`mute_video`) e aviso quando a mídia está preenchida mas não tem áudio
+  nem legenda. `collect()` envia `mute_video`.
+- `RelicPreview.vue`: botão **Preview** no canto superior direito do modal; janela flutuante
+  arrastável pelo cabeçalho, expansível (0.42 → 0.8), sempre reencaixada no viewport
+  (`ResizeObserver`), com alternância **Painel / Modal**. O modo Modal reutiliza `SheetFrame` +
+  `RelicSheet` a 1:1 dentro de um wrapper com `transform: scale`, por isso é o mesmo componente do
+  site publico; os dados vêm do rascunho em tempo real.
+- Correção de suporte: a grelha do admin deixou de renderizar a lista pública (sem cenas) logo
+  após o login — passou a esperar por `loadedFor === 'admin'`.

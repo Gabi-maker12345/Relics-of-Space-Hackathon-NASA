@@ -1,5 +1,5 @@
 import type { RelicStep } from '#shared/types/relic'
-import { wordIndexAtChar } from '~/utils/narration'
+import { splitNarrationWords, wordIndexAtChar } from '~/utils/narration'
 
 export type NarrationMode = 'idle' | 'audio' | 'speech'
 
@@ -14,6 +14,10 @@ const duration = ref(0)
 const speechWord = ref(-1)
 
 let audio: HTMLAudioElement | null = null
+let speechSession = 0
+let speechFrame = 0
+let speechStartedAt = 0
+let lastBoundaryAt = 0
 
 function ensureAudio(): HTMLAudioElement {
   if (audio) return audio
@@ -59,10 +63,42 @@ function captionOf(step: RelicStep | undefined): string {
   return (step.caption || step.title || '').trim()
 }
 
+function stopSpeechLoop(): void {
+  if (speechFrame) cancelAnimationFrame(speechFrame)
+  speechFrame = 0
+}
+
 function stopSpeech(): void {
-  if (!import.meta.client || !('speechSynthesis' in window)) return
-  window.speechSynthesis.cancel()
+  speechSession += 1
+  stopSpeechLoop()
+  if (import.meta.client && 'speechSynthesis' in window) window.speechSynthesis.cancel()
   speechWord.value = -1
+}
+
+/**
+ * Sem `onboundary` (vozes que não o emitem), o destaque avança por estimativa:
+ * ~14 caracteres por segundo. As boundaries reais, quando existem, corrigem.
+ */
+function startSpeechEstimate(session: number, text: string): void {
+  const words = splitNarrationWords(text)
+  if (words.length === 0) return
+  const chars = Math.max(1, text.replace(/\s+/g, ' ').length)
+  const estimateMs = Math.max(1200, (chars / 14) * 1000)
+  speechStartedAt = performance.now()
+  lastBoundaryAt = 0
+
+  const tick = (): void => {
+    if (session !== speechSession || mode.value !== 'speech' || !playing.value) {
+      speechFrame = 0
+      return
+    }
+    if (performance.now() - lastBoundaryAt > 400) {
+      const progress = Math.min(0.999, (performance.now() - speechStartedAt) / estimateMs)
+      speechWord.value = Math.floor(progress * words.length)
+    }
+    speechFrame = requestAnimationFrame(tick)
+  }
+  speechFrame = requestAnimationFrame(tick)
 }
 
 function speak(text: string): void {
@@ -73,23 +109,33 @@ function speak(text: string): void {
     return
   }
 
+  const session = ++speechSession
   const synth = window.speechSynthesis
   synth.cancel()
+
   const next = new SpeechSynthesisUtterance(text)
   next.lang = 'pt-BR'
   next.rate = 1
   next.onboundary = (event) => {
-    if (event.name === 'word') speechWord.value = wordIndexAtChar(text, event.charIndex)
+    if (session !== speechSession || event.name !== 'word') return
+    lastBoundaryAt = performance.now()
+    speechWord.value = wordIndexAtChar(text, event.charIndex)
   }
-  next.onend = () => {
-    if (mode.value !== 'speech') return
+  const finish = (): void => {
+    // Utterances canceladas também disparam onend: ignora sessões antigas.
+    if (session !== speechSession) return
     playing.value = false
     speechWord.value = -1
+    stopSpeechLoop()
     useSoundtrack().duck(false)
   }
+  next.onend = finish
+  next.onerror = finish
+
   speechWord.value = 0
   mode.value = 'speech'
   synth.speak(next)
+  startSpeechEstimate(session, text)
 }
 
 async function play(): Promise<void> {
