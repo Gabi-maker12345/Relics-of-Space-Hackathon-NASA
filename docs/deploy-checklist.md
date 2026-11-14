@@ -22,6 +22,19 @@
 
 **O que não vai para a Vercel:** `ADMIN_PASSWORD`, seed SQL, chaves privadas em texto no chat/repo. O admin é criado por nós no Supabase; a Gabi não precisa da password.
 
+## Estado da execução (14 nov)
+
+- [x] Projeto Supabase cloud criado (`atcfpxpbhmxeqrnmrblq`).
+- [x] Migrações aplicadas (`20261109000100` + `20261114000100`).
+- [x] Seed aplicado: **12 relíquias / 48 factos / 24 mídias / 12 intros / 24 cenas com áudio**.
+- [x] Admin criado (`admin@spacerelics.space`).
+- [x] Bucket `relic-media` público, limite 50 MB, MIME types de imagem/vídeo/áudio.
+- [x] RLS verificado: anon lê 12 relíquias; escrita anon devolve `401 / 42501`.
+- [x] Smoke Nuxt contra o cloud: lista 12, detalhe Spirit com áudio, login admin, lista admin 12.
+- [ ] Vercel (Gabi): env + deploy + domínio.
+- [ ] Smoke de produção: `206` para áudio/vídeo, imagens, login, admin.
+- [ ] Scope final/FE pendentes.
+
 ## 0. Antes de tocar em produção
 
 - [ ] Scope da demo confirmado (12 relíquias atuais ou 13 categorias oficiais).
