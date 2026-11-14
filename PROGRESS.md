@@ -909,13 +909,19 @@ diário aberto pelo cartão.
   de nomes (SVG de linhas, brilhos, morph estrela/infinito guiado pelo scroll) e passou a uma
   órbita de capas — a adaptação do Orbit Images: as 12 relíquias publicadas em elipse, uma volta
   a cada 42 s, com profundidade (frente maior/mais opaca, trás menor/esbatida) e z-index por
-  camada, como no componente original (depth 0.5, intro de 1,3 s a abrir do ponto da frente).
+  camada, como no componente original (depth 0.5).
   As capas são espaçadas por comprimento de arco (720 amostras, como o path do original) para
   não se juntarem nos extremos da elipse.
-- **Linha da órbita**: borda de 1 px a 18% do paper, elipse centrada nas capas (2·rx × 2·ry),
-  aparece com a entrada da secção.
+- **Revelação pelo scroll**: a secção é uma pista de 240vh com palco sticky de 100svh. No topo
+  não há capas; cada uma acende numa janela própria do progresso (início 0.08, passo 0.055,
+  duração 0.16 — termina em 0.84), com opacidade, escala (0.62→1) e blur (7px→0) suaves.
+  Ao subir, a cascata desfaz-se pela mesma ordem.
+- **Linha da órbita**: borda de 1 px a 18% do paper, elipse centrada nas capas (2·rx × 2·ry);
+  entra no primeiro terço do scroll (opacidade 0→1). O alpha da cor e a opacidade do elemento
+  estavam a multiplicar-se (18% × 0.18 ≈ 3%) e a linha desaparecia — a opacidade agora é só a
+  do fade.
 - **Interação**: arrastar gira a órbita (com inércia); `touch-action: pan-y` mantém o scroll
   vertical; o rAF só corre com a secção visível (IntersectionObserver + ResizeObserver);
-  `prefers-reduced-motion` fixa as capas sem rotação.
-- **QA**: 1440×900 e 390×844 — 6 capas, linha visível, sem overflow horizontal, arrasto altera
-  a fase; typecheck/lint sem erros e detector Impeccable vazio.
+  `prefers-reduced-motion` fixa as capas sem rotação (a revelação continua ligada ao scroll).
+- **QA**: 1440×900 e 390×844 — p0: linha 0 e 0 capas; p0.15: linha 0.5 e 1 capa; p0.5: 8 capas;
+  p1: 12 capas e linha a 1; sem overflow horizontal; typecheck/lint sem erros e detector vazio.

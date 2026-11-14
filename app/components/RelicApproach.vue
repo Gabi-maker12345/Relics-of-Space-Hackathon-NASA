@@ -9,6 +9,7 @@ onMounted(() => { void load() })
 /** Todas as relíquias publicadas ficam na órbita (12 no arquivo atual). */
 const orbitItems = computed(() => relics.value.filter(isPublished))
 
+const sectionEl = ref<HTMLElement | null>(null)
 const orbitEl = ref<HTMLElement | null>(null)
 const items = ref<HTMLElement[]>([])
 const setItem = (el: Element | ComponentPublicInstance | null, index: number) => {
@@ -16,19 +17,24 @@ const setItem = (el: Element | ComponentPublicInstance | null, index: number) =>
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
-const easeOutQuint = (value: number) => 1 - Math.pow(1 - value, 5)
+
+const smoothstep = (edge0: number, edge1: number, value: number) => {
+  const t = clamp((value - edge0) / (edge1 - edge0), 0, 1)
+  return t * t * (3 - 2 * t)
+}
 
 /* Constantes do Orbit Images original (ellipse, depth .5, volta de 40 s). */
 const LAP_SECONDS = 42
 const DEPTH = 0.5
-const INTRO_SPREAD = 1300
-const INTRO_FADE = 450
+/* Revelação pelo scroll: cada capa acende numa janela própria. */
+const REVEAL_START = 0.08
+const REVEAL_SPAN = 0.6
+const REVEAL_DURATION = 0.16
 
 let raf = 0
 let last = 0
 let phase = -Math.PI / 2
 let velocity = 0
-let introStart = -1
 let reduced = false
 let visible = false
 let dragging = false
@@ -38,7 +44,7 @@ let width = 0
 let height = 0
 const rx = ref(0)
 const ry = ref(0)
-const started = ref(false)
+const pathOpacity = ref(0)
 let observer: IntersectionObserver | null = null
 let resize: ResizeObserver | null = null
 
@@ -50,17 +56,6 @@ let resize: ResizeObserver | null = null
 const ARC_STEPS = 720
 const arcLengths = new Float32Array(ARC_STEPS + 1)
 let arcPerimeter = 1
-let uFront = 0.25
-
-function lengthAtAngle(angle: number): number {
-  const step = (Math.PI * 2) / ARC_STEPS
-  const position = angle / step
-  const index = Math.min(ARC_STEPS, Math.max(0, Math.floor(position)))
-  const fraction = position - index
-  const from = arcLengths[index] ?? 0
-  const to = arcLengths[Math.min(ARC_STEPS, index + 1)] ?? from
-  return from + (to - from) * fraction
-}
 
 function buildArc(): void {
   const a = Math.max(1, rx.value)
@@ -80,7 +75,6 @@ function buildArc(): void {
     previousY = y
   }
   arcPerimeter = total || 1
-  uFront = lengthAtAngle(Math.PI / 2) / arcPerimeter
 }
 
 function angleAtU(u: number): number {
@@ -99,8 +93,6 @@ function angleAtU(u: number): number {
   return ((index - 1 + fraction) * (Math.PI * 2)) / ARC_STEPS
 }
 
-const wrapSigned = (value: number) => ((((value + 0.5) % 1) + 1) % 1) - 0.5
-
 function measure(): void {
   const el = orbitEl.value
   if (!el) return
@@ -109,6 +101,15 @@ function measure(): void {
   rx.value = width * 0.42
   ry.value = height * 0.3
   buildArc()
+}
+
+/** 0 no topo da secção, 1 quando a última das 140vh de scroll passou. */
+function scrollProgress(): number {
+  const el = sectionEl.value
+  if (!el) return 0
+  const rect = el.getBoundingClientRect()
+  const span = rect.height - window.innerHeight
+  return span > 0 ? clamp(-rect.top / span, 0, 1) : 0
 }
 
 function render(now: number): void {
@@ -124,33 +125,35 @@ function render(now: number): void {
     velocity *= Math.exp(-dt * 1.6)
   }
 
-  const intro = introStart < 0 ? 0 : Math.min(1, (now - introStart) / INTRO_SPREAD)
-  const spread = reduced ? 1 : easeOutQuint(intro)
-  // Antes da entrada, tudo escondido no ponto da frente: nada salta para a elipse.
-  const appear = introStart < 0 ? 0 : reduced ? 1 : Math.min(1, (now - introStart) / INTRO_FADE)
-
+  const progress = scrollProgress()
   const radiusX = rx.value
   const radiusY = ry.value
   const phaseU = phase / (Math.PI * 2)
+  const step = count > 1 ? REVEAL_SPAN / (count - 1) : 0
 
   for (let index = 0; index < count; index += 1) {
     const node = items.value[index]
     if (!node) continue
-    let u = phaseU + index / count
-    // A entrada nasce do ponto da frente e abre para a elipse.
-    if (intro > 0 && intro < 1) u = uFront + wrapSigned(u - uFront) * spread
-    const angle = angleAtU(u)
+    const angle = angleAtU(phaseU + index / count)
     const x = Math.cos(angle) * radiusX
     const y = Math.sin(angle) * radiusY
     const front = (Math.sin(angle) + 1) / 2
-    const scale = 1 + DEPTH * (0.3 * front - 0.45 * (1 - front))
-    const opacity = (1 - DEPTH * 0.55 * (1 - front)) * appear
+    const start = REVEAL_START + step * index
+    const local = smoothstep(start, start + REVEAL_DURATION, progress)
+    const depthScale = 1 + DEPTH * (0.3 * front - 0.45 * (1 - front))
+    const scale = depthScale * (reduced ? 1 : 0.62 + 0.38 * local)
+    const opacity = (1 - DEPTH * 0.55 * (1 - front)) * local
+
     node.style.transform = `translate(-50%, -50%) translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${scale.toFixed(3)})`
     node.style.opacity = opacity.toFixed(3)
     node.style.zIndex = String(Math.round(front * 100))
+    node.style.filter = !reduced && local < 1 ? `blur(${((1 - local) * 7).toFixed(2)}px)` : 'none'
   }
 
-  if (visible && !reduced) raf = requestAnimationFrame(render)
+  const line = smoothstep(0.02, 0.28, progress)
+  if (Math.abs(line - pathOpacity.value) > 0.002) pathOpacity.value = line
+
+  if (visible) raf = requestAnimationFrame(render)
 }
 
 function wake(): void {
@@ -189,13 +192,6 @@ function onPointerUp(event: PointerEvent): void {
   ;(event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId)
 }
 
-function startIntro(): void {
-  if (introStart >= 0) return
-  introStart = performance.now()
-  started.value = true
-  wake()
-}
-
 watch(orbitItems, () => {
   measure()
   wake()
@@ -216,16 +212,13 @@ onMounted(() => {
   if (typeof IntersectionObserver !== 'undefined') {
     observer = new IntersectionObserver((entries) => {
       visible = entries.some(entry => entry.isIntersecting)
-      if (visible) {
-        startIntro()
-        wake()
-      }
-    }, { threshold: 0.2 })
+      if (visible) wake()
+    }, { threshold: 0.15 })
     if (orbitEl.value) observer.observe(orbitEl.value)
   }
   else {
     visible = true
-    startIntro()
+    wake()
   }
 })
 
@@ -237,7 +230,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section id="relics" class="fr-approach" aria-labelledby="relics-approach-title">
+  <section id="relics" ref="sectionEl" class="fr-approach" aria-labelledby="relics-approach-title">
     <div class="fr-approach__stage">
       <div
         ref="orbitEl"
@@ -250,9 +243,8 @@ onBeforeUnmount(() => {
       >
         <span
           class="fr-orbit__path"
-          :class="{ 'is-visible': started }"
           aria-hidden="true"
-          :style="{ width: `${rx * 2}px`, height: `${ry * 2}px` }"
+          :style="{ width: `${rx * 2}px`, height: `${ry * 2}px`, opacity: pathOpacity }"
         />
 
         <figure

@@ -626,11 +626,14 @@ html.is-menu-open body {
 .fr-approach {
   position: relative;
   z-index: 1;
+  /* Pista de scroll: as capas nascem uma a uma ao atravessar a secção. */
+  height: 240vh;
 }
 
 .fr-approach__stage {
-  position: relative;
-  min-height: 100svh;
+  position: sticky;
+  top: 0;
+  height: 100svh;
   display: grid;
   place-items: center;
   overflow: clip;
@@ -663,13 +666,7 @@ html.is-menu-open body {
   transform: translate(-50%, -50%);
   border: 1px solid color-mix(in srgb, var(--fr-paper) 18%, transparent);
   border-radius: 50%;
-  opacity: 0;
   pointer-events: none;
-  transition: opacity 0.9s var(--fr-ease-inout);
-}
-
-.fr-orbit__path.is-visible {
-  opacity: 1;
 }
 
 .fr-orbit__item {
@@ -742,12 +739,6 @@ html.is-menu-open body {
 
   .fr-approach__note {
     font-size: 12px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fr-orbit__item {
-    opacity: 1;
   }
 }
 
