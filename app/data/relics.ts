@@ -20,6 +20,7 @@ interface SeedMedia {
   caption: string
   credit: string
   source_url: string
+  audio_url?: string | null
 }
 
 /**
@@ -41,6 +42,7 @@ export interface SeedRelic {
   ratio: string
   reference_url: string
   is_extra: boolean
+  intro_audio_url?: string | null
   facts: RelicFact[]
   media: SeedMedia[]
 }
@@ -58,6 +60,7 @@ function toScene(media: SeedMedia, isCover: boolean): RelicScene {
     body: media.caption,
     credit: media.credit,
     source_url: media.source_url,
+    audio_url: media.audio_url ?? null,
     is_cover: isCover,
   }
 }
@@ -110,6 +113,7 @@ export const relics: Relic[] = seed.map((entry) => {
     location: entry.location,
     reference_url: entry.reference_url,
     is_extra: entry.is_extra,
+    intro_audio_url: entry.intro_audio_url ?? null,
   })
 })
 

@@ -707,3 +707,19 @@ diário aberto pelo cartão.
   `RelicInput`; validação de URL http(s); mapper e lista pública atualizados.
 - **Seed:** 12 relíquias, 48 factos e 24 mídias; o teste do seed confirma a fonte
   oficial em todas e que só Voyager 1/2 são extras.
+## Iteração 35 — narração real e docs de deploy
+
+- **Narração:** `scripts/generate-narration.mjs` gera intro + uma faixa por cena
+  com Edge TTS (`pt-PT-RaquelNeural`), actualiza `data/relics.json` e regenera
+  o seed. Resultado: **36 MP3, ~8,4 min, 2,9 MB** em `public/media/narration/`.
+- **Contrato:** `intro_audio_url` e `audio_url` passam a ser preenchidos no seed,
+  no gerador SQL e no fallback SSR; o executor FE-09 usa o ficheiro e mantém o
+  `speechSynthesis` como fallback.
+- **Qualidade:** `npm run narration:check` valida a existência dos MP3 e a CI
+  passou a correr esse passo; o teste do seed valida ficheiros, headers MP3 e
+  URLs.
+- **Docs:** `docs/data-sources.md` (13 categorias oficiais, créditos, regras de
+  mídia NASA, disclaimer) e `docs/deploy-checklist.md` (Supabase cloud, Vercel,
+  smoke tests, QA de AR, rollback e pendências).
+- **Decisão:** áudio sintético aprovado para a demo/hackathon; provider oficial
+  e vozes gravadas ficam para depois.

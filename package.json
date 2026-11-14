@@ -20,6 +20,8 @@
     "smoke": "node scripts/smoke.mjs",
     "seed:generate": "node scripts/generate-seed.mjs",
     "seed:check": "node scripts/generate-seed.mjs --check",
+    "narration:generate": "node scripts/generate-narration.mjs",
+    "narration:check": "node scripts/generate-narration.mjs --check",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",
