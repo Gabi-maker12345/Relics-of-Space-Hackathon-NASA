@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import gsap from 'gsap'
 import type { Relic, RelicScene } from '~/data/relics'
+
+type Gsap = typeof import('gsap').default
+let gsapPromise: Promise<Gsap> | null = null
+
+/** GSAP só entra quando o primeiro diário abre; a landing não o descarrega. */
+function loadGsap(): Promise<Gsap> {
+  gsapPromise ??= import('gsap').then(module => module.default)
+  return gsapPromise
+}
 
 const { relics } = useRelics()
 const { lang, t } = useI18n()
@@ -145,7 +153,16 @@ const step = (direction: number): void => {
 }
 
 /** Entrada: scrim, moldura com blur/scale e conteúdo em stagger. */
-const onEnter = (el: Element, done: () => void): void => {
+async function onEnter(el: Element, done: () => void): Promise<void> {
+  let gsap: typeof import('gsap').default
+  try {
+    gsap = await loadGsap()
+  }
+  catch {
+    // sem animação: garantir que o diário fica visível
+    done()
+    return
+  }
   const sheetEl = el.querySelector('.sheet')
   const scrim = el.querySelector('[data-scrim]')
   const timeline = gsap.timeline({ onComplete: done })
@@ -161,7 +178,15 @@ const onEnter = (el: Element, done: () => void): void => {
   }
 }
 
-const onLeave = (el: Element, done: () => void): void => {
+async function onLeave(el: Element, done: () => void): Promise<void> {
+  let gsap: typeof import('gsap').default
+  try {
+    gsap = await loadGsap()
+  }
+  catch {
+    done()
+    return
+  }
   const sheetEl = el.querySelector('.sheet')
   const scrim = el.querySelector('[data-scrim]')
   const timeline = gsap.timeline({ onComplete: done })

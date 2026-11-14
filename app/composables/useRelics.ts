@@ -3,6 +3,19 @@ import type { Relic, RelicInput } from '#shared/types/relic'
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
+/**
+ * O SSR só precisa dos campos do painel da landing. Factos, cenas e passos
+ * chegavam ao payload (e ao HTML) sem serem usados; o detalhe é carregado
+ * quando o diário abre.
+ */
+const seedPanel = (): Relic[] => seedRelics.map(relic => ({
+  ...relic,
+  facts: [],
+  scenes: [],
+  steps: [],
+  total_steps: 0,
+}))
+
 type Mode = 'admin' | 'public'
 
 /** Evita pedidos duplicados quando `restore()` e a página pedem a lista ao mesmo tempo. */
@@ -15,7 +28,7 @@ let inflight: Promise<void> | null = null
  * ser a única fonte. Erros são expostos em `error` em vez de serem escondidos.
  */
 export function useRelics() {
-  const relics = useState<Relic[]>('relics-list', () => clone(seedRelics))
+  const relics = useState<Relic[]>('relics-list', seedPanel)
   const loadedFor = useState<Mode | null>('relics-loaded-for', () => null)
   const loadedLang = useState<string>('relics-loaded-lang', () => 'pt')
   const { lang } = useLocale()

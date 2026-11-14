@@ -254,7 +254,15 @@ onBeforeUnmount(() => {
           class="fr-orbit__item"
           aria-hidden="true"
         >
-          <img :src="relic.image" alt="" draggable="false" decoding="async" />
+          <img
+            :src="imageVariant(relic.image, 480)"
+            :srcset="imageSrcset(relic.image, [480, 960])"
+            sizes="(max-width: 900px) 30vw, 180px"
+            alt=""
+            draggable="false"
+            loading="lazy"
+            decoding="async"
+          />
         </figure>
 
         <header class="fr-approach__head">

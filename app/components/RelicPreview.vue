@@ -68,7 +68,7 @@
 
           <article v-else class="preview__card">
             <div class="preview__cover">
-              <RelicCover v-if="cover" :src="cover" :poster="relic.image" :alt="relic.alt || relic.name" />
+              <RelicCover v-if="cover" :src="cover" :poster="relic.image" :alt="relic.alt || relic.name" sizes="(max-width: 900px) 50vw, 360px" />
               <span v-else class="preview__empty">{{ t('preview.noCover') }}</span>
             </div>
             <div class="preview__cardBody">

@@ -92,6 +92,7 @@ the admin guard, publish/unpublish visibility and that anon cannot insert.
 - Open a new relic and confirm the NASA button is disabled with the “save
   first” hint.
 - Close the dialog with Esc, the X button and a click on the backdrop.
+- After adding seed images, run `npm run images:optimize`; the variants (480/960/1440 WebP) are committed and `images:check` guards them.
 
 ## Scene and navigation (manual)
 
@@ -102,12 +103,27 @@ the admin guard, publish/unpublish visibility and that anon cannot insert.
   on the first click. A real drag (>10 px) should only move the carousel.
 - Check the same two flows with a 390×844 touch viewport.
 
+## Performance (SEC #69)
+
+```bash
+npm run build
+PORT=3200 node .output/server/index.mjs
+npx lighthouse@12 http://127.0.0.1:3200/ \
+  --chrome-flags='--headless=new --no-sandbox --enable-unsafe-swiftshader'
+```
+
+Check: the landing must paint without loading the Three/GSAP chunks; the
+engine boots on the first gesture/scene, and the diary still opens with the
+media. Images should come from the `-480/-960/-1440.webp` variants. Compare
+LCP/TBT/weight with `docs/deploy-checklist.md` §8. Real-GPU numbers are still
+required for #69.
+
 ## CI
 
 The main CI workflow runs `npm ci`, the runtime audit (`--audit-level=high`),
-lint, seed/narration checks, typecheck and unit tests. Integration tests are
-opt-in in CI (set `RUN_INTEGRATION_TESTS=1`) because they require Docker and a
-Supabase stack.
+lint, seed/narration checks, `images:check`, typecheck and unit tests.
+Integration tests are opt-in in CI (set `RUN_INTEGRATION_TESTS=1`) because they
+require Docker and a Supabase stack.
 
 ## Dependency audit (SEC #71)
 

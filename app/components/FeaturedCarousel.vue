@@ -36,27 +36,35 @@ onMounted(() => {
   updateCopies()
   window.addEventListener('resize', updateCopies)
   onBeforeUnmount(() => window.removeEventListener('resize', updateCopies))
-  nextTick(() => useGlEngine().resetCarousel())
+  void ensureGlEngine().then(engine => engine.resetCarousel()).catch(() => {})
 })
 
-watch(copies, () => nextTick(() => useGlEngine().resetCarousel()))
+watch(copies, () => {
+  void ensureGlEngine().then(engine => engine.resetCarousel()).catch(() => {})
+})
 
 // Filtrar troca os cartões no DOM: o engine tem de medir a faixa outra vez.
 watch(() => relics.value.map(relic => relic.id).join('|'), async () => {
   await nextTick()
   const el = track.value
   if (!el) return
-  const engine = useGlEngine()
-  engine.scan()
-  engine.attachTrack(el)
-  engine.resetCarousel()
-  engine.enterAll()
+  try {
+    const engine = await ensureGlEngine()
+    engine.scan()
+    engine.attachTrack(el)
+    engine.resetCarousel()
+    engine.enterAll()
+  }
+  catch {
+    // sem WebGL: os cartões continuam no DOM, apenas sem a camada GL
+  }
 })
 
 function openRelic(id: string, fromPointer = true): void {
   if (!import.meta.client) return
   // arrastar o carrossel não deve abrir a relíquia; o teclado não é um arrasto
-  if (fromPointer && useGlEngine().dragDistance() > 6) return
+  const engine = getGlEngine()
+  if (fromPointer && engine && engine.dragDistance() > 6) return
   open(id)
 }
 </script>
@@ -87,7 +95,7 @@ function openRelic(id: string, fromPointer = true): void {
       :style="{ aspectRatio: card.ratio }"
       :data-id="card.id"
       data-gl="card"
-      :data-texture="card.image"
+      :data-texture="imageVariant(card.image, 960)"
       :aria-hidden="card.copy === 1 || copies === 1 ? undefined : 'true'"
       :tabindex="card.copy === 0 ? 0 : -1"
       role="button"

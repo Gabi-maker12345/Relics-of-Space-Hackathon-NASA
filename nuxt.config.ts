@@ -3,6 +3,8 @@ import tailwindcss from '@tailwindcss/vite'
 // Space Relics — base visual na especificação de forgeautomotive.co.uk (CLONE.md, Parte 1) e no portfólio existente
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-01',
+  // O CSS entra no HTML para não bloquear o primeiro paint num 4G.
+  features: { inlineStyles: true },
   devtools: { enabled: false },
   // Nuxt 4.6.4 resolves an unset `devServer.host` to `{}`, which crashes
   // `nuxt dev` in @nuxt/cli 4.0.1. Pinning the loopback string keeps the
@@ -49,7 +51,8 @@ export default defineNuxtConfig({
         { name: 'twitter:image', content: '/images/relics/opportunity-1.jpg' },
       ],
       link: [
-        { rel: 'icon', type: 'image/png', href: '/images/nasa-logo.png' },
+        { rel: 'icon', type: 'image/png', href: '/images/nasa-logo-64.png', sizes: '64x64' },
+        { rel: 'apple-touch-icon', href: '/images/nasa-logo-180.png' },
         { rel: 'canonical', href: 'https://spacerelics.space/' },
       ],
     },

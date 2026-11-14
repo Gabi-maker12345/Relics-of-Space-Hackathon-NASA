@@ -30,7 +30,7 @@
     <ul v-else class="admin__grid">
       <li v-for="relic in relics" :key="relic.id" class="admin__item">
         <article class="card" :class="{ 'is-draft': relic.published === false }">
-          <RelicCover class="card__img" :src="relic.image" :poster="relic.image" :alt="relic.alt" />
+          <RelicCover class="card__img" :src="relic.image" :poster="relic.image" :alt="relic.alt" sizes="(max-width: 620px) 90vw, 320px" />
           <div class="card__scrim" />
           <div class="card__body">
             <p class="card__flags">

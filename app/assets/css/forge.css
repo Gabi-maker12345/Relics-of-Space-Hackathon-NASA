@@ -751,7 +751,7 @@ html.is-menu-open body {
   text-align: center;
   font-size: 13px;
   line-height: 1.5;
-  color: color-mix(in srgb, var(--fr-paper) 45%, transparent);
+  color: color-mix(in srgb, var(--fr-paper) 68%, transparent);
 }
 
 @media (max-width: 649px) {
@@ -1128,7 +1128,7 @@ html.is-menu-open body {
 }
 
 .fr-rmenu__hint {
-  color: color-mix(in srgb, var(--fr-paper) 45%, transparent);
+  color: color-mix(in srgb, var(--fr-paper) 68%, transparent);
   white-space: nowrap;
   pointer-events: none;
 }
@@ -2084,7 +2084,7 @@ html[data-archive-flip] .cosmos {
   font-size: 10px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--fr-paper) 45%, transparent);
+  color: color-mix(in srgb, var(--fr-paper) 68%, transparent);
   animation: gate-breathe 2.6s ease-in-out infinite;
 }
 

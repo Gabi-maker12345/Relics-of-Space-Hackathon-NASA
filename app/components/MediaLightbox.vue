@@ -38,7 +38,15 @@ onMounted(() => {
           loop
           playsinline
         />
-        <img v-else class="lightbox__media" :src="media.src" :alt="caption" />
+        <img
+          v-else
+          class="lightbox__media"
+          :src="imageVariant(media.src, 1440)"
+          :srcset="imageSrcset(media.src)"
+          sizes="100vw"
+          :alt="caption"
+          decoding="async"
+        />
       </div>
       <div class="lightbox__bar">
         <span class="lightbox__label">{{ caption }}</span>

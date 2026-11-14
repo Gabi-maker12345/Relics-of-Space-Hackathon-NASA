@@ -14,7 +14,7 @@
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { join, relative, extname } from 'node:path'
-import { storageAssetPath, storageAssetUrl } from './media-paths.mjs'
+import { storageObjectPath, storageAssetUrl } from './media-paths.mjs'
 
 const BUCKET = 'relic-media'
 const ROOTS = ['public/images', 'public/media']
@@ -90,7 +90,7 @@ async function ensureBucket() {
 
 async function upload(file) {
   const rel = relative('public', file).split('\\').join('/')
-  const objectPath = storageAssetPath(rel)
+  const objectPath = storageObjectPath(rel)
   const localRef = `/${rel}`
   localToPublic.set(localRef, storageAssetUrl(rel, targetEnv))
   const body = readFileSync(file)
