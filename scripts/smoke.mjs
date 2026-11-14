@@ -61,7 +61,7 @@ async function rest(path, { method = 'GET', token = anonKey, body } = {}) {
   const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
     method,
     headers: {
-      apikey: anonKey,
+      apikey: token,
       authorization: `Bearer ${token}`,
       'content-type': 'application/json',
       prefer: 'return=representation',
