@@ -10,9 +10,24 @@
               <p class="rform__kicker">{{ isEdit ? 'Registo existente' : 'Novo registo' }}</p>
               <h2 id="rform-title" class="rform__title">{{ isEdit ? 'Editar relíquia' : 'Nova relíquia' }}</h2>
             </div>
-            <button type="button" class="rform__x" aria-label="Fechar" @click="requestClose">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" /></svg>
-            </button>
+            <div class="rform__headActions">
+              <button
+                type="button"
+                class="rform__previewBtn"
+                :aria-pressed="previewOpen"
+                aria-controls="relic-preview"
+                @click="previewOpen = !previewOpen"
+              >
+                <svg viewBox="0 0 20 14" aria-hidden="true">
+                  <path d="M1 7s3.2-5 9-5 9 5 9 5-3.2 5-9 5-9-5-9-5Z" />
+                  <circle cx="10" cy="7" r="2.4" />
+                </svg>
+                Preview
+              </button>
+              <button type="button" class="rform__x" aria-label="Fechar" @click="requestClose">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" /></svg>
+              </button>
+            </div>
           </header>
 
           <div class="rform__body" data-lenis-prevent>
@@ -74,10 +89,13 @@
                   <span v-if="errors.body" class="rform__err">{{ errors.body }}</span>
                 </label>
 
-                <label class="rform__field">
-                  <span class="rform__label">Áudio de introdução <em>(opcional)</em></span>
-                  <input v-model="draft.intro_audio_url" class="rform__input rform__input--mono" placeholder="/media/intro.mp3">
-                </label>
+                <AudioField
+                  v-model="draft.intro_audio_url"
+                  label="Áudio de introdução (opcional)"
+                  :relic-id="draft.id"
+                  placeholder="/media/intro.mp3"
+                />
+                <p class="rform__hint">A voz que abre o diário antes da primeira cena.</p>
 
                 <label class="rform__field">
                   <span class="rform__label">Fonte oficial <em>(opcional)</em></span>
@@ -297,10 +315,21 @@
                         </label>
                       </div>
 
-                      <label class="rform__field">
-                        <span class="rform__label">Áudio narrado <em>(opcional)</em></span>
-                        <input v-model="scene.audio_url" class="rform__input rform__input--mono" placeholder="/media/narracao.mp3">
+                      <AudioField
+                        v-model="scene.audio_url"
+                        label="Áudio narrado (opcional)"
+                        :relic-id="draft.id"
+                        placeholder="/media/narracao.mp3"
+                      />
+
+                      <label v-if="scene.kind === 'video'" class="rform__check">
+                        <input v-model="scene.mute_video" type="checkbox">
+                        <span>Vídeo mudo + narração</span>
                       </label>
+
+                      <p v-if="scene.src.trim() && !scene.audio_url?.trim() && !scene.body.trim()" class="rform__warn">
+                        Esta mídia não tem áudio nem legenda.
+                      </p>
                     </div>
                   </div>
                 </article>
@@ -326,6 +355,13 @@
             </div>
           </footer>
         </form>
+
+        <RelicPreview
+          id="relic-preview"
+          :open="previewOpen"
+          :relic="previewRelic"
+          @close="previewOpen = false"
+        />
       </div>
     </Transition>
   </Teleport>
@@ -408,11 +444,59 @@ function emptyScene(kind: 'image' | 'video'): RelicScene {
     credit: '',
     source_url: '',
     audio_url: '',
+    mute_video: true,
   }
 }
 
 const draft = reactive<Draft>(blank())
 const errors = reactive<Record<string, string>>({})
+const previewOpen = ref(false)
+
+/** Retrato ao vivo do rascunho — o mesmo shape que o modal público consome. */
+const previewScenes = computed<RelicScene[]>(() => draft.scenes
+  .filter(scene => scene.src.trim())
+  .map(scene => ({
+    id: scene.id,
+    kind: scene.kind,
+    src: scene.src.trim(),
+    poster: scene.poster?.trim() || undefined,
+    kicker: scene.kicker.trim(),
+    title: scene.title?.trim() || undefined,
+    body: scene.body.trim(),
+    credit: scene.credit?.trim() || undefined,
+    source_url: scene.source_url?.trim() || undefined,
+    audio_url: scene.audio_url?.trim() || undefined,
+    mute_video: scene.mute_video,
+  })))
+
+const previewRelic = computed<Relic>(() => ({
+  id: draft.id || 'preview',
+  name: draft.name || 'Nova relíquia',
+  mission: draft.mission || 'Missão por preencher',
+  tagline: draft.tagline || 'Frase de efeito por preencher',
+  body: draft.body || 'A história desta relíquia aparece aqui.',
+  facts: draft.facts.filter(fact => fact.label.trim() && fact.value.trim()),
+  image: draft.image,
+  alt: draft.alt,
+  ratio: draft.ratio || '1376 / 768',
+  // sem cenas, mostra a capa escolhida (se houver) para o modal não ficar vazio
+  scenes: previewScenes.value.length > 0
+    ? previewScenes.value
+    : draft.image.trim()
+      ? [{
+          kind: 'image' as const,
+          src: draft.image.trim(),
+          kicker: 'Capa',
+          body: draft.body || '',
+        }]
+      : [],
+  steps: [],
+  total_steps: 0,
+  published: draft.published,
+  status: draft.status,
+  location: draft.location,
+  intro_audio_url: draft.intro_audio_url.trim() || undefined,
+}))
 
 const slugify = (value: string): string =>
   value
@@ -529,42 +613,6 @@ const coverProgress = ref(0)
 const safeRelicId = (): string =>
   /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(draft.id) ? draft.id : 'common'
 
-/**
- * Upload direto com progresso real (`xhr.upload.onprogress`). O endpoint aceita
- * até 4 MB; acima disso é preciso o fluxo de signed URL.
- */
-function uploadToStorage(
-  file: File,
-  kind: 'image' | 'video' | 'audio',
-  onProgress: (value: number) => void,
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const form = new FormData()
-    form.append('file', file)
-    form.append('kind', kind)
-    form.append('relicId', safeRelicId())
-
-    const xhr = new XMLHttpRequest()
-    xhr.open('POST', '/api/admin/upload')
-    xhr.upload.addEventListener('progress', (event) => {
-      if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100))
-    })
-    xhr.addEventListener('load', () => {
-      let payload: { url?: string, message?: string } = {}
-      try {
-        payload = JSON.parse(xhr.responseText) as { url?: string, message?: string }
-      }
-      catch {
-        /* resposta sem JSON */
-      }
-      if (xhr.status >= 200 && xhr.status < 300 && payload.url) resolve(payload.url)
-      else reject(new Error(payload.message || `Falha no upload (${xhr.status}).`))
-    })
-    xhr.addEventListener('error', () => reject(new Error('Falha de rede no upload.')))
-    xhr.send(form)
-  })
-}
-
 /** Envia a imagem de cartão; a capa tem de ser uma das cenas. */
 async function onFile(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement
@@ -574,7 +622,7 @@ async function onFile(event: Event): Promise<void> {
   errors.image = ''
   coverProgress.value = 1
   try {
-    const url = await uploadToStorage(file, 'image', value => { coverProgress.value = value })
+    const url = await uploadToStorage(file, 'image', safeRelicId(), value => { coverProgress.value = value })
     draft.image = url
     const empty = draft.scenes.find(scene => scene.kind === 'image' && !scene.src.trim())
     if (empty) empty.src = url
@@ -609,6 +657,7 @@ async function onSceneFile(event: Event, index: number): Promise<void> {
     const url = await uploadToStorage(
       file,
       scene.kind === 'video' ? 'video' : 'image',
+      safeRelicId(),
       value => { uploadProgress.value = value },
     )
     scene.src = url
@@ -640,6 +689,7 @@ function collect(): { facts: RelicFact[], scenes: RelicScene[] } {
         credit: scene.credit?.trim() || undefined,
         source_url: scene.source_url?.trim() || undefined,
         audio_url: scene.audio_url?.trim() || undefined,
+        mute_video: scene.mute_video !== false,
       })),
   }
 }
@@ -759,6 +809,70 @@ function requestClose(): void {
   font-weight: 400;
   letter-spacing: -0.03em;
   line-height: 0.94;
+}
+
+.rform__headActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rform__previewBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  height: 44px;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: inherit;
+  background: none;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 22px;
+  cursor: pointer;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.rform__previewBtn svg {
+  width: 18px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+}
+
+.rform__previewBtn:hover { background: rgb(255 255 255 / 7%); }
+
+.rform__previewBtn[aria-pressed="true"] {
+  background: rgb(255 255 255 / 12%);
+  border-color: color-mix(in srgb, var(--accent, #7aa2ff) 65%, transparent);
+}
+
+.rform__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  opacity: 0.75;
+  cursor: pointer;
+}
+
+.rform__check input {
+  width: 14px;
+  height: 14px;
+  accent-color: #f5f3ee;
+}
+
+.rform__warn {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: #f5d58a;
+  background: rgb(245 213 138 / 8%);
+  border-left: 2px solid rgb(245 213 138 / 55%);
 }
 
 .rform__x {

@@ -21,6 +21,8 @@
       <button type="button" class="admin__primary" @click="requestLogin">Entrar</button>
     </div>
 
+    <p v-else-if="loadedFor !== 'admin'" class="admin__lede">A carregar o arquivo…</p>
+
     <ul v-else class="admin__grid">
       <li v-for="relic in relics" :key="relic.id" class="admin__item">
         <article class="card" :class="{ 'is-draft': relic.published === false }">
@@ -77,7 +79,7 @@
 import type { Relic, RelicInput } from '#shared/types/relic'
 import { relicStatus } from '~/utils/relics'
 
-const { relics, load, create, update, patch, remove, error: loadError } = useRelics()
+const { relics, loadedFor, load, create, update, patch, remove, error: loadError } = useRelics()
 const { user, restore, signOut } = useAuth()
 const { open: openPanel } = usePanels()
 
