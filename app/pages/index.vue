@@ -2,7 +2,7 @@
   <div class="fr">
     <RelicHero />
     <RelicApproach />
-    <RelicPanels />
+    <RelicMenu />
     <RelicArchive />
   </div>
 </template>

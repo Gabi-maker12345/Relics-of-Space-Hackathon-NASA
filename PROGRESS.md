@@ -882,3 +882,24 @@ diário aberto pelo cartão.
 - **Contador do passaporte no sítio certo**: passou para a barra de filtros da cena
   (`RelicFilters`), substituindo “12 relíquias” por “X de N exploradas” — conta apenas as relíquias
   visíveis com os filtros ativos. O `/full` voltou ao estado anterior (sem contador).
+
+## Iteração 44 — relíquias em "Infinite Menu" (globo + foco)
+
+- **Secção trocada**: `RelicPanels` (scroll-scrub de 12 × 100vh) deu lugar a `RelicMenu`, a
+  adaptação do Infinite Menu: esfera de Fibonacci com 84 capas (12 relíquias repetidas e
+  distribuídas sem repetir vizinhos), desenhada em CSS 3D — `matrix3d` a partir do quaternião,
+  `backface-visibility` a esconder a metade de trás, sem WebGL novo.
+- **Dois estados**: em repouso o globo não existe — fica a capa da relíquia em foco em grande
+  (≈54vh) no centro, as restantes capas **retas**, encostadas às bordas do ecrã, e a cópia em
+  duas colunas (nome à esquerda, texto/fatos à direita). Ao arrastar, as capas convergem e
+  formam o globo (trackball com inércia); ao largar, encaixa na capa mais frontal e volta a
+  assentar em plano 900 ms depois. O globo ocupa ≈38vh de raio (684 px a 900 px de altura).
+- **Encaixe garantido**: o alinhamento assintótico tem um instante-limite de 650 ms que alinha
+  a capa frontal de uma vez — sem ciclos de rAF infinitos a adiar o regresso ao plano.
+- **Mobile**: a cópia sai do fluxo e passa a gaveta de ecrã inteiro; a seta do original
+  (círculo claro com seta ↗, só <1200px) abre-a sobre tudo (fundo sólido, header oculto,
+  scroll travado, `Escape`/X fecham e devolvem o foco à seta). Tipografia compacta:
+  título 25 px, corpo 13 px, fatos 12 px.
+- **QA**: 1440×900 e 390×844 — arrasto forma o globo com a cópia escondida, largar encaixa e
+  volta a plano; seta→gaveta→fecho em móvel; sem overflow horizontal; 152 testes, typecheck,
+  lint e detector Impeccable vazios.

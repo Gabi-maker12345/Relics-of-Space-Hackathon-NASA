@@ -52,6 +52,8 @@ export const messages = {
     'panels.empty': 'Arquivo vazio',
     'panels.emptyTitle': 'Ainda não há relíquias publicadas.',
     'panels.extra': 'Extra',
+    'panels.drag': 'arraste',
+    'panels.info': 'Ver informação',
 
     'filters.aria': 'Filtrar o arquivo',
     'filters.location': 'Local',
@@ -285,6 +287,8 @@ export const messages = {
     'panels.empty': 'Empty archive',
     'panels.emptyTitle': 'No published relics yet.',
     'panels.extra': 'Extra',
+    'panels.drag': 'drag',
+    'panels.info': 'View info',
 
     'filters.aria': 'Filter the archive',
     'filters.location': 'Location',
