@@ -770,3 +770,10 @@ diário aberto pelo cartão.
 - RLS verificado (anon lê 12; escrita anon devolve 401/42501).
 - Smoke Nuxt contra o cloud: lista 12, detalhe Spirit com áudio, login admin e lista admin 12.
 - Pendente: deploy Vercel (Gabi), smoke de produção (206 range, imagens, login) e scope final.
+## Iteração 37 — revisão final, branches e QA
+
+- **Branches:** apagadas as branches antigas com PR merged; ficaram apenas `master`, `feat/backend-milestone-1` e a `revert-52` (histórica).
+- **Qualidade:** 145 unitários / 38 integração, typecheck, lint e build verdes; `seed:check` e `narration:check` verdes.
+- **Fluxos reais contra o cloud:** CRUD, upload, quiz manual, tradução EN, NASA search/import, TTS, publicar/despublicar e limpeza; 12 relíquias no fim.
+- **Performance:** Lighthouse mobile headless 25 (LCP 17,4 s, TBT 50,5 s), a11y 100, best practices 100, SEO 92; precisa de medição em GPU real.
+- **Riscos registados:** #69 performance, #70 quiz IA/key, #71 npm audit, #72 categorias oficiais, #73 master Next vs milestone Nuxt.

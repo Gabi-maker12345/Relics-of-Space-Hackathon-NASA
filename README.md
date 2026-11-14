@@ -223,6 +223,7 @@ Público (cliente anon + RLS; rascunhos nunca aparecem; cache `public, max-age=6
 
 - `GET /api/public/relics` (e `/public/relics`) — lista leve com apenas os campos do painel (`slug`, `name`, `summary`, `status`, `location`, capa e seu tipo). Suporta filtros `location`, `status`, pesquisa `q` por nome, ordenação `sort` (`name` | `created_at`) e `order` (`asc` | `desc`) e `lang` (`pt` por omissão, ou `en`).
 - `GET /api/public/relics/:slug` (e `/public/relics/:slug`) — detalhe completo (ficha técnica, `steps`, mídias, quiz; UUID ainda aceite para links antigos). `?lang=en` devolve textos e áudios traduzidos quando existirem.
+- `POST /api/public/relics/:slug/quiz/check` — `{ "question_id": "…", "option_index": 0 }`; devolve `correct`, `correct_index` e `explanation` sem expor a resposta no detalhe.
 
 Admin (requer sessão Supabase com `is_admin`):
 
@@ -249,11 +250,16 @@ Admin (requer sessão Supabase com `is_admin`):
 - `PUT /api/admin/relics/:id/cover` — `{ "media_id": "…" }` ou `null`; aceita
   imagem ou vídeo
 - `GET|POST /api/admin/relics/:id/quiz` — lista as perguntas **com**
-  `correct_index` ou adiciona uma (máximo 5 por relíquia)
+  `correct_index` ou adiciona uma (máximo 8 por relíquia)
+- `PUT /api/admin/relics/:id/quiz` — substitui o quiz inteiro (editor em lote)
+- `POST /api/admin/relics/:id/quiz/generate` — gera 8 perguntas com um provider
+  OpenAI-compatível; requer `QUIZ_AI_API_KEY` (sem chave devolve 503)
 - `PATCH|DELETE /api/admin/quiz/:id` — edita/remove uma pergunta (as traduções
   seguem em cascata)
 - `PUT /api/admin/relics/:id/quiz/order` — `{ "ids": [...] }` com **todas** as
   perguntas da relíquia, pela nova ordem
+- `POST /api/admin/narration/generate` — gera um MP3 com Edge TTS, guarda no
+  Storage e devolve `{ url, path, bytes, voice }`
 - `GET|PUT /api/admin/relics/:id/translations/:lang` — lê/grava uma língua
   (`en`, `pt-BR`, …); ver [Idiomas](#idiomas-be-12)
 
@@ -281,7 +287,8 @@ mídia sem áudio ou sem legenda) — avisos, nunca erros de validação.
 O quiz público (`Relic.quiz`) devolve `id`, `position`, `question`, `options` e
 `explanation`, mas **nunca** `correct_index`. As respostas admin incluem o
 índice correto; o `POST` valida que ele aponta para uma opção existente e o
-limite é de 5 perguntas por relíquia.
+limite é de 8 perguntas por relíquia. A correção de uma resposta pública é feita
+por `POST /api/public/relics/:slug/quiz/check`.
 
 A importação da NASA guarda apenas a URL oficial do asset (`~medium.jpg` para
 imagens, `~mobile.mp4` para vídeos) e o respetivo `poster`, em vez de copiar o
