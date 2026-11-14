@@ -38,6 +38,10 @@ O `Lunokhod 1` foi removido: é soviético e o brief é sobre equipamento NASA.
 ## 2. Mídia
 
 - **24 imagens**, todas obtidas em `https://images.nasa.gov`.
+- No seed, cada `relic_media.url` e cada `audio_url`/`intro_audio_url` é um
+  **URL absoluto do Storage** (`relic-media/assets/...`). O ficheiro original
+  vive em `public/`, mas o browser em produção lê do bucket; `npm run media:upload`
+  é idempotente e garante que o bucket tem os 71 ficheiros.
 - Cada linha de `relic_media` tem:
   - `credit` (ex.: `NASA/JPL-Caltech`, `NASA / JSC`, `NASA/GSFC/Arizona State University`, `NASA/Ames Research Center · Rick Guidice`);
   - `source_url` = `https://images.nasa.gov/details/<nasa_id>`;

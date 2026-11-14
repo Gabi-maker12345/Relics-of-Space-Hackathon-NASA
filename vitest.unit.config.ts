@@ -17,6 +17,7 @@ export default defineConfig({
       'tests/relic-filters.test.ts',
       'tests/narration-timing.test.ts',
       'tests/relics-ui.test.ts',
+      'tests/media-paths.test.ts',
     ],
     exclude: ['**/node_modules/**', '**/.nuxt/**', '**/.output/**'],
   },

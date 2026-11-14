@@ -56,6 +56,7 @@ function isMp3(path: string): boolean {
 }
 
 const seed = dataset.relics
+const seedSql = readFileSync(resolve('supabase/seed.sql'), 'utf8')
 const media = seed.flatMap(relic => relic.media.map(item => ({ slug: relic.slug, ...item })))
 
 describe('relic seed dataset (BE-14)', () => {
@@ -101,8 +102,14 @@ describe('relic seed dataset (BE-14)', () => {
     }
   })
 
-  it('ships narration audio for the intro and every scene', () => {
-    for (const relic of seed) {
+  it('stores absolute Storage URLs in the generated seed', () => {
+    expect(seedSql).not.toMatch(/'\/images\//)
+    expect(seedSql).not.toMatch(/'\/media\//)
+    const storageUrls = seedSql.match(/\/storage\/v1\/object\/public\/relic-media\/assets\//g) ?? []
+    expect(storageUrls.length).toBeGreaterThanOrEqual(60)
+  })
+
+  it('ships narration audio for the intro and every scene', () => {    for (const relic of seed) {
       expect(relic.intro_audio_url, relic.slug).toBe(`/media/narration/${relic.slug}-intro.mp3`)
       const intro = resolve('public', relic.intro_audio_url!.replace(/^\//, ''))
       expect(existsSync(intro), intro).toBe(true)

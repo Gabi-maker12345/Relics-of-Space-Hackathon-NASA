@@ -788,3 +788,19 @@ diário aberto pelo cartão.
 - `scripts/vercel-setup.sh` encadeia link + env + `vercel --prod` com as flags não interativas.
 - Smoke de produção: `/` 200, `/admin` 200, `/api/public/relics` 12 relíquias, imagem do bucket 200,
   login admin 200 e lista admin 12; modal `/#ingenuity` com fotografia e narração.
+
+## Iteração 38 — seed com URLs do Storage (BE-21)
+
+- **Helper `scripts/media-paths.mjs`:** convenção única `assets/<caminho em public>`
+  (com slugificação ASCII), base `SUPABASE_STORAGE_BASE` ou derivada de
+  `NUXT_PUBLIC_SUPABASE_URL`.
+- **Gerador:** `supabase/seed.sql` passa a escrever URLs absolutos para
+  `relic_media.url`, `poster_url`, `audio_url` e `relics.intro_audio_url`; falha
+  se encontrar caminhos locais.
+- **`seed:check`:** valida que o seed não tem `'/images/…` nem `'/media/…` e que
+  as 60 referências de mídia/áudio são do bucket.
+- **`media:upload`:** reutiliza o mesmo helper, mantendo os object paths iguais.
+- **Verificação:** 60 URLs do seed respondem `200` no bucket; DB local e cloud
+  sem caminhos locais; **152 unitários** e **38 integração** verdes.
+- **Docs/env:** `SUPABASE_STORAGE_BASE` no `.env.example` e CI; ordem
+  migrações → `media:upload` → seed no checklist.
