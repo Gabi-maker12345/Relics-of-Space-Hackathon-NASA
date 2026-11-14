@@ -1,16 +1,17 @@
 <script setup lang="ts">
 const { steps, stepIndex, playing, muted, toggle: togglePlay, setMuted, toggleCaptions, captions, hasNarration } = useNarration()
+const { t } = useI18n()
 
 const total = computed(() => steps.value.length)
 const available = computed(() => hasNarration())
 </script>
 
 <template>
-  <div v-if="total > 0" class="narr-controls" role="group" aria-label="Narração">
+  <div v-if="total > 0" class="narr-controls" role="group" :aria-label="t('narration.group')">
     <button
       type="button"
       class="narr-btn"
-      :aria-label="playing ? 'Pausar narração' : 'Tocar narração'"
+      :aria-label="playing ? t('narration.pause') : t('narration.play')"
       :aria-pressed="playing"
       :disabled="!available"
       @click="togglePlay()"
@@ -27,7 +28,7 @@ const available = computed(() => hasNarration())
     <button
       type="button"
       class="narr-btn"
-      :aria-label="muted ? 'Ativar som da narração' : 'Silenciar narração'"
+      :aria-label="muted ? t('narration.muteOff') : t('narration.muteOn')"
       :aria-pressed="muted"
       @click="setMuted(!muted)"
     >
@@ -41,7 +42,7 @@ const available = computed(() => hasNarration())
     <button
       type="button"
       class="narr-btn narr-btn--wide"
-      :aria-label="captions ? 'Desligar legendas' : 'Ligar legendas'"
+      :aria-label="captions ? t('narration.ccOff') : t('narration.ccOn')"
       :aria-pressed="captions"
       @click="toggleCaptions()"
     >

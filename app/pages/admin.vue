@@ -2,14 +2,20 @@
   <section class="admin">
     <header class="admin__head">
       <div>
-        <p class="admin__kicker">Arquivo · painel</p>
-        <h1 class="admin__title">Relíquias</h1>
+        <p class="admin__kicker">{{ t('admin.kicker') }}</p>
+        <h1 class="admin__title">{{ t('admin.title') }}</h1>
         <p class="admin__lede">
-          {{ relics.length }} registo{{ relics.length === 1 ? '' : 's' }} · o último cartão abre o formulário
+          {{ relics.length === 1 ? t('admin.ledeOne') : t('admin.lede', { count: relics.length }) }}
         </p>
       </div>
       <div class="admin__actions">
-        <button type="button" class="admin__ghost" @click="signOutAndLeave">Sair</button>
+        <button
+          type="button"
+          class="admin__ghost admin__lang"
+          :aria-label="adminLang === 'pt' ? 'Mudar o painel para inglês' : 'Switch admin to Portuguese'"
+          @click="toggleAdminLang"
+        >{{ adminLang === 'pt' ? 'PT' : 'EN' }}</button>
+        <button type="button" class="admin__ghost" @click="signOutAndLeave">{{ t('nav.exit') }}</button>
       </div>
     </header>
 
@@ -21,7 +27,7 @@
       <button type="button" class="admin__primary" @click="requestLogin">Entrar</button>
     </div>
 
-    <p v-else-if="loadedFor !== 'admin'" class="admin__lede">A carregar o arquivo…</p>
+    <p v-else-if="loadedFor !== 'admin'" class="admin__lede">{{ t('admin.loading') }}</p>
 
     <ul v-else class="admin__grid">
       <li v-for="relic in relics" :key="relic.id" class="admin__item">
@@ -32,7 +38,7 @@
             <p class="card__flags">
               <StatusBadge :status="relicStatus(relic)" />
               <span v-if="relic.is_extra" class="card__draft">Extra</span>
-              <span v-if="relic.published === false" class="card__draft">Rascunho</span>
+              <span v-if="relic.published === false" class="card__draft">{{ t('admin.draft') }}</span>
             </p>
             <p class="card__mission">{{ relic.mission }}</p>
             <h2 class="card__name">{{ relic.name }}</h2>
@@ -41,10 +47,10 @@
           </div>
           <div class="card__tools">
             <button type="button" class="card__tool" @click="togglePublished(relic)">
-              {{ relic.published === false ? 'Publicar' : 'Despublicar' }}
+              {{ relic.published === false ? t('admin.publish') : t('admin.unpublish') }}
             </button>
-            <button type="button" class="card__tool" @click="openForm(relic)">Editar</button>
-            <button type="button" class="card__tool card__tool--danger" @click="confirmRemove(relic)">Remover</button>
+            <button type="button" class="card__tool" @click="openForm(relic)">{{ t('admin.edit') }}</button>
+            <button type="button" class="card__tool card__tool--danger" @click="confirmRemove(relic)">{{ t('admin.remove') }}</button>
           </div>
         </article>
       </li>
@@ -71,6 +77,7 @@
       :taken-ids="takenIds"
       @close="formOpen = false"
       @save="store"
+      translated="onTranslated"
     />
   </section>
 </template>
@@ -81,6 +88,10 @@ import { relicStatus } from '~/utils/relics'
 
 const { relics, loadedFor, load, create, update, patch, remove, error: loadError } = useRelics()
 const { user, restore, signOut } = useAuth()
+const { lang: adminLang, toggle: toggleAdminLang, load: loadAdminLang } = useAdminLocale()
+const { t } = useI18n(adminLang)
+provideI18nLang(adminLang)
+useHead(() => ({ htmlAttrs: { lang: adminLang.value === 'pt' ? 'pt-PT' : 'en' } }))
 const { open: openPanel } = usePanels()
 
 const formOpen = ref(false)
@@ -101,6 +112,7 @@ function flash(message: string): void {
 }
 
 onMounted(async () => {
+  loadAdminLang()
   await restore()
   if (!user.value) {
     openPanel('profile')
@@ -118,16 +130,20 @@ function openForm(relic: Relic | null): void {
   formOpen.value = true
 }
 
+function onTranslated(): void {
+  flash(t('form.translationSaved'))
+}
+
 async function store(input: RelicInput): Promise<void> {
   saveError.value = ''
   try {
     if (editing.value) {
       await update(editing.value.id, input)
-      flash('Alterações guardadas.')
+      flash(t('admin.toastSaved'))
     }
     else {
       await create(input)
-      flash('Relíquia criada.')
+      flash(t('admin.toastCreated'))
     }
     formOpen.value = false
     editing.value = null
@@ -143,7 +159,7 @@ async function togglePublished(relic: Relic): Promise<void> {
   saveError.value = ''
   try {
     await patch(relic.id, { published: next })
-    flash(next ? 'Publicada na home.' : 'Movida para rascunho.')
+    flash(next ? t('admin.toastPublished') : t('admin.toastDraft'))
   }
   catch (err: unknown) {
     const apiError = err as { data?: { message?: string }, message?: string }
@@ -152,11 +168,11 @@ async function togglePublished(relic: Relic): Promise<void> {
 }
 
 async function confirmRemove(relic: Relic): Promise<void> {
-  if (!window.confirm(`Remover “${relic.name}” do arquivo?`)) return
+  if (!window.confirm(t('admin.confirmRemove', { name: relic.name }))) return
   saveError.value = ''
   try {
     await remove(relic.id)
-    flash('Relíquia removida.')
+    flash(t('admin.toastRemoved'))
   }
   catch (err: unknown) {
     const apiError = err as { data?: { message?: string }, message?: string }
@@ -228,6 +244,10 @@ function requestLogin(): void {
 }
 
 .admin__actions { display: flex; gap: 10px; }
+
+.admin__lang {
+  letter-spacing: 0.14em;
+}
 
 .admin__ghost,
 .admin__primary {

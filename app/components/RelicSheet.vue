@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Relic, RelicScene } from '~/data/relics'
-import { LOCATION_LABEL, relicLocation, relicStatus } from '~/utils/relics'
+import { relicLocation, relicStatus } from '~/utils/relics'
+const { t } = useI18n()
 
 const props = defineProps<{ relic: Relic; index: number; armed?: boolean }>()
 const emit = defineEmits<{ 'update:index': [index: number]; 'open-media': [scene: RelicScene]; typing: [active: boolean] }>()
@@ -147,12 +148,12 @@ defineExpose({ goTo })
   <div class="rsheet">
     <aside class="rsheet__info">
       <p class="rsheet__eyebrow" data-sheet-item>
-        {{ relic.mission }} · {{ LOCATION_LABEL[relicLocation(relic)] }}
+        {{ relic.mission }} · {{ t(`location.${relicLocation(relic)}` as 'location.moon') }}
       </p>
       <h2 class="sheet__title" data-sheet-item>{{ relic.name }}</h2>
       <p class="rsheet__state" data-sheet-item>
         <StatusBadge :status="relicStatus(relic)" />
-        <span v-if="relic.is_extra" class="rsheet__extra">Extra</span>
+        <span v-if="relic.is_extra" class="rsheet__extra">{{ t('sheet.extra') }}</span>
       </p>
       <a
         v-if="relic.reference_url"
@@ -161,7 +162,7 @@ defineExpose({ goTo })
         target="_blank"
         rel="noopener noreferrer"
         data-sheet-item
-      >Fonte oficial ↗</a>
+      >{{ t('sheet.source') }} ↗</a>
 
       <div class="rsheet__copy" data-sheet-item>
         <Transition name="swap" mode="out-in">
@@ -193,7 +194,7 @@ defineExpose({ goTo })
           <button
             type="button"
             class="rsheet__hit"
-            :aria-label="`Ver ${scene.kicker} em ecrã inteiro`"
+            :aria-label="t('sheet.openMedia', { label: scene.kicker })"
             @click="emit('open-media', scene)"
           >
             <img

@@ -27,7 +27,7 @@
         ref="closeRef"
         :to="closeTo"
         class="sheet__close"
-        aria-label="Close"
+        :aria-label="t('common.close')"
       >
         <SheetCloseIcon />
       </NuxtLink>
@@ -36,7 +36,7 @@
         ref="closeRef"
         type="button"
         class="sheet__close"
-        aria-label="Close"
+        :aria-label="t('common.close')"
         @click="emit('close')"
       >
         <SheetCloseIcon />
@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
 withDefaults(
   defineProps<{
     overlay?: boolean

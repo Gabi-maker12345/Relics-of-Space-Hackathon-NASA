@@ -2,6 +2,7 @@
 const section = ref<HTMLElement | null>(null)
 const elements = ref<HTMLElement[]>([])
 const { open } = useAct()
+const { t } = useI18n()
 
 const setEl = (el: Element | ComponentPublicInstance | null, index: number) => {
   if (el instanceof HTMLElement) elements.value[index] = el
@@ -52,7 +53,7 @@ const startFlip = () => open()
   <section ref="section" class="fr-archive" aria-labelledby="archive-title">
     <div class="fr-archive__stage">
       <div class="fr-archive__plane">
-        <p :ref="el => setEl(el, 0)" class="fr-label fr-archive__eyebrow">Arquivo de missões</p>
+        <p :ref="el => setEl(el, 0)" class="fr-label fr-archive__eyebrow">{{ t('archive.eyebrow') }}</p>
         <h2 id="archive-title" :ref="el => setEl(el, 1)" class="fr-serif fr-archive__title">
           O que ficou<br />para trás
         </h2>
@@ -60,7 +61,7 @@ const startFlip = () => open()
           Três relíquias, três histórias. A mesma pergunta: o que acontece com aquilo que deixamos de usar?
         </p>
         <div :ref="el => setEl(el, 3)" class="fr-archive__action">
-          <ForgeCta label="Ver o arquivo" @click="startFlip" />
+          <ForgeCta :label="t('archive.cta')" @click="startFlip" />
         </div>
       </div>
     </div>

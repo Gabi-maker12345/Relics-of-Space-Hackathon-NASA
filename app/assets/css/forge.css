@@ -888,7 +888,7 @@
   font-weight: 600;
   letter-spacing: 2.4px;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--fr-paper) 45%, transparent);
+  color: color-mix(in srgb, var(--fr-paper) 72%, transparent);
   margin-bottom: 4px;
 }
 
@@ -1647,7 +1647,7 @@ html[data-act='scene'] .gl {
   display: inline-flex;
   align-items: center;
   gap: 0.8rem;
-  opacity: 0.75;
+  opacity: 0.92;
 }
 
 .fr-step__extra {
@@ -1657,7 +1657,7 @@ html[data-act='scene'] .gl {
   text-transform: uppercase;
   border: 1px dashed currentColor;
   border-radius: 999px;
-  opacity: 0.65;
+  opacity: 0.85;
 }
 
 .fr-panels--empty {
@@ -1725,4 +1725,34 @@ html[data-act='scene'] .gl {
   stroke-width: 1.2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+
+/* ── Acessibilidade (FE-21) ── */
+.skip-link {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 200;
+  transform: translate(-50%, -120%);
+  padding: 10px 16px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #05060a;
+  background: #f2f1ed;
+  transition: transform 0.2s ease;
+}
+
+.skip-link:focus-visible {
+  transform: translate(-50%, 0);
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.site__main:focus {
+  outline: none;
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { act, back } = useAct()
+const { t } = useI18n()
 
 const stars = Array.from({ length: 26 }, (_, i) => {
   const seed = (n: number) => {
@@ -30,12 +31,12 @@ const stars = Array.from({ length: 26 }, (_, i) => {
 
     <div class="gate__stage">
       <div class="gate__glow" aria-hidden="true" />
-      <p class="fr-label gate__eyebrow">Fim da transmissão</p>
+      <p class="fr-label gate__eyebrow">{{ t('gate.end') }}</p>
       <h2 class="gate__title">
-        <span class="gate__word gate__word--l">O cosmos</span>
-        <span class="gate__word gate__word--r">continua.</span>
+        <span class="gate__word gate__word--l">{{ t('gate.cosmos') }}</span>
+        <span class="gate__word gate__word--r">{{ t('gate.continues') }}</span>
       </h2>
-      <p class="gate__hint">Desça para atravessar</p>
+      <p class="gate__hint">{{ t('gate.hint') }}</p>
     </div>
 
     <div class="gate__scene">
@@ -47,12 +48,12 @@ const stars = Array.from({ length: 26 }, (_, i) => {
         <RelicFilters overlay />
       </div>
       <div v-if="act !== 'page'" class="gate-chrome fr">
-        <p v-if="act === 'scene'" class="fr-label gate__label">Relíquias</p>
+        <p v-if="act === 'scene'" class="fr-label gate__label">{{ t('gate.relics') }}</p>
         <button type="button" class="gate__back" @click="back">
           <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
             <path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
-          Voltar
+          {{ t('nav.back') }}
         </button>
       </div>
     </Teleport>

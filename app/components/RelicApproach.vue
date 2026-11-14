@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { missionMarquee } from '~/data/relics'
+const { t } = useI18n()
 
 const wrap = ref<HTMLElement | null>(null)
 const title = ref<HTMLElement | null>(null)
@@ -107,7 +108,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
   <section ref="wrap" class="fr-approach" aria-labelledby="relics-approach-title">
     <div class="fr-approach__stage">
       <header class="fr-approach__head">
-        <h2 id="relics-approach-title" ref="title" class="fr-serif fr-approach__title">As relíquias</h2>
+        <h2 id="relics-approach-title" ref="title" class="fr-serif fr-approach__title">{{ t('approach.title') }}</h2>
       </header>
 
       <svg class="fr-orbit__lines" aria-hidden="true">

@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import type { Relic, RelicPanelCover } from '#shared/types/relic'
-import { isPublished, LOCATION_LABEL, relicLocation, relicStatus } from '~/utils/relics'
+import { isPublished, relicLocation, relicStatus } from '~/utils/relics'
+
+const { t } = useI18n()
+
+onMounted(() => { void load() })
 
 type PanelRelic = Relic & { cover?: RelicPanelCover | null }
 
-const { relics } = useRelics()
+const { relics, load } = useRelics()
 const visible = computed<PanelRelic[]>(() => relics.value.filter(isPublished) as PanelRelic[])
 
 const wrap = ref<HTMLElement | null>(null)
@@ -72,8 +76,8 @@ const cardInset = (index: number) => {
 
 <template>
   <div v-if="visible.length === 0" class="fr-panels fr-panels--empty">
-    <p class="fr-label">Arquivo vazio</p>
-    <p class="fr-panels__emptyTitle">Ainda não há relíquias publicadas.</p>
+    <p class="fr-label">{{ t('panels.empty') }}</p>
+    <p class="fr-panels__emptyTitle">{{ t('panels.emptyTitle') }}</p>
   </div>
 
   <div v-else ref="wrap" class="fr-panels" :style="{ height: `${Math.max(1, total) * 100}vh` }">
@@ -117,9 +121,9 @@ const cardInset = (index: number) => {
           <p class="fr-label fr-step__counter">
             {{ counter(index) }}
             <span class="fr-step__meta">
-              {{ LOCATION_LABEL[relicLocation(relic)] }}
+              {{ t(`location.${relicLocation(relic)}` as 'location.moon') }}
               <StatusBadge :status="relicStatus(relic)" />
-              <span v-if="relic.is_extra" class="fr-step__extra">Extra</span>
+              <span v-if="relic.is_extra" class="fr-step__extra">{{ t('panels.extra') }}</span>
             </span>
           </p>
           <h3 :id="`relic-${relic.id}`" class="fr-serif fr-step__title">{{ relic.name }}</h3>

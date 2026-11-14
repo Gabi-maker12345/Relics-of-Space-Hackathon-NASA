@@ -3,6 +3,7 @@ import gsap from 'gsap'
 import type { Relic, RelicScene } from '~/data/relics'
 
 const { relics } = useRelics()
+const { lang } = useI18n()
 const { activeSlug, open, close } = useProjectModal()
 const route = useRoute()
 const frame = ref<{ focusSelf: () => void } | null>(null)
@@ -26,7 +27,9 @@ async function loadDetail(slug: string): Promise<void> {
   detailRequestSlug = slug
   detailRequest = (async () => {
     try {
-      const full = await $fetch<Relic>(`/api/public/relics/${encodeURIComponent(slug)}`)
+      const full = await $fetch<Relic>(`/api/public/relics/${encodeURIComponent(slug)}`, {
+        query: { lang: lang.value },
+      })
       if (!full || activeSlug.value !== slug) return
       detail.value = full
       relics.value = relics.value.map(r => (r.id === slug ? { ...r, ...full } : r))
@@ -57,6 +60,14 @@ watch(
   },
   { immediate: true },
 )
+
+// FE-18: trocar de idioma recarrega o diário aberto (texto e áudio por passo)
+watch(lang, () => {
+  if (!activeSlug.value) return
+  detail.value = null
+  detailRequestSlug = ''
+  void loadDetail(activeSlug.value)
+})
 const index = ref(0)
 const lightbox = ref<RelicScene | null>(null)
 const glitching = ref(false)

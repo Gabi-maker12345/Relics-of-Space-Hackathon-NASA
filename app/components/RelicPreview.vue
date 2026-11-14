@@ -16,14 +16,14 @@
           @pointerup="endDrag"
           @pointercancel="endDrag"
         >
-          <p class="preview__kicker">Pré-visualização <em>ao vivo</em></p>
+          <p class="preview__kicker">{{ t('preview.title') }} <em>{{ t('preview.live') }}</em></p>
 
           <div class="preview__modes" role="group" aria-label="Modo de pré-visualização">
             <button type="button" :class="{ 'is-on': mode === 'panel' }" :aria-pressed="mode === 'panel'" @click="mode = 'panel'">
-              Painel
+              {{ t('preview.panel') }}
             </button>
             <button type="button" :class="{ 'is-on': mode === 'modal' }" :aria-pressed="mode === 'modal'" @click="mode = 'modal'">
-              Modal
+              {{ t('preview.modal') }}
             </button>
           </div>
 
@@ -31,8 +31,8 @@
             type="button"
             class="preview__expand"
             :aria-pressed="expanded"
-            :aria-label="expanded ? 'Reduzir pré-visualização' : 'Expandir pré-visualização'"
-            :title="expanded ? 'Reduzir' : 'Expandir'"
+            :aria-label="expanded ? t('preview.collapse') : t('preview.expand')"
+            :title="expanded ? t('preview.collapse') : t('preview.expand')"
             @click="toggleExpanded"
           >
             <svg v-if="!expanded" viewBox="0 0 16 16" aria-hidden="true">
@@ -43,7 +43,7 @@
             </svg>
           </button>
 
-          <button type="button" class="preview__close" aria-label="Fechar pré-visualização" @click="emit('close')">
+          <button type="button" class="preview__close" :aria-label="t('preview.close')" @click="emit('close')">
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" /></svg>
           </button>
         </header>
@@ -69,27 +69,27 @@
           <article v-else class="preview__card">
             <div class="preview__cover">
               <RelicCover v-if="cover" :src="cover" :poster="relic.image" :alt="relic.alt || relic.name" />
-              <span v-else class="preview__empty">sem capa</span>
+              <span v-else class="preview__empty">{{ t('preview.noCover') }}</span>
             </div>
             <div class="preview__cardBody">
               <p class="preview__meta">
                 <StatusBadge :status="relicStatus(relic)" />
-                <span>{{ LOCATION_LABEL[relicLocation(relic)] }}</span>
+                <span>{{ t(`location.${relicLocation(relic)}` as 'location.moon') }}</span>
               </p>
-              <h3 class="preview__name">{{ relic.name || 'Sem nome' }}</h3>
-              <p class="preview__tagline">{{ relic.tagline || 'Frase de efeito por escrever.' }}</p>
+              <h3 class="preview__name">{{ relic.name || t('preview.unnamed') }}</h3>
+              <p class="preview__tagline">{{ relic.tagline || t('preview.noTagline') }}</p>
               <p class="preview__facts">{{ factsLabel }} · {{ scenesLabel }}</p>
             </div>
           </article>
         </div>
 
         <p v-if="relic.scenes.length === 0" class="preview__noMedia">
-          Sem mídias — adiciona uma cena para veres o modal completo.
+          {{ t('preview.noMedia') }}
         </p>
 
         <footer class="preview__foot">
           <span>{{ progressLabel }}</span>
-          <span class="preview__note">arrasta pelo cabeçalho</span>
+          <span class="preview__note">{{ t('preview.dragHint') }}</span>
         </footer>
       </aside>
     </Transition>
@@ -98,7 +98,8 @@
 
 <script setup lang="ts">
 import type { Relic } from '#shared/types/relic'
-import { LOCATION_LABEL, relicLocation, relicStatus } from '~/utils/relics'
+import { relicLocation, relicStatus } from '~/utils/relics'
+const { t } = useI18n()
 
 const props = defineProps<{ open: boolean, relic: Relic }>()
 const emit = defineEmits<{ close: [] }>()
@@ -121,17 +122,14 @@ const stageH = computed(() => Math.round(STAGE_H * scale.value))
 
 const progress = computed(() => (props.relic.scenes.length > 0 ? (index.value + 1) / props.relic.scenes.length : 0))
 const progressLabel = computed(() => {
-  if (mode.value === 'panel') {
-    const total = props.relic.scenes.length
-    return `${total} ${total === 1 ? 'mídia' : 'mídias'} no cartão`
-  }
   const total = props.relic.scenes.length
-  return total > 0 ? `passo ${index.value + 1} / ${total}` : 'sem mídias'
+  if (mode.value === 'panel') return t('preview.mediaOnCard', { count: total })
+  return total > 0 ? t('preview.step', { current: index.value + 1, total }) : t('preview.noMediaShort')
 })
 
 const cover = computed(() => props.relic.image || props.relic.scenes[0]?.src || '')
-const factsLabel = computed(() => `${props.relic.facts.length} ${props.relic.facts.length === 1 ? 'facto' : 'factos'}`)
-const scenesLabel = computed(() => `${props.relic.scenes.length} ${props.relic.scenes.length === 1 ? 'cena' : 'cenas'}`)
+const factsLabel = computed(() => t('preview.facts', { count: props.relic.facts.length }))
+const scenesLabel = computed(() => t('preview.scenes', { count: props.relic.scenes.length }))
 
 watch(() => props.relic.scenes.length, (total) => {
   if (index.value > total - 1) index.value = Math.max(0, total - 1)

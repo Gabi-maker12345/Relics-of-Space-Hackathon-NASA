@@ -83,6 +83,12 @@ export function useAct() {
       { passive: false },
     )
     window.addEventListener('keydown', (event) => {
+      // FE-21: o teclado atravessa o cosmos (a roda não é o único caminho)
+      if (act.value === 'cosmos' && ['ArrowDown', 'PageDown', ' ', 'Enter'].includes(event.key)) {
+        event.preventDefault()
+        void enter()
+        return
+      }
       if (event.key !== 'Escape' || act.value === 'page') return
       // com um diário aberto, o Escape pertence ao modal (fecha-o primeiro)
       if (document.querySelector('[data-modal]')) return

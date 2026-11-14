@@ -1,11 +1,12 @@
 <template>
   <div class="site">
+    <a class="skip-link" href="#main">{{ t('a11y.skip') }}</a>
     <CosmosBackground />
     <GlCanvas />
-    <main class="site__main">
+    <ForgeHeader />
+    <main id="main" class="site__main" tabindex="-1">
       <NuxtPage />
     </main>
-    <ForgeHeader />
     <CosmosGate />
     <ScrollProgress />
     <ProfilePanel />
@@ -19,6 +20,7 @@
 usePanels()
 
 const { lang } = useLocale()
+const { t } = useI18n()
 useHead(() => ({ htmlAttrs: { lang: lang.value === 'pt' ? 'pt-PT' : 'en' } }))
 
 const { muted } = useSound()

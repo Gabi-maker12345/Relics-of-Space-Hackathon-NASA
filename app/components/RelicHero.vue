@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { heroCopy } from '~/data/relics'
+const { t } = useI18n()
 
 const section = ref<HTMLElement | null>(null)
 const progress = ref(0)
@@ -54,16 +54,15 @@ const secondStyle = computed(() => ({
   <section ref="section" class="fr-hero" aria-label="Space Relics">
     <div class="fr-hero__sticky">
       <div class="fr-hero__layer" :style="firstStyle">
-        <h1 class="fr-serif fr-hero__title">{{ heroCopy.title }}</h1>
-        <p class="fr-hero__deck">{{ heroCopy.deck }}</p>
+        <h1 class="fr-serif fr-hero__title">Space Relics</h1>
+        <p class="fr-hero__deck">{{ t('hero.deck') }}</p>
       </div>
 
       <div class="fr-hero__layer" :style="secondStyle" aria-hidden="false">
         <h2 class="fr-serif fr-hero__title">
-          Abandonados,
-          <em>mas não esquecidos.</em>
+          {{ t('hero.phaseTwo') }}
         </h2>
-        <p class="fr-hero__deck">{{ heroCopy.phaseTwoDeck }}</p>
+        <p class="fr-hero__deck">{{ t('hero.phaseTwoDeck') }}</p>
       </div>
 
       <div class="fr-hero__dots" aria-hidden="true">

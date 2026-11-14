@@ -17,25 +17,34 @@ let inflight: Promise<void> | null = null
 export function useRelics() {
   const relics = useState<Relic[]>('relics-list', () => clone(seedRelics))
   const loadedFor = useState<Mode | null>('relics-loaded-for', () => null)
+  const loadedLang = useState<string>('relics-loaded-lang', () => 'pt')
+  const { lang } = useLocale()
   const error = useState<string>('relics-error', () => '')
   const { user } = useAuth()
+  const route = useRoute()
 
-  const mode = (): Mode => (user.value ? 'admin' : 'public')
+  // O modo segue a rota, não a sessão: um admin no site público vê a lista
+  // pública (traduzida), o painel vê a lista de administração.
+  const mode = (): Mode => (route.path.startsWith('/admin') ? 'admin' : 'public')
 
   const load = async (force = false): Promise<void> => {
     if (!import.meta.client) return
     if (inflight) return inflight
 
     const current = mode()
-    if (!force && loadedFor.value === current) return
+    const currentLang = current === 'public' ? lang.value : ''
+    if (!force && loadedFor.value === current && loadedLang.value === currentLang) return
 
     inflight = (async () => {
       error.value = ''
       try {
         const endpoint = current === 'admin' ? '/api/admin/relics' : '/api/public/relics'
-        const data = await $fetch<Relic[]>(endpoint)
+        const data = await $fetch<Relic[]>(endpoint, {
+          query: current === 'public' ? { lang: currentLang } : undefined,
+        })
         if (Array.isArray(data)) relics.value = data
         loadedFor.value = current
+        loadedLang.value = currentLang
       }
       catch (err: unknown) {
         const apiError = err as { data?: { message?: string }, statusMessage?: string, message?: string }
@@ -52,6 +61,11 @@ export function useRelics() {
       inflight = null
     }
   }
+
+  // FE-18: no site público, trocar de idioma recarrega a lista traduzida.
+  watch(lang, () => {
+    if (mode() === 'public') void load(true)
+  })
 
   // Login/logout mudam o que é visível: descarta a lista anterior e recarrega.
   watch(

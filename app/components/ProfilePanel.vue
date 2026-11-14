@@ -10,12 +10,12 @@
       class="portal__inner"
       :class="active === 'profile' ? '' : 'pointer-events-none'"
     >
-      <p class="portal__kicker" data-gl="text">Arquivo · acesso restrito</p>
-      <h2 class="portal__title" data-gl="text">Entrar</h2>
+      <p class="portal__kicker" data-gl="text">{{ t('login.kicker') }}</p>
+      <h2 class="portal__title" data-gl="text">{{ t('login.title') }}</h2>
 
       <form class="portal__form" novalidate @submit.prevent="submit">
         <label class="portal__field">
-          <span class="portal__label" data-gl="text">Email</span>
+          <span class="portal__label" data-gl="text">{{ t('login.email') }}</span>
           <input
             v-model="email"
             type="email"
@@ -27,7 +27,7 @@
         </label>
 
         <label class="portal__field">
-          <span class="portal__label" data-gl="text">Palavra-passe</span>
+          <span class="portal__label" data-gl="text">{{ t('login.password') }}</span>
           <span class="portal__wrap">
             <input
               v-model="password"
@@ -43,20 +43,20 @@
               :aria-pressed="reveal"
               tabindex="-1"
               @click="reveal = !reveal"
-            >{{ reveal ? 'esconder' : 'mostrar' }}</button>
+            >{{ reveal ? t('login.hide') : t('login.reveal') }}</button>
           </span>
         </label>
 
-        <p v-if="error" class="portal__error" role="alert">{{ error }}</p>
+        <p v-if="errorText" class="portal__error" role="alert">{{ errorText }}</p>
 
         <button class="portal__submit" type="submit">
-          <span>Entrar no arquivo</span>
+          <span>{{ t('login.submit') }}</span>
           <svg viewBox="0 0 24 12" aria-hidden="true"><path d="M0 6h22M17 1l5 5-5 5" /></svg>
         </button>
       </form>
 
       <p class="portal__hint" data-gl="text">
-        acesso restrito ao arquivo
+        {{ t('login.hint') }}
       </p>
     </div>
   </div>
@@ -65,6 +65,17 @@
 <script setup lang="ts">
 const { active, close } = usePanels()
 const { signIn, error } = useAuth()
+const { t } = useI18n()
+
+const errorText = computed(() => {
+  switch (error.value) {
+    case 'invalid_email': return t('login.errEmail')
+    case 'short_password': return t('login.errPassword')
+    case 'bad_credentials':
+    case 'generic': return t('login.errCredentials')
+    default: return ''
+  }
+})
 
 const email = ref('')
 const password = ref('')

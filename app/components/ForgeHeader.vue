@@ -3,6 +3,7 @@ const { active, toggle } = usePanels()
 const { user } = useAuth()
 const { lang, toggle: toggleLang } = useLocale()
 const { muted, toggle: toggleSound } = useSound()
+const { t } = useI18n()
 
 const socials = [
   {
@@ -49,7 +50,7 @@ const socials = [
       </a>
     </nav>
 
-    <NuxtLink to="/" class="fr-logo" aria-label="Space Relics — início">
+    <NuxtLink to="/" class="fr-logo" :aria-label="`Space Relics — ${t('nav.home')}`">
       <img src="/images/nasa-logo.png" alt="NASA" width="2625" height="765" />
     </NuxtLink>
 
@@ -57,7 +58,7 @@ const socials = [
       <button
         type="button"
         class="fr-control fr-label"
-        :aria-label="lang === 'pt' ? 'Mudar para inglês' : 'Switch to Portuguese'"
+        :aria-label="t('nav.langTo')"
         @click="toggleLang"
       >{{ lang === 'pt' ? 'PT' : 'EN' }}</button>
 
@@ -65,7 +66,7 @@ const socials = [
         type="button"
         class="fr-control fr-control--sound"
         :aria-pressed="!muted"
-        :aria-label="muted ? 'Ligar som' : 'Desligar som'"
+        :aria-label="muted ? t('nav.soundOn') : t('nav.soundOff')"
         @click="toggleSound"
       >
         <svg viewBox="0 0 20 16" aria-hidden="true">
@@ -75,7 +76,7 @@ const socials = [
         </svg>
       </button>
 
-      <NuxtLink v-if="user" to="/admin" class="fr-profile fr-label">Painel</NuxtLink>
+      <NuxtLink v-if="user" to="/admin" class="fr-profile fr-label">{{ t('nav.panel') }}</NuxtLink>
       <button
         v-else
         type="button"
@@ -83,7 +84,7 @@ const socials = [
         :aria-expanded="active === 'profile'"
         aria-controls="profile-panel"
         @click="toggle('profile')"
-      >Entrar</button>
+      >{{ t('nav.enter') }}</button>
     </div>
   </header>
 </template>

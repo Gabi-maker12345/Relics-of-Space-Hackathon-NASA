@@ -744,3 +744,20 @@ diário aberto pelo cartão.
   responsiva, 0.42 no desktop, mínima de 0.16 em ecrãs pequenos), largura do painel = palco +
   padding, `contain: paint` no palco e `.sheet` preso ao contentor de 1240×747
   (`width/height: calc(100% - 4rem)`) — acabou o transbordo do conteúdo para fora da janela.
+
+## FE-18 + FE-21 — idioma global (público e painel) e acessibilidade
+
+- **i18n**: `app/i18n/messages.ts` (PT/EN, ~140 chaves) + `useI18n()` com fallback para PT.
+  O site usa o idioma do cabeçalho (`useLocale`, persistido); o painel tem o **seu próprio**
+  seletor no canto superior direito (`useAdminLocale`, persistido) e fornece o idioma ao subtree
+  (`provideI18nLang`), por isso lista, formulário, toasts e pré-visualização mudam em conjunto.
+- **Conteúdo**: `?lang=` enviado à lista pública, ao detalhe (recarrega ao trocar de idioma) e ao
+  store (`useRelics`); o modo do store passou a seguir a rota, não a sessão. Traduções de conteúdo
+  editam-se no formulário, numa secção **05 Traduções** (nome, missão, frase, história, alt, áudio
+  de intro e por mídia) que grava em `PUT /api/admin/relics/:id/translations/en`.
+- **a11y**: skip link, foco visível global, cabeçalho antes do conteúdo na ordem de tabulação,
+  cartões do carrossel focáveis (Enter/Espaço), entrada na cena 3D por teclado (↓/PageDown/Enter),
+  focus trap e Esc no formulário do admin, `aria-controls` só quando o alvo existe, contraste AA no
+  sheet e nos painéis (selos escuros sobre a folha clara, labels a 0.62/0.72).
+- **Verificação**: axe-core 4.10 (WCAG 2.0/2.1 AA) sem violações na landing, painéis, admin, modal
+  aberto e formulário; fluxo completo por teclado; `prefers-reduced-motion` reduz transições a ~0.

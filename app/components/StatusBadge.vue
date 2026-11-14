@@ -4,10 +4,10 @@
 
 <script setup lang="ts">
 import type { RelicStatus } from '#shared/types/relic'
-import { STATUS_LABEL } from '~/utils/relics'
 
 const props = withDefaults(defineProps<{ status?: RelicStatus }>(), { status: 'active' })
-const label = computed(() => STATUS_LABEL[props.status])
+const { t } = useI18n()
+const label = computed(() => t(`status.${props.status}` as 'status.active'))
 </script>
 
 <style scoped>

@@ -2,27 +2,27 @@
   <Teleport to="body">
     <Transition name="form">
       <div v-if="open" class="rform" role="dialog" aria-modal="true" aria-labelledby="rform-title">
-        <button class="rform__scrim" type="button" aria-label="Fechar" @click="requestClose" />
+        <button class="rform__scrim" type="button" :aria-label="t('common.close')" @click="requestClose" />
 
         <form class="rform__sheet" novalidate @submit.prevent="save">
           <header class="rform__head">
             <div class="rform__headText">
-              <p class="rform__kicker">{{ isEdit ? 'Registo existente' : 'Novo registo' }}</p>
-              <h2 id="rform-title" class="rform__title">{{ isEdit ? 'Editar relíquia' : 'Nova relíquia' }}</h2>
+              <p class="rform__kicker">{{ isEdit ? t('form.kickerEdit') : t('form.kickerNew') }}</p>
+              <h2 id="rform-title" class="rform__title">{{ isEdit ? t('form.titleEdit') : t('form.titleNew') }}</h2>
             </div>
             <div class="rform__headActions">
               <button
                 type="button"
                 class="rform__previewBtn"
                 :aria-pressed="previewOpen"
-                aria-controls="relic-preview"
+                :aria-controls="previewOpen ? 'relic-preview' : undefined"
                 @click="previewOpen = !previewOpen"
               >
                 <svg viewBox="0 0 20 14" aria-hidden="true">
                   <path d="M1 7s3.2-5 9-5 9 5 9 5-3.2 5-9 5-9-5-9-5Z" />
                   <circle cx="10" cy="7" r="2.4" />
                 </svg>
-                Preview
+                {{ t('form.preview') }}
               </button>
               <button type="button" class="rform__x" aria-label="Fechar" @click="requestClose">
                 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" /></svg>
@@ -34,18 +34,18 @@
             <section class="rform__group">
               <div class="rform__groupHead">
                 <span class="rform__num">01</span>
-                <h3 class="rform__legend">Identidade</h3>
+                <h3 class="rform__legend">{{ t('form.identity') }}</h3>
               </div>
 
               <div class="rform__groupBody">
                 <div class="rform__pairRow">
                   <label class="rform__field rform__field--wide">
-                    <span class="rform__label">Nome da relíquia</span>
+                    <span class="rform__label">{{ t('form.name') }}</span>
                     <input v-model="draft.name" class="rform__input" placeholder="Módulo Lunar Apollo" @input="onName">
                     <span v-if="errors.name" class="rform__err">{{ errors.name }}</span>
                   </label>
                   <label class="rform__field">
-                    <span class="rform__label">Identificador <em>(URL)</em></span>
+                    <span class="rform__label">{{ t('form.slug') }}</span>
                     <input v-model="draft.id" class="rform__input rform__input--mono" placeholder="apollo-lunar-module">
                     <span v-if="errors.id" class="rform__err">{{ errors.id }}</span>
                   </label>
@@ -53,12 +53,12 @@
 
                 <div class="rform__pairRow">
                   <label class="rform__field">
-                    <span class="rform__label">Missão</span>
+                    <span class="rform__label">{{ t('form.mission') }}</span>
                     <input v-model="draft.mission" class="rform__input" placeholder="Apollo 11–17 · 1969–1972">
                     <span v-if="errors.mission" class="rform__err">{{ errors.mission }}</span>
                   </label>
                   <label class="rform__field">
-                    <span class="rform__label">Frase de efeito</span>
+                    <span class="rform__label">{{ t('form.tagline') }}</span>
                     <input v-model="draft.tagline" class="rform__input" placeholder="Seis pousos, seis módulos deixados para trás.">
                     <span v-if="errors.tagline" class="rform__err">{{ errors.tagline }}</span>
                   </label>
@@ -66,25 +66,25 @@
 
                 <div class="rform__pairRow">
                   <label class="rform__field">
-                    <span class="rform__label">Estado</span>
+                    <span class="rform__label">{{ t('form.status') }}</span>
                     <select v-model="draft.status" class="rform__input">
-                      <option value="active">Activo</option>
-                      <option value="silent">Silencioso</option>
-                      <option value="lost">Perdido</option>
+                      <option value="active">{{ t('status.active') }}</option>
+                      <option value="silent">{{ t('status.silent') }}</option>
+                      <option value="lost">{{ t('status.lost') }}</option>
                     </select>
                   </label>
                   <label class="rform__field">
-                    <span class="rform__label">Local</span>
+                    <span class="rform__label">{{ t('form.location') }}</span>
                     <select v-model="draft.location" class="rform__input">
-                      <option value="moon">Lua</option>
-                      <option value="mars">Marte</option>
-                      <option value="deep_space">Espaço profundo</option>
+                      <option value="moon">{{ t('location.moon') }}</option>
+                      <option value="mars">{{ t('location.mars') }}</option>
+                      <option value="deep_space">{{ t('location.deep_space') }}</option>
                     </select>
                   </label>
                 </div>
 
                 <label class="rform__field">
-                  <span class="rform__label">História</span>
+                  <span class="rform__label">{{ t('form.story') }}</span>
                   <textarea v-model="draft.body" class="rform__input rform__area" rows="4" placeholder="O que ficou para trás, contado em duas ou três frases." />
                   <span v-if="errors.body" class="rform__err">{{ errors.body }}</span>
                 </label>
@@ -96,10 +96,10 @@
                   :text="draft.body"
                   placeholder="/media/intro.mp3"
                 />
-                <p class="rform__hint">A voz que abre o diário antes da primeira cena.</p>
+                <p class="rform__hint">{{ t('form.introAudioHint') }}</p>
 
                 <label class="rform__field">
-                  <span class="rform__label">Fonte oficial <em>(opcional)</em></span>
+                  <span class="rform__label">{{ t('form.officialSource') }}</span>
                   <input v-model="draft.reference_url" class="rform__input rform__input--mono" placeholder="https://science.nasa.gov/mission/...">
                 </label>
               </div>
@@ -108,17 +108,17 @@
             <section class="rform__group">
               <div class="rform__groupHead">
                 <span class="rform__num">02</span>
-                <h3 class="rform__legend">Cartão</h3>
+                <h3 class="rform__legend">{{ t('form.card') }}</h3>
               </div>
 
               <div class="rform__groupBody">
                 <div class="rform__media">
                   <div class="rform__thumb">
-                    <img v-if="draft.image" :src="draft.image" :alt="draft.alt || 'Pré-visualização'" @load="onImageLoad">
-                    <span v-else class="rform__thumbEmpty">sem imagem</span>
+                    <img v-if="draft.image" :src="draft.image" :alt="draft.alt || t('form.coverImage')" @load="onImageLoad">
+                    <span v-else class="rform__thumbEmpty">{{ t('form.thumbEmpty') }}</span>
                     <label class="rform__upload">
                       <input type="file" accept="image/*" class="sr-only" @change="onFile">
-                      <span>{{ draft.image ? 'Substituir' : 'Enviar imagem' }}</span>
+                      <span>{{ draft.image ? t('form.replace') : t('form.uploadImage') }}</span>
                     </label>
                     <div
                       v-if="coverProgress"
@@ -135,19 +135,19 @@
 
                   <div class="rform__mediaFields">
                     <label class="rform__field">
-                      <span class="rform__label">Imagem <em>(URL ou ficheiro)</em></span>
+                      <span class="rform__label">{{ t('form.coverImage') }}</span>
                       <input v-model="draft.image" class="rform__input rform__input--mono" placeholder="/images/relics/nova.jpg">
                       <span v-if="errors.image" class="rform__err">{{ errors.image }}</span>
                     </label>
 
                     <div class="rform__pairRow">
                       <label class="rform__field">
-                        <span class="rform__label">Texto alternativo</span>
+                        <span class="rform__label">{{ t('form.alt') }}</span>
                         <input v-model="draft.alt" class="rform__input" placeholder="Descrição da imagem">
                         <span v-if="errors.alt" class="rform__err">{{ errors.alt }}</span>
                       </label>
                       <label class="rform__field">
-                        <span class="rform__label">Proporção <em>(automática)</em></span>
+                        <span class="rform__label">{{ t('form.ratio') }}</span>
                         <input v-model="draft.ratio" class="rform__input rform__input--mono" placeholder="1376 / 768">
                         <span v-if="errors.ratio" class="rform__err">{{ errors.ratio }}</span>
                       </label>
@@ -160,8 +160,8 @@
             <section class="rform__group">
               <div class="rform__groupHead">
                 <span class="rform__num">03</span>
-                <h3 class="rform__legend">Ficha técnica</h3>
-                <button type="button" class="rform__add" @click="addFact">+ linha</button>
+                <h3 class="rform__legend">{{ t('form.facts') }}</h3>
+                <button type="button" class="rform__add" @click="addFact">{{ t('form.addFact') }}</button>
               </div>
 
               <div class="rform__groupBody">
@@ -179,13 +179,11 @@
             <section class="rform__group">
               <div class="rform__groupHead">
                 <span class="rform__num">04</span>
-                <h3 class="rform__legend">Mídias <em>(narradas)</em></h3>
+                <h3 class="rform__legend">{{ t('form.media') }}</h3>
                 <div class="rform__addRow">
-                  <button type="button" class="rform__add" @click="addScene()">+ mídia</button>
+                  <button type="button" class="rform__add" @click="addScene()">{{ t('form.addMedia') }}</button>
                 </div>
-                <p class="rform__hint">
-                  Alterna Imagem/Vídeo em cada cena. Arrasta ⠿ (ou usa ↑↓) para reordenar.
-                </p>
+                <p class="rform__hint">{{ t('form.mediaHint') }}</p>
               </div>
 
               <div class="rform__groupBody">
@@ -199,7 +197,7 @@
                 >
                   <header class="rform__sceneHead">
                     <span class="rform__sceneNum">
-                      Cena {{ String(i + 1).padStart(2, '0') }} · {{ scene.kind === 'video' ? 'vídeo' : 'imagem' }}
+                      {{ t('form.scene', { n: String(i + 1).padStart(2, '0'), kind: t(scene.kind === 'video' ? 'form.video' : 'form.image') }) }}
                       <em v-if="isCover(scene)" class="rform__coverTag">capa</em>
                     </span>
                     <div class="rform__sceneTools">
@@ -213,8 +211,8 @@
                         @dragstart="onDragStart(i, $event)"
                       >⠿</span>
                       <div class="rform__segment" role="group" aria-label="Tipo de mídia">
-                        <button type="button" :class="{ 'is-on': scene.kind === 'image' }" @click="scene.kind = 'image'">Imagem</button>
-                        <button type="button" :class="{ 'is-on': scene.kind === 'video' }" @click="scene.kind = 'video'">Vídeo</button>
+                        <button type="button" :class="{ 'is-on': scene.kind === 'image' }" @click="scene.kind = 'image'">{{ t('form.image') }}</button>
+                        <button type="button" :class="{ 'is-on': scene.kind === 'video' }" @click="scene.kind = 'video'">{{ t('form.video') }}</button>
                       </div>
                       <button
                         v-if="draft.scenes.length > 1"
@@ -248,7 +246,7 @@
                           :accept="scene.kind === 'video' ? 'video/*' : 'image/*'"
                           @change="onSceneFile($event, i)"
                         >
-                        <span>{{ scene.src ? 'Substituir' : 'Enviar ficheiro' }}</span>
+                        <span>{{ scene.src ? t('form.replace') : t('form.uploadImage') }}</span>
                       </label>
                       <div
                         v-if="uploadIndex === i"
@@ -265,7 +263,7 @@
 
                     <div class="rform__sceneFields">
                       <label class="rform__field">
-                        <span class="rform__label">URL do {{ scene.kind === 'video' ? 'vídeo' : 'imagem' }}</span>
+                        <span class="rform__label">{{ t('form.mediaUrl', { kind: t(scene.kind === 'video' ? 'form.video' : 'form.image') }) }}</span>
                         <input v-model="scene.src" class="rform__input rform__input--mono" placeholder="/media/loop.mp4">
                       </label>
 
@@ -277,41 +275,41 @@
                           :aria-pressed="isCover(scene)"
                           @click="setCover(scene)"
                         >
-                          {{ isCover(scene) ? 'Capa do cartão' : 'Definir como capa' }}
+                          {{ isCover(scene) ? t('form.cover') : t('form.setCover') }}
                         </button>
                         <span class="rform__coverHint">
-                          {{ isCover(scene) ? 'Esta mídia é a capa da home.' : 'Usa a imagem (ou o poster do vídeo) como capa.' }}
+                          {{ isCover(scene) ? t('form.coverHintOn') : t('form.coverHintOff') }}
                         </span>
                       </div>
 
                       <div class="rform__pairRow">
                         <label class="rform__field">
-                          <span class="rform__label">Título <em>(opcional)</em></span>
+                          <span class="rform__label">{{ t('form.title') }}</span>
                           <input v-model="scene.title" class="rform__input" placeholder="Descida do módulo">
                         </label>
                         <label class="rform__field">
-                          <span class="rform__label">Etiqueta</span>
+                          <span class="rform__label">{{ t('form.kicker') }}</span>
                           <input v-model="scene.kicker" class="rform__input" placeholder="Fotografia / Transmissão">
                         </label>
                       </div>
 
                       <label v-if="scene.kind === 'video'" class="rform__field">
-                        <span class="rform__label">Poster do vídeo</span>
+                        <span class="rform__label">{{ t('form.poster') }}</span>
                         <input v-model="scene.poster" class="rform__input rform__input--mono" placeholder="/images/relics/poster.jpg">
                       </label>
 
                       <label class="rform__field">
-                        <span class="rform__label">Legenda / transcrição</span>
+                        <span class="rform__label">{{ t('form.caption') }}</span>
                         <textarea v-model="scene.body" class="rform__input rform__area" rows="3" placeholder="O que o diário conta nesta cena." />
                       </label>
 
                       <div class="rform__pairRow">
                         <label class="rform__field">
-                          <span class="rform__label">Crédito</span>
+                          <span class="rform__label">{{ t('form.credit') }}</span>
                           <input v-model="scene.credit" class="rform__input" placeholder="NASA / JPL">
                         </label>
                         <label class="rform__field">
-                          <span class="rform__label">Fonte <em>(URL)</em></span>
+                          <span class="rform__label">{{ t('form.source') }}</span>
                           <input v-model="scene.source_url" class="rform__input rform__input--mono" placeholder="https://images.nasa.gov/…">
                         </label>
                       </div>
@@ -330,7 +328,7 @@
                       </label>
 
                       <p v-if="scene.src.trim() && !scene.audio_url?.trim() && !scene.body.trim()" class="rform__warn">
-                        Esta mídia não tem áudio nem legenda.
+                        {{ t('form.noAudioNoCaption') }}
                       </p>
                     </div>
                   </div>
@@ -338,22 +336,117 @@
                 <span v-if="errors.scenes" class="rform__err">{{ errors.scenes }}</span>
               </div>
             </section>
+            <section class="rform__group">
+              <div class="rform__groupHead">
+                <span class="rform__num">05</span>
+                <h3 class="rform__legend">{{ t('form.translations') }}</h3>
+                <p class="rform__hint">{{ t('form.langEn') }}</p>
+              </div>
+
+              <div class="rform__groupBody">
+                <p v-if="!relic" class="rform__hint">{{ t('form.translationHint') }}</p>
+
+                <template v-else>
+                  <p v-if="translationBusy" class="rform__hint">…</p>
+
+                  <div class="rform__pairRow">
+                    <label class="rform__field">
+                      <span class="rform__label">{{ t('form.name') }}</span>
+                      <input v-model="translation.name" class="rform__input" :disabled="translationBusy">
+                    </label>
+                    <label class="rform__field">
+                      <span class="rform__label">{{ t('form.slug') }}</span>
+                      <input :value="relic.id" class="rform__input rform__input--mono" disabled>
+                    </label>
+                  </div>
+
+                  <div class="rform__pairRow">
+                    <label class="rform__field">
+                      <span class="rform__label">{{ t('form.mission') }}</span>
+                      <input v-model="translation.mission" class="rform__input" :disabled="translationBusy">
+                    </label>
+                    <label class="rform__field">
+                      <span class="rform__label">{{ t('form.tagline') }}</span>
+                      <input v-model="translation.summary" class="rform__input" :disabled="translationBusy">
+                    </label>
+                  </div>
+
+                  <label class="rform__field">
+                    <span class="rform__label">{{ t('form.story') }}</span>
+                    <textarea v-model="translation.story_text" class="rform__input rform__area" rows="4" :disabled="translationBusy" />
+                  </label>
+
+                  <label class="rform__field">
+                    <span class="rform__label">{{ t('form.alt') }}</span>
+                    <input v-model="translation.alt" class="rform__input" :disabled="translationBusy">
+                  </label>
+
+                  <label class="rform__field">
+                    <span class="rform__label">{{ t('form.introAudio') }}</span>
+                    <input v-model="translation.intro_audio_url" class="rform__input rform__input--mono" :placeholder="'/media/intro-en.mp3'" :disabled="translationBusy">
+                  </label>
+
+                  <div
+                    v-for="(item, i) in translationMedia"
+                    :key="item.media_id"
+                    class="rform__scene"
+                  >
+                    <header class="rform__sceneHead">
+                      <span class="rform__sceneNum">{{ t('form.langEn') }} · {{ String(i + 1).padStart(2, '0') }}</span>
+                    </header>
+
+                    <div class="rform__pairRow">
+                      <label class="rform__field">
+                        <span class="rform__label">{{ t('form.title') }}</span>
+                        <input v-model="item.title" class="rform__input" :disabled="translationBusy">
+                      </label>
+                      <label class="rform__field">
+                        <span class="rform__label">{{ t('form.kicker') }}</span>
+                        <input v-model="item.kicker" class="rform__input" :disabled="translationBusy">
+                      </label>
+                    </div>
+
+                    <label class="rform__field">
+                      <span class="rform__label">{{ t('form.caption') }}</span>
+                      <textarea v-model="item.caption" class="rform__input rform__area" rows="3" :disabled="translationBusy" />
+                    </label>
+
+                    <label class="rform__field">
+                      <span class="rform__label">{{ t('form.narration') }}</span>
+                      <input v-model="item.audio_url" class="rform__input rform__input--mono" :disabled="translationBusy">
+                    </label>
+                  </div>
+
+                  <p v-if="translationError" class="rform__err" role="alert">{{ translationError }}</p>
+                  <p v-if="translationSaved" class="rform__hint" role="status">{{ t('form.translationSaved') }}</p>
+
+                  <button
+                    type="button"
+                    class="rform__add rform__saveTranslation"
+                    :disabled="!relic || translationBusy"
+                    @click="saveTranslation"
+                  >
+                    {{ t('form.saveTranslation') }}
+                  </button>
+                </template>
+              </div>
+            </section>
           </div>
 
           <footer class="rform__foot">
-            <p class="rform__footNote">Guardado na base de dados.</p>
+            <p class="rform__footNote">{{ t('form.footNote') }}</p>
             <label class="rform__publish">
               <input v-model="draft.published" type="checkbox">
-              <span>Publicada no arquivo</span>
+              <span>{{ t('form.published') }}</span>
             </label>
             <label class="rform__publish">
               <input v-model="draft.is_extra" type="checkbox">
-              <span>Fora do brief oficial</span>
+              <span>{{ t('form.extra') }}</span>
             </label>
             <span v-if="errors.general" class="rform__err">{{ errors.general }}</span>
             <div class="rform__actions">
-              <button type="button" class="rform__cancel" @click="requestClose">Cancelar</button>
-              <button type="submit" class="rform__save">{{ isEdit ? 'Guardar alterações' : 'Criar relíquia' }}</button>
+              <button type="button" class="rform__cancel" @click="requestClose">{{ t('common.cancel') }}</button>
+              <button type="submit" class="rform__save">{{ isEdit ? t('form.saveEdit') : t('form.saveNew') }}</button>
             </div>
           </footer>
         </form>
@@ -381,6 +474,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
   save: [input: RelicInput]
+  translated: []
 }>()
 
 const isEdit = computed(() => Boolean(props.relic))
@@ -450,9 +544,115 @@ function emptyScene(kind: 'image' | 'video'): RelicScene {
   }
 }
 
+const { t } = useI18n()
+
 const draft = reactive<Draft>(blank())
 const errors = reactive<Record<string, string>>({})
 const previewOpen = ref(false)
+const translationBusy = ref(false)
+const translationError = ref('')
+const translationSaved = ref(false)
+
+const translation = reactive({
+  name: '',
+  mission: '',
+  summary: '',
+  story_text: '',
+  alt: '',
+  intro_audio_url: '',
+})
+
+type MediaTranslationRow = {
+  media_id: string
+  kicker: string
+  title: string
+  caption: string
+  audio_url: string
+}
+
+const translationMedia = ref<MediaTranslationRow[]>([])
+
+/** Preenche o separador EN a partir da API (BE-12). */
+async function loadTranslation(): Promise<void> {
+  if (!props.relic) return
+  translationBusy.value = true
+  translationError.value = ''
+  translationSaved.value = false
+  try {
+    const res = await $fetch<{
+      relic: Record<string, string | null> | null
+      media: Array<Record<string, string | null>>
+    }>(`/api/admin/relics/${encodeURIComponent(props.relic.id)}/translations/en`)
+    const row = res.relic ?? {}
+    translation.name = row.name ?? ''
+    translation.mission = row.mission ?? ''
+    translation.summary = row.summary ?? ''
+    translation.story_text = row.story_text ?? ''
+    translation.alt = row.alt ?? ''
+    translation.intro_audio_url = row.intro_audio_url ?? ''
+    translationMedia.value = (props.relic.scenes ?? [])
+      .filter(scene => Boolean(scene.id))
+      .map((scene) => {
+        const media = res.media.find(item => item.media_id === scene.id) ?? {}
+        return {
+          media_id: scene.id as string,
+          kicker: media.kicker ?? '',
+          title: media.title ?? '',
+          caption: media.caption ?? '',
+          audio_url: media.audio_url ?? '',
+        }
+      })
+  }
+  catch {
+    translationError.value = t('form.translationHint')
+  }
+  finally {
+    translationBusy.value = false
+  }
+}
+
+async function saveTranslation(): Promise<void> {
+  if (!props.relic) return
+  translationBusy.value = true
+  translationError.value = ''
+  translationSaved.value = false
+  try {
+    const media = translationMedia.value
+      .filter(item => item.kicker || item.title || item.caption || item.audio_url)
+      .map(item => ({
+        media_id: item.media_id,
+        kicker: item.kicker || undefined,
+        title: item.title || undefined,
+        caption: item.caption || undefined,
+        audio_url: item.audio_url || null,
+      }))
+    await $fetch(`/api/admin/relics/${encodeURIComponent(props.relic.id)}/translations/en`, {
+      method: 'PUT',
+      body: {
+        name: translation.name || undefined,
+        mission: translation.mission || undefined,
+        summary: translation.summary || undefined,
+        story_text: translation.story_text || undefined,
+        alt: translation.alt || undefined,
+        intro_audio_url: translation.intro_audio_url || null,
+        media,
+      },
+    })
+    translationSaved.value = true
+    emit('translated')
+  }
+  catch (err: unknown) {
+    const apiError = err as { data?: { message?: string }, message?: string }
+    translationError.value = apiError.data?.message || apiError.message || 'Falha ao guardar a tradução.'
+  }
+  finally {
+    translationBusy.value = false
+  }
+}
+
+watch(() => props.open, (open) => {
+  if (open && props.relic) void loadTranslation()
+})
 
 /** Retrato ao vivo do rascunho — o mesmo shape que o modal público consome. */
 const previewScenes = computed<RelicScene[]>(() => draft.scenes
@@ -473,10 +673,10 @@ const previewScenes = computed<RelicScene[]>(() => draft.scenes
 
 const previewRelic = computed<Relic>(() => ({
   id: draft.id || 'preview',
-  name: draft.name || 'Nova relíquia',
-  mission: draft.mission || 'Missão por preencher',
-  tagline: draft.tagline || 'Frase de efeito por preencher',
-  body: draft.body || 'A história desta relíquia aparece aqui.',
+  name: draft.name || t('preview.unnamed'),
+  mission: draft.mission || '—',
+  tagline: draft.tagline || t('preview.noTagline'),
+  body: draft.body,
   facts: draft.facts.filter(fact => fact.label.trim() && fact.value.trim()),
   image: draft.image,
   alt: draft.alt,
@@ -488,7 +688,7 @@ const previewRelic = computed<Relic>(() => ({
       ? [{
           kind: 'image' as const,
           src: draft.image.trim(),
-          kicker: 'Capa',
+          kicker: t('form.cover'),
           body: draft.body || '',
         }]
       : [],
@@ -514,6 +714,7 @@ watch(
   () => props.open,
   (open) => {
     if (!open) return
+    translationSaved.value = false
     Object.assign(draft, blank())
     if (props.relic) {
       Object.assign(draft, JSON.parse(JSON.stringify(props.relic)))
@@ -595,8 +796,8 @@ function setCover(scene: RelicScene): void {
   const source = scene.kind === 'video' ? (scene.poster?.trim() ?? '') : scene.src.trim()
   if (!source) {
     errors.image = scene.kind === 'video'
-      ? 'Preenche o poster para usar este vídeo como capa.'
-      : 'Esta cena ainda não tem imagem.'
+      ? t('form.errCoverVideo')
+      : t('form.errCoverImage')
     return
   }
   errors.image = ''
@@ -638,7 +839,7 @@ async function onFile(event: Event): Promise<void> {
     image.src = url
   }
   catch (err: unknown) {
-    errors.image = err instanceof Error ? err.message : 'Falha ao enviar a imagem.'
+    errors.image = err instanceof Error ? err.message : t('form.errImage')
   }
   finally {
     coverProgress.value = 0
@@ -665,7 +866,7 @@ async function onSceneFile(event: Event, index: number): Promise<void> {
     scene.src = url
   }
   catch (err: unknown) {
-    errors.scenes = err instanceof Error ? err.message : 'Falha ao enviar a mídia.'
+    errors.scenes = err instanceof Error ? err.message : t('form.errScenes')
   }
   finally {
     uploadIndex.value = -1
@@ -699,29 +900,29 @@ function collect(): { facts: RelicFact[], scenes: RelicScene[] } {
 function validate(): boolean {
   clearErrors()
   const required: Array<[keyof Draft, string]> = [
-    ['name', 'Dá um nome à relíquia.'],
-    ['mission', 'Indica a missão.'],
-    ['tagline', 'Escreve a frase de efeito.'],
-    ['body', 'Falta a história.'],
-    ['image', 'Falta a imagem do cartão.'],
-    ['alt', 'Falta o texto alternativo.'],
+    ['name', t('form.errName')],
+    ['mission', t('form.errMission')],
+    ['tagline', t('form.errTagline')],
+    ['body', t('form.errBody')],
+    ['image', t('form.errImage')],
+    ['alt', t('form.errAlt')],
   ]
   for (const [key, message] of required) {
     if (!String(draft[key] ?? '').trim()) errors[key] = message
   }
-  if (!/^[a-z0-9-]+$/.test(draft.id)) errors.id = 'Só minúsculas, números e hífens.'
-  else if (props.takenIds.includes(draft.id)) errors.id = 'Já existe uma relíquia com este identificador.'
+  if (!/^[a-z0-9-]+$/.test(draft.id)) errors.id = t('form.errSlug')
+  else if (props.takenIds.includes(draft.id)) errors.id = t('form.errSlugTaken')
 
   const { facts, scenes } = collect()
-  if (facts.length < 1) errors.facts = 'Preenche pelo menos uma linha da ficha.'
-  if (scenes.length < 1) errors.scenes = 'Cada cena precisa de mídia e texto narrado.'
+  if (facts.length < 1) errors.facts = t('form.errFacts')
+  if (scenes.length < 1) errors.scenes = t('form.errScenes')
   if (
     !errors.image
     && draft.image.trim()
     && scenes.length > 0
     && !scenes.some(scene => scene.src === draft.image.trim() || scene.poster === draft.image.trim())
   ) {
-    errors.image = 'A imagem do cartão tem de ser uma das cenas.'
+    errors.image = t('form.errCover')
   }
 
   return Object.values(errors).every(message => !message)
@@ -753,6 +954,51 @@ function save(): void {
 function requestClose(): void {
   emit('close')
 }
+
+/** FE-21: Esc fecha e Tab fica dentro do diálogo (como no modal público). */
+function onKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') {
+    event.stopPropagation()
+    requestClose()
+    return
+  }
+  if (event.key !== 'Tab') return
+  const root = document.querySelector<HTMLElement>('.rform__sheet')
+  if (!root) return
+  const items = Array.from(
+    root.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'),
+  ).filter(el => el.offsetParent !== null)
+  if (items.length === 0) return
+  const first = items[0] as HTMLElement
+  const last = items[items.length - 1] as HTMLElement
+  const active = document.activeElement as HTMLElement | null
+  if (event.shiftKey && (active === first || active === null || !items.includes(active))) {
+    event.preventDefault()
+    last.focus()
+  }
+  else if (!event.shiftKey && (active === last || active === null || !items.includes(active))) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
+watch(
+  () => props.open,
+  (open) => {
+    if (typeof window === 'undefined') return
+    if (open) {
+      window.addEventListener('keydown', onKeydown)
+      void nextTick(() => document.querySelector<HTMLElement>('.rform__sheet input')?.focus())
+    }
+    else {
+      window.removeEventListener('keydown', onKeydown)
+    }
+  },
+)
+
+onBeforeUnmount(() => {
+  if (typeof window !== 'undefined') window.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <style scoped>
@@ -812,6 +1058,22 @@ function requestClose(): void {
   letter-spacing: -0.03em;
   line-height: 0.94;
 }
+
+.rform__saveTranslation {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 10px 16px;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #06070c;
+  background: var(--fr-fg, #e8e6e1);
+  border: 1px solid transparent;
+  opacity: 1;
+}
+
+.rform__saveTranslation:disabled { opacity: 0.35; cursor: not-allowed; }
+.rform__saveTranslation:hover:not(:disabled) { filter: brightness(1.06); background: var(--fr-fg, #e8e6e1); }
 
 .rform__headActions {
   display: flex;

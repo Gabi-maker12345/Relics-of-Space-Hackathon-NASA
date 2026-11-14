@@ -1,7 +1,9 @@
+export type AuthErrorCode = 'invalid_email' | 'short_password' | 'bad_credentials' | 'generic' | ''
+
 export function useAuth() {
   const user = useState<string | null>('auth-user', () => null)
   const loaded = useState<boolean>('auth-loaded', () => false)
-  const error = ref('')
+  const error = ref<AuthErrorCode>('')
 
   const restore = async (): Promise<void> => {
     if (!import.meta.client) {
@@ -29,11 +31,11 @@ export function useAuth() {
     error.value = ''
     const mail = email.trim().toLowerCase()
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
-      error.value = 'Escreve um email válido.'
+      error.value = 'invalid_email'
       return false
     }
     if (password.length < 8) {
-      error.value = 'A palavra-passe precisa de 8 caracteres ou mais.'
+      error.value = 'short_password'
       return false
     }
 
@@ -46,12 +48,12 @@ export function useAuth() {
         user.value = res.user.email
         return true
       }
-      error.value = 'Falha ao autenticar.'
+      error.value = 'generic'
       return false
     }
-    catch (err: unknown) {
-      const apiError = err as { data?: { message?: string }, statusMessage?: string, message?: string }
-      error.value = apiError.data?.message || apiError.statusMessage || apiError.message || 'Credenciais incorrectas.'
+    catch {
+      // a API responde com mensagens genéricas; a UI traduz o código
+      error.value = 'bad_credentials'
       return false
     }
   }
