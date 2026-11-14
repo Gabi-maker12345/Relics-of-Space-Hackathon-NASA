@@ -2,7 +2,6 @@
 import type { RelicScene } from '~/data/relics'
 
 const { t } = useI18n()
-
 const props = defineProps<{ media: RelicScene }>()
 const emit = defineEmits<{ close: [] }>()
 

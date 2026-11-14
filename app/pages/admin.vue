@@ -76,8 +76,8 @@
       :relic="editing"
       :taken-ids="takenIds"
       @close="formOpen = false"
-      @translated="onTranslated"
       @save="store"
+      @translated="onTranslated"
     />
   </section>
 </template>

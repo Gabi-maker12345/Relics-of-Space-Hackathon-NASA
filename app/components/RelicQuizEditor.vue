@@ -66,7 +66,11 @@ function apiMessage(err: unknown, fallback: string): string {
   return apiError.data?.message || apiError.statusMessage || apiError.message || fallback
 }
 
-onMounted(load)
+onMounted(async () => {
+  await load()
+  // Quiz já existente abre diretamente na lista editável (sem escolher modo).
+  view.value = questions.value.length > 0 ? 'manual' : 'choose'
+})
 
 function startManual(): void {
   notice.value = ''
@@ -168,7 +172,7 @@ async function generate(): Promise<void> {
         </p>
       </div>
       <div class="rquiz__headActions">
-        <button v-if="view === 'manual'" type="button" class="rquiz__ghost" @click="view = 'choose'">
+        <button v-if="view === 'manual' && questions.length === 0" type="button" class="rquiz__ghost" @click="view = 'choose'">
           Modos
         </button>
         <button type="button" class="rquiz__ghost" @click="emit('close')">

@@ -70,6 +70,13 @@ watch(lang, () => {
 })
 const index = ref(0)
 const quizOpen = ref(false)
+const quizProgress = ref(0)
+
+function openQuiz(): void {
+  typedNarration.pause()
+  quizProgress.value = 0
+  quizOpen.value = true
+}
 const lightbox = ref<RelicScene | null>(null)
 const glitching = ref(false)
 const typing = ref(false)
@@ -338,11 +345,18 @@ onBeforeUnmount(() => {
           ref="frame"
           overlay
           :label="relic.name"
-          :progress="progress"
+          :progress="quizOpen ? quizProgress : progress"
           :glitch="glitching"
           @close="close"
         >
+          <RelicQuiz
+            v-if="quizOpen"
+            :relic="relic"
+            @close="quizOpen = false"
+            @progress="quizProgress = $event"
+          />
           <RelicSheet
+            v-else
             ref="sheet"
             :relic="relic"
             :index="index"
@@ -352,12 +366,11 @@ onBeforeUnmount(() => {
             @typing="typing = $event"
           />
         </SheetFrame>
-        <RelicQuizButton v-if="relic && armed && hasQuiz && atLastScene" @click="quizOpen = true" />
-        <RelicQuiz v-if="relic && quizOpen" :relic="relic" @close="quizOpen = false" />
+        <RelicQuizButton v-if="relic && armed && hasQuiz && atLastScene && !quizOpen" @click="openQuiz" />
         <Transition name="bot">
-          <BotNarrator v-if="relic && armed" :talking="typing || typedNarration.playing.value" />
+          <BotNarrator v-if="relic && armed && !quizOpen" :talking="typing || typedNarration.playing.value" />
         </Transition>
-        <NarrationControls v-if="relic && armed" />
+        <NarrationControls v-if="relic && armed && !quizOpen" />
         <Transition name="lb">
           <MediaLightbox v-if="lightbox" :media="lightbox" @close="lightbox = null" />
         </Transition>
