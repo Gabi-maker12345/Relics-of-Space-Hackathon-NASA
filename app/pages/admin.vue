@@ -43,7 +43,7 @@
             <p class="card__mission">{{ relic.mission }}</p>
             <h2 class="card__name">{{ relic.name }}</h2>
             <p class="card__tagline">{{ relic.tagline }}</p>
-            <p class="card__meta">{{ relic.facts.length }} factos · {{ relic.scenes.length }} cenas</p>
+            <p class="card__meta">{{ t('preview.facts', { count: relic.facts.length }) }} · {{ t('preview.scenes', { count: relic.scenes.length }) }}</p>
           </div>
           <div class="card__tools">
             <button type="button" class="card__tool" @click="togglePublished(relic)">
