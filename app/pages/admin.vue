@@ -9,6 +9,10 @@
         </p>
       </div>
       <div class="admin__actions">
+        <button type="button" class="admin__ghost" :disabled="translating" @click="translateAll">
+          {{ translating ? t('admin.translateBusy', { done: translateDone, total: relics.length }) : t('admin.translateAll') }}
+        </button>
+        <button type="button" class="admin__ghost" @click="nasaOpen = true">{{ t('admin.importNasa') }}</button>
         <button type="button" class="admin__ghost" @click="signOutAndLeave">{{ t('nav.exit') }}</button>
       </div>
     </header>
@@ -73,6 +77,14 @@
       @save="store"
       @translated="onTranslated"
     />
+
+    <NasaImportDialog
+      :open="nasaOpen"
+      :relic-id="null"
+      :relics="nasaRelics"
+      @close="nasaOpen = false"
+      @imported="onNasaImported"
+    />
   </section>
 </template>
 
@@ -88,6 +100,11 @@ const { open: openPanel } = usePanels()
 const formOpen = ref(false)
 const editing = ref<Relic | null>(null)
 const saveError = ref('')
+const nasaOpen = ref(false)
+const translating = ref(false)
+const translateDone = ref(0)
+
+const nasaRelics = computed(() => relics.value.map(relic => ({ id: relic.id, name: relic.name })))
 
 const saveErrorText = computed(() => saveError.value || loadError.value)
 
@@ -122,6 +139,45 @@ function openForm(relic: Relic | null): void {
 
 function onTranslated(): void {
   flash(t('form.translationSaved'))
+}
+
+function onNasaImported(): void {
+  flash(t('admin.toastNasa'))
+  void load(true)
+}
+
+/**
+ * Traduz todas as relíquias uma a uma (uma chamada por relíquia), mostrando o
+ * progresso no botão. Se uma falhar, continua com as restantes.
+ */
+async function translateAll(): Promise<void> {
+  if (translating.value || relics.value.length === 0) return
+  if (!window.confirm(t('admin.translateConfirm'))) return
+
+  translating.value = true
+  translateDone.value = 0
+  saveError.value = ''
+  let failed = 0
+
+  try {
+    for (const relic of relics.value) {
+      try {
+        await $fetch(`/api/admin/relics/${encodeURIComponent(relic.id)}/translate`, { method: 'POST' })
+      }
+      catch {
+        failed += 1
+      }
+      translateDone.value += 1
+    }
+  }
+  finally {
+    translating.value = false
+  }
+
+  await load(true)
+  flash(failed > 0
+    ? t('admin.translatePartial', { failed })
+    : t('admin.translateDone'))
 }
 
 async function store(input: RelicInput): Promise<void> {
@@ -251,6 +307,11 @@ function requestLogin(): void {
   color: inherit;
   background: none;
   border: 1px solid rgb(255 255 255 / 16%);
+}
+
+.admin__ghost:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .admin__primary {

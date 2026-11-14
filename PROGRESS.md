@@ -925,3 +925,22 @@ diário aberto pelo cartão.
   `prefers-reduced-motion` fixa as capas sem rotação (a revelação continua ligada ao scroll).
 - **QA**: 1440×900 e 390×844 — p0: linha 0 e 0 capas; p0.15: linha 0.5 e 1 capa; p0.5: 8 capas;
   p1: 12 capas e linha a 1; sem overflow horizontal; typecheck/lint sem erros e detector vazio.
+
+## Iteração 46 — som no header + importação NASA e tradução em massa no painel
+
+- **Header**: o botão de som saiu do dropdown e passou para a barra, ao lado do hambúrguer
+  (`PT · som · menu`); o menu fica só com Painel/Arquivo. `aria-pressed` e as etiquetas de
+  ligar/desligar mantêm-se.
+- **Painel admin**: `Traduzir tudo · Importar da Nasa · Sair` no cabeçalho. O botão da NASA
+  abre o diálogo existente com um seletor de relíquia de destino (o diálogo passou a aceitar
+  `relics` e um alvo interno, sem mudar o uso dentro do formulário); após importar, a lista
+  recarrega.
+- **Tradução automática**: `POST /api/admin/relics/:id/translate` traduz pt→en com o mesmo
+  provider do quiz (`QUIZ_AI_*`, Groq gpt-oss-120b). Traduz `name/mission/summary/story_text/alt`,
+  `kicker/title/caption` das mídias e `question/options/explanation` do quiz; preserva ids,
+  nomes próprios, siglas, números e a ordem das opções (a resposta correta depende dela), e grava
+  nas tabelas de tradução via `saveRelicTranslations`. O botão percorre as relíquias uma a uma
+  (progresso no próprio botão, continua se uma falhar) e recarrega o arquivo no fim.
+- **QA**: login real; Ingenuity traduzida em 7,9 s → `saved: relic + 2 mídias + 8 perguntas`;
+  `GET …/translations/en` devolve resumo, alt, legendas e quiz em inglês; 152 testes,
+  typecheck e lint verdes.

@@ -54,8 +54,17 @@
             </button>
           </div>
 
-          <p v-if="!canImport" class="nasa__notice">{{ t('nasa.needsRelic') }}</p>
-          <p v-else class="nasa__note">{{ t('nasa.note') }}</p>
+          <p v-if="canImport" class="nasa__note">{{ t('nasa.note') }}</p>
+
+          <label v-if="!relicId && relics && relics.length" class="nasa__target">
+            <span class="sr-only">{{ t('nasa.pickRelic') }}</span>
+            <select v-model="targetId" class="nasa__input">
+              <option value="">{{ t('nasa.pickRelic') }}</option>
+              <option v-for="relic in relics" :key="relic.id" :value="relic.id">{{ relic.name }}</option>
+            </select>
+          </label>
+
+          <p v-if="!canImport && !(relics && relics.length)" class="nasa__notice">{{ t('nasa.needsRelic') }}</p>
 
           <div class="nasa__body">
             <p v-if="loading" class="nasa__state">{{ t('nasa.loading') }}</p>
@@ -139,6 +148,7 @@ type MediaFilter = 'all' | 'image' | 'video'
 const props = defineProps<{
   open: boolean
   relicId: string | null
+  relics?: Array<{ id: string, name: string }>
 }>()
 
 const emit = defineEmits<{
@@ -168,9 +178,19 @@ const error = ref('')
 const importing = ref<string | null>(null)
 const imported = ref<Set<string>>(new Set())
 const input = ref<HTMLInputElement | null>(null)
+const targetId = ref<string>('')
 
-const canImport = computed(() => Boolean(props.relicId))
+const canImport = computed(() => Boolean(props.relicId || targetId.value))
 const hasMore = computed(() => items.value.length < total.value)
+
+/** Quando aberto a partir do painel, deixa escolher a relíquia de destino. */
+watch(
+  () => [props.open, props.relicId] as const,
+  ([open]) => {
+    if (open) targetId.value = props.relicId ?? ''
+  },
+  { immediate: true },
+)
 
 /** Ignores responses from an outdated query (fast typing / filter changes). */
 let searchToken = 0
@@ -255,12 +275,13 @@ function selectMedia(value: MediaFilter): void {
 }
 
 async function importItem(item: NasaItem): Promise<void> {
-  if (!props.relicId || importing.value) return
+  const target = props.relicId ?? targetId.value
+  if (!target || importing.value) return
 
   importing.value = item.nasa_id
   error.value = ''
   try {
-    const relic = await $fetch<Relic>(`/api/admin/relics/${encodeURIComponent(props.relicId)}/media/import`, {
+    const relic = await $fetch<Relic>(`/api/admin/relics/${encodeURIComponent(target)}/media/import`, {
       method: 'POST',
       body: { nasa_id: item.nasa_id },
     })
@@ -440,6 +461,12 @@ onBeforeUnmount(() => {
 
 .nasa__notice { color: #f5d58a; }
 .nasa__note { opacity: 0.55; }
+
+.nasa__target {
+  display: block;
+  padding: 12px 32px;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+}
 
 .nasa__body {
   flex: 1;

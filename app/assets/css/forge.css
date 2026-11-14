@@ -186,6 +186,33 @@
   color: var(--fr-paper);
 }
 
+.fr-sound {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: color-mix(in srgb, var(--fr-paper) 78%, transparent);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color 0.3s var(--fr-ease-inout);
+}
+
+.fr-sound:hover {
+  color: var(--fr-paper);
+}
+
+.fr-sound svg {
+  width: 18px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* Pílulas brancas do original → só o traço redondo, transparente. */
 .fr-burger {
   display: inline-flex;
@@ -492,6 +519,7 @@
 }
 
 .fr-lang:focus-visible,
+.fr-sound:focus-visible,
 .fr-burger:focus-visible,
 .fr-logo:focus-visible,
 .fr-menu__link:focus-visible,

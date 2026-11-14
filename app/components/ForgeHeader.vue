@@ -196,6 +196,20 @@ onBeforeUnmount(() => {
       >{{ lang === 'pt' ? 'PT' : 'EN' }}</button>
 
       <button
+        type="button"
+        class="fr-sound"
+        :aria-pressed="!muted"
+        :aria-label="muted ? t('nav.soundOn') : t('nav.soundOff')"
+        @click="toggleSound"
+      >
+        <svg viewBox="0 0 20 16" aria-hidden="true">
+          <path d="M2 6h3l4.5-3.4v10.8L5 10H2z" />
+          <path v-if="muted" d="M13 5.5l4 5M17 5.5l-4 5" />
+          <path v-else d="M13.4 5.2a3.6 3.6 0 0 1 0 5.6M15.6 3.2a6.4 6.4 0 0 1 0 9.6" />
+        </svg>
+      </button>
+
+      <button
         ref="burger"
         type="button"
         class="fr-burger"
@@ -245,21 +259,6 @@ onBeforeUnmount(() => {
       </nav>
 
       <div class="fr-menu__utils">
-        <button
-          type="button"
-          class="fr-menu__util"
-          :aria-pressed="!muted"
-          :aria-label="muted ? t('nav.soundOn') : t('nav.soundOff')"
-          @click="toggleSound"
-        >
-          <svg viewBox="0 0 20 16" aria-hidden="true">
-            <path d="M2 6h3l4.5-3.4v10.8L5 10H2z" />
-            <path v-if="muted" d="M13 5.5l4 5M17 5.5l-4 5" />
-            <path v-else d="M13.4 5.2a3.6 3.6 0 0 1 0 5.6M15.6 3.2a6.4 6.4 0 0 1 0 9.6" />
-          </svg>
-          <span>{{ t('nav.sound') }}</span>
-        </button>
-
         <NuxtLink
           v-if="user && route.path !== '/admin'"
           to="/admin"
