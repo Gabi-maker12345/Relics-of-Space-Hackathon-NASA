@@ -42,7 +42,7 @@ export async function getPublicRelicsList(
 
   let dbQuery = supabase
     .from('relics')
-    .select('id, slug, name, summary, story_text, mission, status, location, ratio, alt, cover_media_id, created_at')
+    .select('id, slug, name, summary, story_text, mission, status, location, ratio, alt, cover_media_id, reference_url, is_extra, created_at')
     .eq('published', true)
 
   if (location) {

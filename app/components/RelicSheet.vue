@@ -138,7 +138,18 @@ defineExpose({ goTo })
         {{ relic.mission }} · {{ LOCATION_LABEL[relicLocation(relic)] }}
       </p>
       <h2 class="sheet__title" data-sheet-item>{{ relic.name }}</h2>
-      <p class="rsheet__state" data-sheet-item><StatusBadge :status="relicStatus(relic)" /></p>
+      <p class="rsheet__state" data-sheet-item>
+        <StatusBadge :status="relicStatus(relic)" />
+        <span v-if="relic.is_extra" class="rsheet__extra">Extra</span>
+      </p>
+      <a
+        v-if="relic.reference_url"
+        class="rsheet__source"
+        :href="relic.reference_url"
+        target="_blank"
+        rel="noopener noreferrer"
+        data-sheet-item
+      >Fonte oficial ↗</a>
 
       <div class="rsheet__copy" data-sheet-item>
         <Transition name="swap" mode="out-in">
@@ -222,7 +233,36 @@ defineExpose({ goTo })
 </template>
 
 <style scoped>
-.rsheet__state { margin: 0; }
+.rsheet__state {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.rsheet__extra {
+  padding: 4px 8px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px dashed currentColor;
+  border-radius: 999px;
+  opacity: 0.7;
+}
+
+.rsheet__source {
+  display: inline-block;
+  margin-top: 0.8rem;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+  opacity: 0.6;
+}
+
+.rsheet__source:hover { opacity: 1; }
 
 .swap-enter-active,
 .swap-leave-active {

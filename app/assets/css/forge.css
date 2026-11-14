@@ -1634,6 +1634,16 @@ html[data-act='scene'] .gl {
   opacity: 0.75;
 }
 
+.fr-step__extra {
+  padding: 3px 7px;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px dashed currentColor;
+  border-radius: 999px;
+  opacity: 0.65;
+}
+
 .fr-panels--empty {
   height: auto;
   min-height: 60vh;

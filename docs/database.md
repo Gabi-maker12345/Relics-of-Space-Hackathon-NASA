@@ -32,6 +32,8 @@ erDiagram
     text intro_audio_url
     text alt
     text ratio
+    text reference_url
+    bool is_extra
   }
 
   relic_facts {
@@ -223,7 +225,8 @@ npx supabase gen types typescript --linked > app/types/database.types.ts
 ```
 
 The checked-in [`app/types/database.types.ts`](../app/types/database.types.ts)
-matches migration `20261109000100_core_schema.sql`.
+matches the latest migrations (`20261109000100_core_schema.sql` plus
+`20261114000100_relic_references.sql`).
 
 ## Seed
 
@@ -233,13 +236,16 @@ turns it into [`supabase/seed.sql`](../supabase/seed.sql), and the front reads
 the same JSON for its SSR fallback (`app/data/relics.ts`).
 
 - **12 relics:** Apollo LM, Opportunity, Viking 1, Spirit, Sojourner, Ingenuity,
-  Apollo Lunar Roving Vehicle, Lunokhod 1, Voyager 1, Voyager 2, Pioneer 10 and
+  Apollo Lunar Roving Vehicle, Surveyor 3, Voyager 1, Voyager 2, Pioneer 10 and
   Pioneer 11.
 - Every relic has a fact sheet and 1–2 official NASA media items, each with a
   `credit` and a `source_url` (`https://images.nasa.gov/details/<nasa_id>`).
 - **Idempotent:** the script deletes the demo rows by `slug` and reinserts them;
   facts, media and translations follow the `on delete cascade`. Running it twice
-  leaves exactly 12 relics, 48 facts and 23 media rows.
+  leaves exactly 12 relics, 48 facts and 24 media rows.
+- **Official references:** `relics.reference_url` points at the mission page or
+  NSSDC record listed by the Space Apps challenge. `relics.is_extra` marks
+  Voyager 1/2 as outside the official resource list, so the UI can label them.
 - Local images live in `public/images/relics/` and are normalised to 1600×900
   (16:9) so the carousel and the modal share the same ratio.
 

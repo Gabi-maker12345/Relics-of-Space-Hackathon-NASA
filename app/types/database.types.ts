@@ -253,12 +253,14 @@ export type Database = {
           created_at: string
           id: string
           intro_audio_url: string | null
+          is_extra: boolean
           location: string
           mission: string
           name: string
           published: boolean
           published_at: string | null
           ratio: string
+          reference_url: string | null
           slug: string
           status: string
           story_text: string
@@ -271,12 +273,14 @@ export type Database = {
           created_at?: string
           id?: string
           intro_audio_url?: string | null
+          is_extra?: boolean
           location?: string
           mission?: string
           name: string
           published?: boolean
           published_at?: string | null
           ratio?: string
+          reference_url?: string | null
           slug: string
           status?: string
           story_text?: string
@@ -289,12 +293,14 @@ export type Database = {
           created_at?: string
           id?: string
           intro_audio_url?: string | null
+          is_extra?: boolean
           location?: string
           mission?: string
           name?: string
           published?: boolean
           published_at?: string | null
           ratio?: string
+          reference_url?: string | null
           slug?: string
           status?: string
           story_text?: string

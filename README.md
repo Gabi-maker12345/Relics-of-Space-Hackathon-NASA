@@ -93,7 +93,12 @@ npm run seed:check        # falha se o SQL estiver desatualizado (corre na CI)
 
 O seed é idempotente: apaga as relíquias de demonstração por `slug` e volta a
 inseri-las com factos e mídias (o `on delete cascade` limpa os filhos). Correr
-duas vezes deixa exatamente as mesmas 12 relíquias, 48 factos e 23 mídias.
+duas vezes deixa exatamente as mesmas 12 relíquias, 48 factos e 24 mídias.
+
+Cada relíquia tem `reference_url` (página oficial da missão ou registo NSSDC) e
+`is_extra`. O **Voyager 1/2** ficam marcados como extra porque não estão na lista
+oficial de resources do desafio; o **Surveyor 3** substituiu o Lunokhod 1, que
+não é equipamento NASA.
 
 Depois de alterar o esquema, gera os tipos:
 

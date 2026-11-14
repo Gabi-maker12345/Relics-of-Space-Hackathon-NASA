@@ -13,10 +13,22 @@
       "alt": "Módulo lunar Apollo 11 na superfície da Lua, com o estágio de descida dourado e as pernas de pouso",
       "ratio": "16 / 9",
       "facts": [
-        { "label": "Primeiro pouso", "value": "20 jul 1969" },
-        { "label": "Massa (descida)", "value": "~10 t" },
-        { "label": "Locais", "value": "6 na Lua" },
-        { "label": "Última visita", "value": "dez 1972" }
+        {
+          "label": "Primeiro pouso",
+          "value": "20 jul 1969"
+        },
+        {
+          "label": "Massa (descida)",
+          "value": "~10 t"
+        },
+        {
+          "label": "Locais",
+          "value": "6 na Lua"
+        },
+        {
+          "label": "Última visita",
+          "value": "dez 1972"
+        }
       ],
       "media": [
         {
@@ -39,7 +51,9 @@
           "credit": "NASA / JSC",
           "source_url": "https://images.nasa.gov/details/as11-40-5903"
         }
-      ]
+      ],
+      "reference_url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1969-059C",
+      "is_extra": false
     },
     {
       "id": "00000000-0000-4000-8000-000000000002",
@@ -54,10 +68,22 @@
       "alt": "Autorretrato do rover Opportunity em Marte, com os painéis solares cobertos de poeira",
       "ratio": "16 / 9",
       "facts": [
-        { "label": "Pouso", "value": "25 jan 2004" },
-        { "label": "Distância", "value": "45,16 km" },
-        { "label": "Tempo ativo", "value": "14 anos" },
-        { "label": "Último sinal", "value": "10 jun 2018" }
+        {
+          "label": "Pouso",
+          "value": "25 jan 2004"
+        },
+        {
+          "label": "Distância",
+          "value": "45,16 km"
+        },
+        {
+          "label": "Tempo ativo",
+          "value": "14 anos"
+        },
+        {
+          "label": "Último sinal",
+          "value": "10 jun 2018"
+        }
       ],
       "media": [
         {
@@ -80,7 +106,9 @@
           "credit": "NASA/JPL-Caltech/University of Arizona",
           "source_url": "https://images.nasa.gov/details/PIA14537"
         }
-      ]
+      ],
+      "reference_url": "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/",
+      "is_extra": false
     },
     {
       "id": "00000000-0000-4000-8000-000000000003",
@@ -95,10 +123,22 @@
       "alt": "Modelo em escala do lander Viking 1 sobre uma superfície marciana simulada",
       "ratio": "16 / 9",
       "facts": [
-        { "label": "Pouso", "value": "20 jul 1976" },
-        { "label": "Operação", "value": "6 anos" },
-        { "label": "Marco", "value": "1.ª missão a operar em Marte" },
-        { "label": "Último contacto", "value": "11 nov 1982" }
+        {
+          "label": "Pouso",
+          "value": "20 jul 1976"
+        },
+        {
+          "label": "Operação",
+          "value": "6 anos"
+        },
+        {
+          "label": "Marco",
+          "value": "1.ª missão a operar em Marte"
+        },
+        {
+          "label": "Último contacto",
+          "value": "11 nov 1982"
+        }
       ],
       "media": [
         {
@@ -121,7 +161,9 @@
           "credit": "NASA/JPL",
           "source_url": "https://images.nasa.gov/details/PIA00383"
         }
-      ]
+      ],
+      "reference_url": "https://science.nasa.gov/mission/viking-1/",
+      "is_extra": false
     },
     {
       "id": "00000000-0000-4000-8000-000000000004",
@@ -136,10 +178,22 @@
       "alt": "Ilustração do rover Spirit nas Columbia Hills, em Marte",
       "ratio": "16 / 9",
       "facts": [
-        { "label": "Pouso", "value": "4 jan 2004" },
-        { "label": "Distância", "value": "7,73 km" },
-        { "label": "Columbia Hills", "value": "2004–2009" },
-        { "label": "Último sinal", "value": "22 mar 2010" }
+        {
+          "label": "Pouso",
+          "value": "4 jan 2004"
+        },
+        {
+          "label": "Distância",
+          "value": "7,73 km"
+        },
+        {
+          "label": "Columbia Hills",
+          "value": "2004–2009"
+        },
+        {
+          "label": "Último sinal",
+          "value": "22 mar 2010"
+        }
       ],
       "media": [
         {
@@ -162,7 +216,9 @@
           "credit": "NASA/JPL/Malin Space Science Systems",
           "source_url": "https://images.nasa.gov/details/PIA05248"
         }
-      ]
+      ],
+      "reference_url": "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/",
+      "is_extra": false
     },
     {
       "id": "00000000-0000-4000-8000-000000000005",
@@ -177,10 +233,22 @@
       "alt": "Rover Sojourner recém-implantado na superfície de Marte",
       "ratio": "16 / 9",
       "facts": [
-        { "label": "Pouso", "value": "4 jul 1997" },
-        { "label": "Massa", "value": "10,6 kg" },
-        { "label": "Distância", "value": "~100 m" },
-        { "label": "Último sinal", "value": "27 set 1997" }
+        {
+          "label": "Pouso",
+          "value": "4 jul 1997"
+        },
+        {
+          "label": "Massa",
+          "value": "10,6 kg"
+        },
+        {
+          "label": "Distância",
+          "value": "~100 m"
+        },
+        {
+          "label": "Último sinal",
+          "value": "27 set 1997"
+        }
       ],
       "media": [
         {
@@ -203,7 +271,9 @@
           "credit": "NASA/JPL",
           "source_url": "https://images.nasa.gov/details/PIA04422"
         }
-      ]
+      ],
+      "reference_url": "https://science.nasa.gov/mission/mars-pathfinder/",
+      "is_extra": false
     },
     {
       "id": "00000000-0000-4000-8000-000000000006",
@@ -218,10 +288,22 @@
       "alt": "Ilustração do helicóptero Ingenuity na superfície de Marte",
       "ratio": "16 / 9",
       "facts": [
-        { "label": "Primeiro voo", "value": "19 abr 2021" },
-        { "label": "Voos", "value": "72" },
-        { "label": "Tempo no ar", "value": "~129 min" },
-        { "label": "Último voo", "value": "18 jan 2024" }
+        {
+          "label": "Primeiro voo",
+          "value": "19 abr 2021"
+        },
+        {
+          "label": "Voos",
+          "value": "72"
+        },
+        {
+          "label": "Tempo no ar",
+          "value": "~129 min"
+        },
+        {
+          "label": "Último voo",
+          "value": "18 jan 2024"
+        }
       ],
       "media": [
         {
@@ -244,7 +326,9 @@
           "credit": "NASA/JPL-Caltech",
           "source_url": "https://images.nasa.gov/details/PIA24593"
         }
-      ]
+      ],
+      "reference_url": "https://science.nasa.gov/mission/mars-2020-perseverance/ingenuity-mars-helicopter/",
+      "is_extra": false
     },
     {
       "id": "00000000-0000-4000-8000-000000000007",
@@ -259,10 +343,22 @@
       "alt": "Rover lunar Apollo 15 sozinho na superfície da Lua",
       "ratio": "16 / 9",
       "facts": [
-        { "label": "Missões", "value": "3 (Apollo 15–17)" },
-        { "label": "Distância total", "value": "~90 km" },
-        { "label": "Massa", "value": "210 kg" },
-        { "label": "Última utilização", "value": "dez 1972" }
+        {
+          "label": "Missões",
+          "value": "3 (Apollo 15–17)"
+        },
+        {
+          "label": "Distância total",
+          "value": "~90 km"
+        },
+        {
+          "label": "Massa",
+          "value": "210 kg"
+        },
+        {
+          "label": "Última utilização",
+          "value": "dez 1972"
+        }
       ],
       "media": [
         {
@@ -285,36 +381,62 @@
           "credit": "NASA / JSC",
           "source_url": "https://images.nasa.gov/details/as15-86-11603"
         }
-      ]
+      ],
+      "reference_url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1971-063C",
+      "is_extra": false
     },
     {
       "id": "00000000-0000-4000-8000-000000000008",
-      "slug": "lunokhod-1",
-      "name": "Lunokhod 1",
-      "mission": "Luna 17 · 1970–1971",
-      "summary": "O primeiro rover controlado à distância noutro mundo.",
-      "story_text": "Pousou em Mare Imbrium a 17 de novembro de 1970, transportado pela sonda soviética Luna 17. Com oito rodas e 756 kg, percorreu 10,54 km em 322 dias e enviou mais de 20 mil imagens. O último contacto foi a 14 de setembro de 1971. Em 2010, a sonda LRO encontrou o lander e as marcas do rover no mesmo local.",
-      "status": "lost",
+      "slug": "surveyor-3",
+      "name": "Surveyor 3",
+      "mission": "Surveyor · 1967",
+      "summary": "O lander que os astronautas do Apollo 12 visitaram.",
+      "story_text": "Pousou em Oceanus Procellarum a 20 de abril de 1967, na terceira de sete missões Surveyor. Quase três anos depois, a tripulação do Apollo 12 pousou a cerca de 180 metros e visitou o lander, recolhendo componentes para análise. O Surveyor 3 continua na Lua.",
+      "status": "silent",
       "location": "moon",
       "published": true,
-      "alt": "Vista orbital do lander Luna 17 e das marcas do Lunokhod 1 em Mare Imbrium",
+      "alt": "Lander Surveyor 3 na cratera em que pousou, visto durante a missão Apollo 12",
       "ratio": "16 / 9",
+      "reference_url": "https://science.nasa.gov/mission/surveyor-3/",
+      "is_extra": false,
       "facts": [
-        { "label": "Pouso", "value": "17 nov 1970" },
-        { "label": "Distância", "value": "10,54 km" },
-        { "label": "Operação", "value": "322 dias" },
-        { "label": "Último sinal", "value": "14 set 1971" }
+        {
+          "label": "Pouso",
+          "value": "20 abr 1967"
+        },
+        {
+          "label": "Local",
+          "value": "Oceanus Procellarum"
+        },
+        {
+          "label": "Visita",
+          "value": "Apollo 12 · nov 1969"
+        },
+        {
+          "label": "Massa",
+          "value": "~300 kg"
+        }
       ],
       "media": [
         {
           "id": "00000000-0000-4000-8000-000000008001",
-          "file": "lunokhod-1-1.jpg",
+          "file": "surveyor-3-1.jpg",
           "type": "image",
-          "kicker": "Registo orbital",
-          "title": "O local do Lunokhod 1",
-          "caption": "Imagem da Lunar Reconnaissance Orbiter, de 2010, com o lander Luna 17 e o rasto deixado pelo Lunokhod 1 em Mare Imbrium. A seta aponta para o lander.",
-          "credit": "NASA/GSFC/Arizona State University",
-          "source_url": "https://images.nasa.gov/details/PIA12967"
+          "kicker": "Fotografia",
+          "title": "Surveyor 3 na cratera",
+          "caption": "O lander Surveyor 3 fotografado pela tripulação do Apollo 12 em novembro de 1969, na cratera em que pousou dois anos e meio antes.",
+          "credit": "NASA / JSC",
+          "source_url": "https://images.nasa.gov/details/as12-48-7121"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000008002",
+          "file": "surveyor-3-2.jpg",
+          "type": "image",
+          "kicker": "Fotografia",
+          "title": "Dois veículos na Lua",
+          "caption": "O astronauta Alan Bean junto ao Surveyor 3, com o módulo lunar Intrepid ao fundo. A Apollo 12 recolheu peças do lander para estudar os efeitos do ambiente lunar.",
+          "credit": "NASA / JSC",
+          "source_url": "https://images.nasa.gov/details/AS12-48-7133"
         }
       ]
     },
@@ -331,10 +453,22 @@
       "alt": "Ilustração da Voyager 1 com a antena apontada para a Terra",
       "ratio": "16 / 9",
       "facts": [
-        { "label": "Lançamento", "value": "5 set 1977" },
-        { "label": "Júpiter", "value": "1979" },
-        { "label": "Saturno", "value": "1980" },
-        { "label": "Espaço interestelar", "value": "2012" }
+        {
+          "label": "Lançamento",
+          "value": "5 set 1977"
+        },
+        {
+          "label": "Júpiter",
+          "value": "1979"
+        },
+        {
+          "label": "Saturno",
+          "value": "1980"
+        },
+        {
+          "label": "Espaço interestelar",
+          "value": "2012"
+        }
       ],
       "media": [
         {
@@ -357,7 +491,9 @@
           "credit": "NASA/JPL-Caltech",
           "source_url": "https://images.nasa.gov/details/PIA21741"
         }
-      ]
+      ],
+      "reference_url": "https://science.nasa.gov/mission/voyager/",
+      "is_extra": true
     },
     {
       "id": "00000000-0000-4000-8000-000000000010",
@@ -372,10 +508,22 @@
       "alt": "Fotografia da Voyager 2 numa sala limpa do JPL, em 1977",
       "ratio": "16 / 9",
       "facts": [
-        { "label": "Lançamento", "value": "20 ago 1977" },
-        { "label": "Gigantes visitados", "value": "4" },
-        { "label": "Urano", "value": "1986" },
-        { "label": "Espaço interestelar", "value": "2018" }
+        {
+          "label": "Lançamento",
+          "value": "20 ago 1977"
+        },
+        {
+          "label": "Gigantes visitados",
+          "value": "4"
+        },
+        {
+          "label": "Urano",
+          "value": "1986"
+        },
+        {
+          "label": "Espaço interestelar",
+          "value": "2018"
+        }
       ],
       "media": [
         {
@@ -398,7 +546,9 @@
           "credit": "NASA/JPL-Caltech",
           "source_url": "https://images.nasa.gov/details/PIA18182"
         }
-      ]
+      ],
+      "reference_url": "https://science.nasa.gov/mission/voyager/",
+      "is_extra": true
     },
     {
       "id": "00000000-0000-4000-8000-000000000011",
@@ -413,10 +563,22 @@
       "alt": "Ilustração da Pioneer 10 a passar por Júpiter, por Rick Guidice",
       "ratio": "16 / 9",
       "facts": [
-        { "label": "Lançamento", "value": "2 mar 1972" },
-        { "label": "Júpiter", "value": "dez 1973" },
-        { "label": "Placa gravada", "value": "1972" },
-        { "label": "Último sinal", "value": "23 jan 2003" }
+        {
+          "label": "Lançamento",
+          "value": "2 mar 1972"
+        },
+        {
+          "label": "Júpiter",
+          "value": "dez 1973"
+        },
+        {
+          "label": "Placa gravada",
+          "value": "1972"
+        },
+        {
+          "label": "Último sinal",
+          "value": "23 jan 2003"
+        }
       ],
       "media": [
         {
@@ -439,7 +601,9 @@
           "credit": "NASA/Ames Research Center · Don Moore",
           "source_url": "https://images.nasa.gov/details/ARC-1969-AC72-1353"
         }
-      ]
+      ],
+      "reference_url": "https://science.nasa.gov/mission/pioneer-10/",
+      "is_extra": false
     },
     {
       "id": "00000000-0000-4000-8000-000000000012",
@@ -454,10 +618,22 @@
       "alt": "Ilustração da Pioneer 11 a passar por Saturno, por Wilson Hurley",
       "ratio": "16 / 9",
       "facts": [
-        { "label": "Lançamento", "value": "5 abr 1973" },
-        { "label": "Júpiter", "value": "1974" },
-        { "label": "Saturno", "value": "1979" },
-        { "label": "Último sinal", "value": "30 set 1995" }
+        {
+          "label": "Lançamento",
+          "value": "5 abr 1973"
+        },
+        {
+          "label": "Júpiter",
+          "value": "1974"
+        },
+        {
+          "label": "Saturno",
+          "value": "1979"
+        },
+        {
+          "label": "Último sinal",
+          "value": "30 set 1995"
+        }
       ],
       "media": [
         {
@@ -480,7 +656,9 @@
           "credit": "NASA/Ames Research Center · Fornalski",
           "source_url": "https://images.nasa.gov/details/ARC-1982-AC82-0178"
         }
-      ]
+      ],
+      "reference_url": "https://science.nasa.gov/mission/pioneer-10/",
+      "is_extra": false
     }
   ]
 }

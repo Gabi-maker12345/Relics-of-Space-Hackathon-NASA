@@ -691,3 +691,19 @@ diário aberto pelo cartão.
 - **Verificação:** 130 unitários verdes (`tests/relics-ui.test.ts`), typecheck,
   lint (0 erros) e build; screenshots via Chrome/CDP da home, painel, modal
   `/#spirit`, admin e formulário. Sem alterações a `master`.
+## Iteração 34 — alinhamento mínimo com os resources oficiais
+
+- **Referências oficiais:** nova migração `20261114000100_relic_references.sql`
+  acrescenta `relics.reference_url` (página de missão da `science.nasa.gov` ou
+  registo NSSDC) e `relics.is_extra`.
+- **Catálogo:** o Lunokhod 1 (soviético, fora do brief NASA) deu lugar ao
+  **Surveyor 3**, com duas fotografias oficiais do Apollo 12 e o link
+  `science.nasa.gov/mission/surveyor-3/`. O Voyager 1/2 ficam marcados como
+  `is_extra`; o resto segue a lista de resources do desafio.
+- **UI:** “Extra” aparece na sheet, nos painéis e no admin; a sheet mostra
+  “Fonte oficial” quando existe `reference_url`; o formulário ganhou o campo da
+  fonte e o checkbox “Fora do brief oficial”.
+- **Contrato/API:** `reference_url`/`is_extra` em `Relic`, `RelicPanelItem` e
+  `RelicInput`; validação de URL http(s); mapper e lista pública atualizados.
+- **Seed:** 12 relíquias, 48 factos e 24 mídias; o teste do seed confirma a fonte
+  oficial em todas e que só Voyager 1/2 são extras.

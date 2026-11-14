@@ -31,6 +31,10 @@ export interface RelicScene {
   credit?: string
   /** Original source of the media (NASA page, archive, …). */
   source_url?: string | null
+  /** Official mission page / NSSDC record for this relic. */
+  reference_url?: string | null
+  /** True when the relic is outside the challenge's official categories. */
+  is_extra?: boolean
   /** Per-item narration. Falls back to the relic intro when absent. */
   audio_url?: string | null
   /** Only meaningful for videos: keep them silent while the narration plays. */
@@ -125,6 +129,10 @@ export interface RelicPanelItem {
   cover: RelicPanelCover | null
   ratio: string
   facts: RelicFact[]
+  /** Official mission page / NSSDC record. */
+  reference_url?: string | null
+  /** Outside the challenge's official categories. */
+  is_extra?: boolean
 }
 
 export interface Relic {
@@ -144,6 +152,10 @@ export interface Relic {
   steps: RelicStep[]
   /** `steps.length`, for `100 / total_steps`. */
   total_steps: number
+  /** Official mission page / NSSDC record. */
+  reference_url?: string | null
+  /** Outside the challenge's official categories. */
+  is_extra?: boolean
   /** Only present on admin responses. */
   warnings?: RelicWarning[]
   /** Narration played before the first step. */
@@ -169,6 +181,8 @@ export interface RelicInput {
   status?: RelicStatus
   location?: RelicLocation
   intro_audio_url?: string
+  reference_url?: string
+  is_extra?: boolean
   facts?: RelicFact[]
   scenes?: RelicScene[]
 }
