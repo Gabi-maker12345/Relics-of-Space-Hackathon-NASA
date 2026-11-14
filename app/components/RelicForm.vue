@@ -162,9 +162,11 @@
                 <span class="rform__num">04</span>
                 <h3 class="rform__legend">Mídias <em>(narradas)</em></h3>
                 <div class="rform__addRow">
-                  <button type="button" class="rform__add" @click="addScene('image')">+ imagem</button>
-                  <button type="button" class="rform__add" @click="addScene('video')">+ vídeo</button>
+                  <button type="button" class="rform__add" @click="addScene()">+ mídia</button>
                 </div>
+                <p class="rform__hint">
+                  Alterna Imagem/Vídeo em cada cena. Arrasta ⠿ (ou usa ↑↓) para reordenar.
+                </p>
               </div>
 
               <div class="rform__groupBody">
@@ -173,8 +175,6 @@
                   :key="`scene-${i}`"
                   class="rform__scene"
                   :class="{ 'is-cover': isCover(scene) }"
-                  draggable="true"
-                  @dragstart="onDragStart(i, $event)"
                   @dragover.prevent
                   @drop.prevent="onDrop(i)"
                 >
@@ -184,18 +184,15 @@
                       <em v-if="isCover(scene)" class="rform__coverTag">capa</em>
                     </span>
                     <div class="rform__sceneTools">
-                      <button
-                        type="button"
-                        class="rform__cover"
-                        :class="{ 'is-on': isCover(scene) }"
-                        :aria-pressed="isCover(scene)"
-                        @click="setCover(scene)"
-                      >
-                        {{ isCover(scene) ? 'É capa' : 'Definir capa' }}
-                      </button>
                       <button type="button" class="rform__move" :disabled="i === 0" aria-label="Subir cena" @click="moveScene(i, -1)">↑</button>
                       <button type="button" class="rform__move" :disabled="i === draft.scenes.length - 1" aria-label="Descer cena" @click="moveScene(i, 1)">↓</button>
-                      <span class="rform__grab" aria-hidden="true" title="Arrastar para reordenar">⠿</span>
+                      <span
+                        class="rform__grab"
+                        aria-hidden="true"
+                        title="Arrastar para reordenar"
+                        draggable="true"
+                        @dragstart="onDragStart(i, $event)"
+                      >⠿</span>
                       <div class="rform__segment" role="group" aria-label="Tipo de mídia">
                         <button type="button" :class="{ 'is-on': scene.kind === 'image' }" @click="scene.kind = 'image'">Imagem</button>
                         <button type="button" :class="{ 'is-on': scene.kind === 'video' }" @click="scene.kind = 'video'">Vídeo</button>
@@ -252,6 +249,21 @@
                         <span class="rform__label">URL do {{ scene.kind === 'video' ? 'vídeo' : 'imagem' }}</span>
                         <input v-model="scene.src" class="rform__input rform__input--mono" placeholder="/media/loop.mp4">
                       </label>
+
+                      <div class="rform__coverRow">
+                        <button
+                          type="button"
+                          class="rform__cover"
+                          :class="{ 'is-on': isCover(scene) }"
+                          :aria-pressed="isCover(scene)"
+                          @click="setCover(scene)"
+                        >
+                          {{ isCover(scene) ? 'Capa do cartão' : 'Definir como capa' }}
+                        </button>
+                        <span class="rform__coverHint">
+                          {{ isCover(scene) ? 'Esta mídia é a capa da home.' : 'Usa a imagem (ou o poster do vídeo) como capa.' }}
+                        </span>
+                      </div>
 
                       <div class="rform__pairRow">
                         <label class="rform__field">
@@ -1122,6 +1134,25 @@ function requestClose(): void {
 .rform__cover.is-on {
   border-color: var(--accent, #7aa2ff);
   background: color-mix(in srgb, var(--accent, #7aa2ff) 24%, transparent);
+}
+
+.rform__coverRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.rform__coverHint {
+  font-size: 11px;
+  opacity: 0.55;
+}
+
+.rform__hint {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  opacity: 0.5;
 }
 
 .rform__cover:disabled,

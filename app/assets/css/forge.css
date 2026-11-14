@@ -536,10 +536,15 @@
 }
 
 .fr-chip:focus-visible,
-.fr-filters__input:focus-visible,
 .fr-filters__clear:focus-visible {
   outline: 2px solid var(--fr-gold);
   outline-offset: 3px;
+}
+
+.fr-filters__input:focus,
+.fr-filters__input:focus-visible {
+  outline: none;
+  border-bottom-color: color-mix(in srgb, var(--fr-paper) 72%, transparent);
 }
 
 .fr-filters__search {

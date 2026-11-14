@@ -33,7 +33,7 @@ async function loadDetail(slug: string): Promise<void> {
       typedNarration.setSteps(full.steps ?? [])
       if (armed.value) {
         typedNarration.goTo(full.steps?.[0]?.audio_url ? 0 : Math.min(1, Math.max(0, (full.steps?.length ?? 1) - 1)))
-        if (full.steps?.[0]?.audio_url) void typedNarration.play()
+        void typedNarration.play()
       }
     }
     catch {
@@ -144,11 +144,7 @@ const onLeave = (el: Element, done: () => void): void => {
 }
 
 const typedNarration = useNarration()
-const sound = useSound()
 const introPlaying = computed(() => typedNarration.stepIndex.value === 0 && typedNarration.playing.value)
-
-// O mute do cabeçalho (trilha) é o mesmo da narração.
-watch(sound.muted, value => typedNarration.setMuted(value), { immediate: true })
 
 /** `/#slug` abre o diário; fechar limpa o hash (link direto partilhável). */
 function syncHash(): void {
@@ -237,12 +233,13 @@ watch(relic, (value) => {
   syncHash()
 }, { flush: 'post' })
 
-// A introdução só arranca depois do glitch (o clique que abriu já autorizou áudio).
+// A narração começa assim que o diário está armado (o clique que abriu já
+// autorizou áudio). Sem ficheiro, o fallback fala a legenda.
 watch(armed, (ready) => {
   if (!ready) return
   const steps = relic.value?.steps ?? []
   typedNarration.goTo(steps[0]?.audio_url ? 0 : Math.min(1, Math.max(0, steps.length - 1)))
-  if (steps[0]?.audio_url) void typedNarration.play()
+  void typedNarration.play()
 })
 
 // Cada cena corresponde ao passo seguinte (steps[0] é a introdução).

@@ -101,6 +101,7 @@ async function play(): Promise<void> {
 
   const text = captionOf(step)
   if (step.audio_url) {
+    stopSpeech()
     const el = ensureAudio()
     el.muted = muted.value
     if (!el.src || !el.src.endsWith(step.audio_url)) {
@@ -120,6 +121,7 @@ async function play(): Promise<void> {
   }
 
   // Sem ficheiro, a voz sintetizada não tem volume próprio: silenciar pausa-a.
+  audio?.pause()
   if (text && !muted.value) speak(text)
   else {
     mode.value = 'idle'
