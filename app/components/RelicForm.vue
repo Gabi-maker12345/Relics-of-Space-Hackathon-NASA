@@ -96,6 +96,17 @@
                       <input type="file" accept="image/*" class="sr-only" @change="onFile">
                       <span>{{ draft.image ? 'Substituir' : 'Enviar imagem' }}</span>
                     </label>
+                    <div
+                      v-if="coverProgress"
+                      class="rform__progress"
+                      role="progressbar"
+                      :aria-valuenow="coverProgress"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      aria-label="Envio da imagem de cartão"
+                    >
+                      <span :style="{ width: `${coverProgress}%` }" />
+                    </div>
                   </div>
 
                   <div class="rform__mediaFields">
@@ -144,64 +155,137 @@
             <section class="rform__group">
               <div class="rform__groupHead">
                 <span class="rform__num">04</span>
-                <h3 class="rform__legend">Cenas <em>(narradas)</em></h3>
-                <button type="button" class="rform__add" @click="addScene">+ cena</button>
+                <h3 class="rform__legend">Mídias <em>(narradas)</em></h3>
+                <div class="rform__addRow">
+                  <button type="button" class="rform__add" @click="addScene('image')">+ imagem</button>
+                  <button type="button" class="rform__add" @click="addScene('video')">+ vídeo</button>
+                </div>
               </div>
 
               <div class="rform__groupBody">
-                <article v-for="(scene, i) in draft.scenes" :key="`scene-${i}`" class="rform__scene">
+                <article
+                  v-for="(scene, i) in draft.scenes"
+                  :key="`scene-${i}`"
+                  class="rform__scene"
+                  :class="{ 'is-cover': isCover(scene) }"
+                  draggable="true"
+                  @dragstart="onDragStart(i, $event)"
+                  @dragover.prevent
+                  @drop.prevent="onDrop(i)"
+                >
                   <header class="rform__sceneHead">
-                    <span class="rform__sceneNum">Cena {{ String(i + 1).padStart(2, '0') }}</span>
+                    <span class="rform__sceneNum">
+                      Cena {{ String(i + 1).padStart(2, '0') }} · {{ scene.kind === 'video' ? 'vídeo' : 'imagem' }}
+                      <em v-if="isCover(scene)" class="rform__coverTag">capa</em>
+                    </span>
                     <div class="rform__sceneTools">
+                      <button
+                        type="button"
+                        class="rform__cover"
+                        :class="{ 'is-on': isCover(scene) }"
+                        :aria-pressed="isCover(scene)"
+                        @click="setCover(scene)"
+                      >
+                        {{ isCover(scene) ? 'É capa' : 'Definir capa' }}
+                      </button>
+                      <button type="button" class="rform__move" :disabled="i === 0" aria-label="Subir cena" @click="moveScene(i, -1)">↑</button>
+                      <button type="button" class="rform__move" :disabled="i === draft.scenes.length - 1" aria-label="Descer cena" @click="moveScene(i, 1)">↓</button>
+                      <span class="rform__grab" aria-hidden="true" title="Arrastar para reordenar">⠿</span>
                       <div class="rform__segment" role="group" aria-label="Tipo de mídia">
-                        <button
-                          type="button"
-                          :class="{ 'is-on': scene.kind === 'image' }"
-                          @click="scene.kind = 'image'"
-                        >Imagem</button>
-                        <button
-                          type="button"
-                          :class="{ 'is-on': scene.kind === 'video' }"
-                          @click="scene.kind = 'video'"
-                        >Vídeo</button>
+                        <button type="button" :class="{ 'is-on': scene.kind === 'image' }" @click="scene.kind = 'image'">Imagem</button>
+                        <button type="button" :class="{ 'is-on': scene.kind === 'video' }" @click="scene.kind = 'video'">Vídeo</button>
                       </div>
                       <button
                         v-if="draft.scenes.length > 1"
                         type="button"
                         class="rform__del"
                         :aria-label="`Remover cena ${i + 1}`"
-                        @click="draft.scenes.splice(i, 1)"
+                        @click="removeScene(i)"
                       >
                         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" /></svg>
                       </button>
                     </div>
                   </header>
 
-                  <div class="rform__pairRow">
-                    <label class="rform__field">
-                      <span class="rform__label">{{ scene.kind === 'video' ? 'Vídeo' : 'Imagem' }} <em>(URL ou ficheiro)</em></span>
-                      <input v-model="scene.src" class="rform__input rform__input--mono" placeholder="/media/loop.mp4">
-                    </label>
-                    <label class="rform__field">
-                      <span class="rform__label">Etiqueta</span>
-                      <input v-model="scene.kicker" class="rform__input" placeholder="Fotografia / Transmissão">
-                    </label>
+                  <div class="rform__sceneGrid">
+                    <div class="rform__scenePreview">
+                      <video
+                        v-if="scene.src && scene.kind === 'video'"
+                        :src="scene.src"
+                        :poster="scene.poster || undefined"
+                        muted
+                        loop
+                        playsinline
+                        preload="metadata"
+                      />
+                      <img v-else-if="scene.src" :src="scene.src" alt="">
+                      <span v-else class="rform__thumbEmpty">sem mídia</span>
+                      <label class="rform__upload">
+                        <input
+                          type="file"
+                          class="sr-only"
+                          :accept="scene.kind === 'video' ? 'video/*' : 'image/*'"
+                          @change="onSceneFile($event, i)"
+                        >
+                        <span>{{ scene.src ? 'Substituir' : 'Enviar ficheiro' }}</span>
+                      </label>
+                      <div
+                        v-if="uploadIndex === i"
+                        class="rform__progress"
+                        role="progressbar"
+                        :aria-valuenow="uploadProgress"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        :aria-label="`Envio da cena ${i + 1}`"
+                      >
+                        <span :style="{ width: `${uploadProgress}%` }" />
+                      </div>
+                    </div>
+
+                    <div class="rform__sceneFields">
+                      <label class="rform__field">
+                        <span class="rform__label">URL do {{ scene.kind === 'video' ? 'vídeo' : 'imagem' }}</span>
+                        <input v-model="scene.src" class="rform__input rform__input--mono" placeholder="/media/loop.mp4">
+                      </label>
+
+                      <div class="rform__pairRow">
+                        <label class="rform__field">
+                          <span class="rform__label">Título <em>(opcional)</em></span>
+                          <input v-model="scene.title" class="rform__input" placeholder="Descida do módulo">
+                        </label>
+                        <label class="rform__field">
+                          <span class="rform__label">Etiqueta</span>
+                          <input v-model="scene.kicker" class="rform__input" placeholder="Fotografia / Transmissão">
+                        </label>
+                      </div>
+
+                      <label v-if="scene.kind === 'video'" class="rform__field">
+                        <span class="rform__label">Poster do vídeo</span>
+                        <input v-model="scene.poster" class="rform__input rform__input--mono" placeholder="/images/relics/poster.jpg">
+                      </label>
+
+                      <label class="rform__field">
+                        <span class="rform__label">Legenda / transcrição</span>
+                        <textarea v-model="scene.body" class="rform__input rform__area" rows="3" placeholder="O que o diário conta nesta cena." />
+                      </label>
+
+                      <div class="rform__pairRow">
+                        <label class="rform__field">
+                          <span class="rform__label">Crédito</span>
+                          <input v-model="scene.credit" class="rform__input" placeholder="NASA / JPL">
+                        </label>
+                        <label class="rform__field">
+                          <span class="rform__label">Fonte <em>(URL)</em></span>
+                          <input v-model="scene.source_url" class="rform__input rform__input--mono" placeholder="https://images.nasa.gov/…">
+                        </label>
+                      </div>
+
+                      <label class="rform__field">
+                        <span class="rform__label">Áudio narrado <em>(opcional)</em></span>
+                        <input v-model="scene.audio_url" class="rform__input rform__input--mono" placeholder="/media/narracao.mp3">
+                      </label>
+                    </div>
                   </div>
-
-                  <label v-if="scene.kind === 'video'" class="rform__field">
-                    <span class="rform__label">Poster do vídeo</span>
-                    <input v-model="scene.poster" class="rform__input rform__input--mono" placeholder="/images/relics/poster.jpg">
-                  </label>
-
-                  <label class="rform__field">
-                    <span class="rform__label">Áudio narrado <em>(opcional)</em></span>
-                    <input v-model="scene.audio_url" class="rform__input rform__input--mono" placeholder="/media/narracao.mp3">
-                  </label>
-
-                  <label class="rform__field">
-                    <span class="rform__label">Texto narrado</span>
-                    <textarea v-model="scene.body" class="rform__input rform__area" rows="3" placeholder="O que o diário conta nesta cena." />
-                  </label>
                 </article>
                 <span v-if="errors.scenes" class="rform__err">{{ errors.scenes }}</span>
               </div>
@@ -278,11 +362,28 @@ const blank = (): Draft => ({
     { label: '', value: '' },
     { label: '', value: '' },
   ],
-  scenes: [emptyScene('image')],
+  // FE-14: arranque com três vídeos e duas imagens; slots vazios não são guardados.
+  scenes: [
+    emptyScene('video'),
+    emptyScene('video'),
+    emptyScene('video'),
+    emptyScene('image'),
+    emptyScene('image'),
+  ],
 })
 
 function emptyScene(kind: 'image' | 'video'): RelicScene {
-  return { kind, src: '', poster: '', kicker: kind === 'video' ? 'Transmissão' : 'Fotografia', body: '', audio_url: '' }
+  return {
+    kind,
+    src: '',
+    poster: '',
+    kicker: kind === 'video' ? 'Transmissão' : 'Fotografia',
+    title: '',
+    body: '',
+    credit: '',
+    source_url: '',
+    audio_url: '',
+  }
 }
 
 const draft = reactive<Draft>(blank())
@@ -308,7 +409,13 @@ watch(
       draft.status = props.relic.status ?? 'active'
       draft.location = props.relic.location ?? 'moon'
       draft.intro_audio_url = props.relic.intro_audio_url ?? ''
-      draft.scenes = props.relic.scenes.map(scene => ({ ...scene, audio_url: scene.audio_url ?? '' }))
+      draft.scenes = props.relic.scenes.map(scene => ({
+        ...scene,
+        title: scene.title ?? '',
+        credit: scene.credit ?? '',
+        source_url: scene.source_url ?? '',
+        audio_url: scene.audio_url ?? '',
+      }))
     }
     // criar: o identificador segue o nome. editar: o identificador fica estável.
     idTouched = Boolean(props.relic)
@@ -329,8 +436,58 @@ function addFact(): void {
   draft.facts.push({ label: '', value: '' })
 }
 
-function addScene(): void {
-  draft.scenes.push(emptyScene(draft.scenes.at(-1)?.kind === 'video' ? 'video' : 'image'))
+function addScene(kind: 'image' | 'video' = 'image'): void {
+  draft.scenes.push(emptyScene(kind))
+}
+
+function removeScene(index: number): void {
+  const scene = draft.scenes[index]
+  if (!scene) return
+  if (scene.src.trim() && !window.confirm(`Remover a cena ${index + 1}?`)) return
+  draft.scenes.splice(index, 1)
+}
+
+function moveScene(index: number, direction: -1 | 1): void {
+  const target = index + direction
+  if (target < 0 || target >= draft.scenes.length) return
+  const [scene] = draft.scenes.splice(index, 1)
+  if (scene) draft.scenes.splice(target, 0, scene)
+}
+
+let dragIndex = -1
+
+function onDragStart(index: number, event: DragEvent): void {
+  dragIndex = index
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', String(index))
+  }
+}
+
+function onDrop(index: number): void {
+  const from = dragIndex
+  dragIndex = -1
+  if (from < 0 || from === index) return
+  const [scene] = draft.scenes.splice(from, 1)
+  if (scene) draft.scenes.splice(index, 0, scene)
+}
+
+function isCover(scene: RelicScene): boolean {
+  const image = draft.image.trim()
+  if (!image) return false
+  return scene.src.trim() === image || (scene.poster?.trim() ?? '') === image
+}
+
+function setCover(scene: RelicScene): void {
+  const source = scene.kind === 'video' ? (scene.poster?.trim() ?? '') : scene.src.trim()
+  if (!source) {
+    errors.image = scene.kind === 'video'
+      ? 'Preenche o poster para usar este vídeo como capa.'
+      : 'Esta cena ainda não tem imagem.'
+    return
+  }
+  errors.image = ''
+  draft.image = source
 }
 
 function onImageLoad(event: Event): void {
@@ -338,24 +495,62 @@ function onImageLoad(event: Event): void {
   if (img.naturalWidth && img.naturalHeight) draft.ratio = `${img.naturalWidth} / ${img.naturalHeight}`
 }
 
-/** Envia a imagem para o Storage e devolve o URL público. */
+const uploadIndex = ref(-1)
+const uploadProgress = ref(0)
+const coverProgress = ref(0)
+
+const safeRelicId = (): string =>
+  /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(draft.id) ? draft.id : 'common'
+
+/**
+ * Upload direto com progresso real (`xhr.upload.onprogress`). O endpoint aceita
+ * até 4 MB; acima disso é preciso o fluxo de signed URL.
+ */
+function uploadToStorage(
+  file: File,
+  kind: 'image' | 'video' | 'audio',
+  onProgress: (value: number) => void,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('kind', kind)
+    form.append('relicId', safeRelicId())
+
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', '/api/admin/upload')
+    xhr.upload.addEventListener('progress', (event) => {
+      if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100))
+    })
+    xhr.addEventListener('load', () => {
+      let payload: { url?: string, message?: string } = {}
+      try {
+        payload = JSON.parse(xhr.responseText) as { url?: string, message?: string }
+      }
+      catch {
+        /* resposta sem JSON */
+      }
+      if (xhr.status >= 200 && xhr.status < 300 && payload.url) resolve(payload.url)
+      else reject(new Error(payload.message || `Falha no upload (${xhr.status}).`))
+    })
+    xhr.addEventListener('error', () => reject(new Error('Falha de rede no upload.')))
+    xhr.send(form)
+  })
+}
+
+/** Envia a imagem de cartão; a capa tem de ser uma das cenas. */
 async function onFile(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
 
   errors.image = ''
-  const form = new FormData()
-  form.append('file', file)
-  form.append('kind', 'image')
-  form.append('relicId', /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(draft.id) ? draft.id : 'common')
-
+  coverProgress.value = 1
   try {
-    const uploaded = await $fetch<{ url: string }>('/api/admin/upload', { method: 'POST', body: form })
-    draft.image = uploaded.url
-    // A capa tem de ser uma das cenas; preenche a primeira imagem vazia.
-    const emptyScene = draft.scenes.find(scene => scene.kind === 'image' && !scene.src.trim())
-    if (emptyScene) emptyScene.src = uploaded.url
+    const url = await uploadToStorage(file, 'image', value => { coverProgress.value = value })
+    draft.image = url
+    const empty = draft.scenes.find(scene => scene.kind === 'image' && !scene.src.trim())
+    if (empty) empty.src = url
 
     const image = new Image()
     image.addEventListener('load', () => {
@@ -363,14 +558,41 @@ async function onFile(event: Event): Promise<void> {
         draft.ratio = `${image.naturalWidth} / ${image.naturalHeight}`
       }
     })
-    image.src = uploaded.url
-    input.value = ''
+    image.src = url
   }
   catch (err: unknown) {
-    const apiError = err as { statusCode?: number, data?: { message?: string } }
-    errors.image = apiError.statusCode === 413
-      ? 'Imagem grande demais (máximo 4 MB).'
-      : apiError.data?.message || 'Falha ao enviar a imagem.'
+    errors.image = err instanceof Error ? err.message : 'Falha ao enviar a imagem.'
+  }
+  finally {
+    coverProgress.value = 0
+    input.value = ''
+  }
+}
+
+async function onSceneFile(event: Event, index: number): Promise<void> {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  const scene = draft.scenes[index]
+  if (!file || !scene) return
+
+  errors.scenes = ''
+  uploadIndex.value = index
+  uploadProgress.value = 1
+  try {
+    const url = await uploadToStorage(
+      file,
+      scene.kind === 'video' ? 'video' : 'image',
+      value => { uploadProgress.value = value },
+    )
+    scene.src = url
+  }
+  catch (err: unknown) {
+    errors.scenes = err instanceof Error ? err.message : 'Falha ao enviar a mídia.'
+  }
+  finally {
+    uploadIndex.value = -1
+    uploadProgress.value = 0
+    input.value = ''
   }
 }
 
@@ -386,7 +608,10 @@ function collect(): { facts: RelicFact[], scenes: RelicScene[] } {
         src: scene.src.trim(),
         poster: scene.poster?.trim() || undefined,
         kicker: scene.kicker.trim(),
+        title: scene.title?.trim() || undefined,
         body: scene.body.trim(),
+        credit: scene.credit?.trim() || undefined,
+        source_url: scene.source_url?.trim() || undefined,
         audio_url: scene.audio_url?.trim() || undefined,
       })),
   }
@@ -849,5 +1074,129 @@ function requestClose(): void {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* FE-14 — gestor de mídias */
+.rform__addRow {
+  display: flex;
+  gap: 8px;
+}
+
+.rform__cover,
+.rform__move {
+  min-height: 28px;
+  padding: 4px 10px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.rform__move {
+  min-width: 28px;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
+.rform__cover.is-on {
+  border-color: var(--accent, #7aa2ff);
+  background: color-mix(in srgb, var(--accent, #7aa2ff) 24%, transparent);
+}
+
+.rform__cover:disabled,
+.rform__move:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.rform__cover:focus-visible,
+.rform__move:focus-visible,
+.rform__grab:focus-visible {
+  outline: 2px solid var(--accent, #7aa2ff);
+  outline-offset: 2px;
+}
+
+.rform__grab {
+  cursor: grab;
+  opacity: 0.4;
+  font-size: 15px;
+  line-height: 1;
+  user-select: none;
+}
+
+.rform__scene:active .rform__grab {
+  cursor: grabbing;
+}
+
+.rform__scene.is-cover {
+  border-color: color-mix(in srgb, var(--accent, #7aa2ff) 55%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent, #7aa2ff) 28%, transparent);
+}
+
+.rform__coverTag {
+  margin-left: 8px;
+  color: var(--accent, #7aa2ff);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-style: normal;
+}
+
+.rform__sceneGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.rform__scenePreview {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 2%);
+}
+
+.rform__scenePreview img,
+.rform__scenePreview video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #000;
+}
+
+.rform__sceneFields {
+  display: grid;
+  gap: 10px;
+}
+
+.rform__progress {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 10%);
+}
+
+.rform__progress span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent, #7aa2ff);
+  transition: width 0.15s linear;
+}
+
+@media (max-width: 900px) {
+  .rform__sceneGrid { grid-template-columns: 1fr; }
+  .rform__scenePreview { max-width: 220px; }
 }
 </style>
