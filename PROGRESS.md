@@ -907,9 +907,11 @@ diário aberto pelo cartão.
 
 - **Efeito substituído**: a secção `#relics` deixou de ser um sticky de 260vh com a constelação
   de nomes (SVG de linhas, brilhos, morph estrela/infinito guiado pelo scroll) e passou a uma
-  órbita de capas — a adaptação do Orbit Images: 6 relíquias publicadas em elipse, uma volta a
-  cada 42 s, com profundidade (frente maior/mais opaca, trás menor/esbatida) e z-index por
+  órbita de capas — a adaptação do Orbit Images: as 12 relíquias publicadas em elipse, uma volta
+  a cada 42 s, com profundidade (frente maior/mais opaca, trás menor/esbatida) e z-index por
   camada, como no componente original (depth 0.5, intro de 1,3 s a abrir do ponto da frente).
+  As capas são espaçadas por comprimento de arco (720 amostras, como o path do original) para
+  não se juntarem nos extremos da elipse.
 - **Linha da órbita**: borda de 1 px a 18% do paper, elipse centrada nas capas (2·rx × 2·ry),
   aparece com a entrada da secção.
 - **Interação**: arrastar gira a órbita (com inércia); `touch-action: pan-y` mantém o scroll

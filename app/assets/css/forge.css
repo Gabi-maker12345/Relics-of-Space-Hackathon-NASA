@@ -735,8 +735,8 @@ html.is-menu-open body {
   }
 
   .fr-orbit__item {
-    width: clamp(52px, 14vw, 72px);
-    height: clamp(52px, 14vw, 72px);
+    width: clamp(46px, 12vw, 64px);
+    height: clamp(46px, 12vw, 64px);
     border-radius: 12px;
   }
 

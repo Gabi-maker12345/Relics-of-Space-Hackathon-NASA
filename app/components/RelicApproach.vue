@@ -6,8 +6,8 @@ const { relics, load } = useRelics()
 
 onMounted(() => { void load() })
 
-/** Só seis capas: a órbita é um enquadramento, não o arquivo todo. */
-const orbitItems = computed(() => relics.value.filter(isPublished).slice(0, 6))
+/** Todas as relíquias publicadas ficam na órbita (12 no arquivo atual). */
+const orbitItems = computed(() => relics.value.filter(isPublished))
 
 const orbitEl = ref<HTMLElement | null>(null)
 const items = ref<HTMLElement[]>([])
@@ -42,6 +42,65 @@ const started = ref(false)
 let observer: IntersectionObserver | null = null
 let resize: ResizeObserver | null = null
 
+/**
+ * As capas são distribuídas por comprimento de arco (como no Orbit Images, que
+ * amostra o path). Em ângulo, a elipse junta as capas nos extremos do eixo
+ * maior e elas sobrepunham-se.
+ */
+const ARC_STEPS = 720
+const arcLengths = new Float32Array(ARC_STEPS + 1)
+let arcPerimeter = 1
+let uFront = 0.25
+
+function lengthAtAngle(angle: number): number {
+  const step = (Math.PI * 2) / ARC_STEPS
+  const position = angle / step
+  const index = Math.min(ARC_STEPS, Math.max(0, Math.floor(position)))
+  const fraction = position - index
+  const from = arcLengths[index] ?? 0
+  const to = arcLengths[Math.min(ARC_STEPS, index + 1)] ?? from
+  return from + (to - from) * fraction
+}
+
+function buildArc(): void {
+  const a = Math.max(1, rx.value)
+  const b = Math.max(1, ry.value)
+  const step = (Math.PI * 2) / ARC_STEPS
+  let total = 0
+  let previousX = a
+  let previousY = 0
+  arcLengths[0] = 0
+  for (let index = 1; index <= ARC_STEPS; index += 1) {
+    const angle = index * step
+    const x = a * Math.cos(angle)
+    const y = b * Math.sin(angle)
+    total += Math.hypot(x - previousX, y - previousY)
+    arcLengths[index] = total
+    previousX = x
+    previousY = y
+  }
+  arcPerimeter = total || 1
+  uFront = lengthAtAngle(Math.PI / 2) / arcPerimeter
+}
+
+function angleAtU(u: number): number {
+  const target = (((u % 1) + 1) % 1) * arcPerimeter
+  let low = 0
+  let high = ARC_STEPS
+  while (low < high) {
+    const mid = (low + high) >> 1
+    if ((arcLengths[mid] ?? 0) < target) low = mid + 1
+    else high = mid
+  }
+  const index = Math.max(1, low)
+  const from = arcLengths[index - 1] ?? 0
+  const to = arcLengths[index] ?? from
+  const fraction = to > from ? (target - from) / (to - from) : 0
+  return ((index - 1 + fraction) * (Math.PI * 2)) / ARC_STEPS
+}
+
+const wrapSigned = (value: number) => ((((value + 0.5) % 1) + 1) % 1) - 0.5
+
 function measure(): void {
   const el = orbitEl.value
   if (!el) return
@@ -49,6 +108,7 @@ function measure(): void {
   height = el.clientHeight
   rx.value = width * 0.42
   ry.value = height * 0.3
+  buildArc()
 }
 
 function render(now: number): void {
@@ -71,13 +131,15 @@ function render(now: number): void {
 
   const radiusX = rx.value
   const radiusY = ry.value
+  const phaseU = phase / (Math.PI * 2)
 
   for (let index = 0; index < count; index += 1) {
     const node = items.value[index]
     if (!node) continue
-    const base = phase + (index / count) * Math.PI * 2
+    let u = phaseU + index / count
     // A entrada nasce do ponto da frente e abre para a elipse.
-    const angle = intro <= 0 || intro >= 1 ? base : Math.PI / 2 + (base - Math.PI / 2) * spread
+    if (intro > 0 && intro < 1) u = uFront + wrapSigned(u - uFront) * spread
+    const angle = angleAtU(u)
     const x = Math.cos(angle) * radiusX
     const y = Math.sin(angle) * radiusY
     const front = (Math.sin(angle) + 1) / 2
