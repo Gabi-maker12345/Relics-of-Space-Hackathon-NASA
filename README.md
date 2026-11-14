@@ -35,7 +35,9 @@ Não há CORS: front e API são same-origin.
 
 ## Requisitos
 
-- **Node.js >= 22.22** (recomendado 24 LTS). O projeto usa APIs de Node 22+.
+- **Node.js:** `^22.22.3` ou `^24.15.0` (Nuxt 4.6.4). Recomendado **24 LTS**; o
+  `.nvmrc` aponta para 24 e a CI/Vercel usam a última patch dessa linha.
+  Corre `nvm install 24 && nvm use` se tiveres uma 24.x antiga.
 - Conta Supabase e um projeto criado.
 - (Opcional) Supabase CLI para migrações: `npx supabase --version`.
 
