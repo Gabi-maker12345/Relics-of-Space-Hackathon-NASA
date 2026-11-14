@@ -17,7 +17,10 @@ Unit tests are pure Node tests — no Supabase stack required:
 | `tests/relic-contract.test.ts` | The front↔API contract: mapper (`id` = slug, cover only from images, no audio fallback), input schema, column mapping (`tagline`→`summary`, `body`→`story_text`), one-field publish patch and the cover-must-be-a-scene rule. |
 | `tests/i18n.test.ts` | Language normalization (`en`, `pt-BR`, invalid → `pt`) and the translation payload schema (partial saves, UUIDs, quiz options, safe URLs). |
 | `tests/seed.test.ts` | The demo catalogue: 12 relics, unique ids/slugs, fact sheets, official media with credits/sources, every image present as a 1600×900 JPEG, narration MP3s for every intro/scene, `reference_url`/`is_extra` on every relic, and the SSR fallback matching `data/relics.json` (cover, scenes, steps). |
-| `tests/quiz.test.ts` | Quiz input/patch schemas (2–5 options, answer index in range, UUIDs for ordering) and the DTO guarantee: the public mapper omits `correct_index`, the admin mapper includes it. |
+| `tests/quiz.test.ts` | Quiz input/patch schemas (2–5 options, answer index in range, UUIDs for ordering), the 8-question cap and the DTO guarantee: the public mapper omits `correct_index`, the admin mapper includes it. |
+| `tests/narration-timing.test.ts` | Word timings for captions: character offsets, punctuation pauses and the active word at a given time. |
+| `tests/relic-filters.test.ts` | FE-05 query filters: valid location/status/search, unknown values dropped, empty values removed and URL query round-trip. |
+| `tests/relics-ui.test.ts` | UI helpers: video URL detection, status/location labels, published default and extra flag. |
 | `tests/nasa.test.ts` | NASA client: credit normalization (`JPL` → `NASA/JPL-Caltech`, unknown creators preserved), image/video/poster selection, search normalization that filters audio, and clear 400/502 errors. |
 
 ## Integration tests (local Supabase required)
@@ -58,7 +61,7 @@ Current coverage:
   relics exist exactly once, with their covers, fact sheets, media counts, credits and
   sources; anon can read all published relics.
 - `tests/integration/quiz.test.ts` — adding, inserting at a position, updating, reordering
-  and deleting questions; the five-question cap; out-of-range answers after shrinking the
+  and deleting questions; the eight-question cap; out-of-range answers after shrinking the
   options; partial/duplicate/foreign order lists; translations cascade on delete; and the
   public detail omits `correct_index` while the admin payload includes it.
 - `tests/integration/nasa-import.test.ts` — importing an image and a video from fake NASA
