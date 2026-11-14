@@ -39,9 +39,9 @@
 
 - **145 testes unitários / 38 de integração** verdes; `typecheck`, `lint` (0 erros) e `build` limpos.
 - **Fluxos reais contra o cloud:** login, upload, criar rascunho, quiz manual, publicar, detalhe público sem `correct_index`, correção de resposta, tradução EN, NASA search/import, TTS (22 KB), unpublish e limpeza (volta a 12).
-- **Lighthouse mobile headless:** performance **45** em produção (LCP 3,7 s, TBT 40,1 s), a11y **100**, best practices **100**, SEO **92**. Medir em GPU real antes da demo; seguido em #69.
-- **Riscos abertos:** #69 (performance do GL), #70 (quiz IA/key), #71 (npm audit), #72 (categorias oficiais), #73 (master Next vs milestone Nuxt).
-- **Pendente:** deploy Vercel, `206` em produção e validação do TTS na Vercel.
+- **Lighthouse mobile headless:** ver a secção “Performance (SEC #69)” abaixo. Os números de GPU real/produção continuam por confirmar.
+- **Riscos abertos:** #69 (performance do GL), #72 (categorias oficiais).
+- **Pendente:** medição final em GPU real e validação do build novo em produção.
 
 ## 0. Antes de tocar em produção
 
@@ -80,9 +80,12 @@ where table_schema = 'public' and table_name = 'relics'
   and column_name in ('reference_url', 'is_extra', 'intro_audio_url');
 ```
 
-4. Popular o bucket antes do seed (idempotente; sobe `public/images` + `public/media` para `relic-media/assets/...`):
+4. Gerar as variantes WebP e popular o bucket antes do seed (idempotente;
+   sobe `public/images` + `public/media` para `relic-media/assets/...`):
 
 ```bash
+npm run images:optimize
+npm run images:check
 npm run media:upload
 ```
 
@@ -125,8 +128,9 @@ npm run setup:admin
    - `NUXT_PUBLIC_SUPABASE_KEY`
    - `NUXT_SUPABASE_SECRET_KEY`
 4. Não colocar `ADMIN_PASSWORD` no runtime; só no comando local de setup.
-5. Deploy. Confirmar que `public/images/relics/` e
-   `public/media/narration/` são servidos pela CDN da Vercel.
+5. Deploy. As imagens e a narração do seed são servidas pelo bucket público
+   `relic-media` (Storage), não pela CDN da Vercel; confirmar que o bucket tem
+   os originais e as variantes WebP.
 6. Configurar domínio + HTTPS e forçar HTTPS.
 7. Confirmar que `NUXT_SUPABASE_SECRET_KEY` está apenas nas variáveis de
    servidor (nunca em `NUXT_PUBLIC_*`).
@@ -223,3 +227,46 @@ devolvem **7 low, 0 moderate, 0 high, 0 critical**.
 - **Nuxt 4.6.4 / @nuxt/cli 4.0.1:** um `devServer.host` vazio resolve para `{}`
   e rebenta `nuxt dev`; o `nuxt.config.ts` fixa `127.0.0.1` (podes expor com
   `nuxt dev --host 0.0.0.0`).
+
+## 8. Performance (SEC #69)
+
+O arranque da landing deixou de depender do WebGL e das imagens completas:
+
+- **Engine GL lazy:** o chunk do Three.js (~587 KB) e o boot só carregam ao
+  primeiro gesto, ao abrir a cena ou o painel de acesso; a landing é DOM puro.
+- **GSAP lazy:** o chunk (~445 KB) só é descarregado quando o primeiro diário
+  abre; deixa de estar no caminho crítico.
+- **Variantes WebP:** `images:optimize` gera 480/960/1440 px por imagem do seed;
+  a landing usa 480/960 e o lightbox 1440. O `media:upload` envia-as para o
+  bucket. O poster/GL usa a variante de 960 px.
+- **BootLoader removido:** o véu preto deixou de esperar pelo engine; o LCP é
+  o título do hero, não o loader.
+- **CSS inline + preload da serifa:** menos um pedido que bloqueia o render.
+- **Favicon/logo:** PNG de 64/180 px e WebP de 480 px (o original de 136 KB
+  deixou de ser pedido).
+- **A11y:** contraste da nota de “As relíquias” e nome acessível do botão PT
+  corrigidos (100 de novo).
+
+### Números (Lighthouse 12, built preview local, SwiftShader, sem gzip)
+
+| Métrica | Antes | Depois |
+|---|---:|---:|
+| Performance | 30 | **62** |
+| LCP | 12,8 s | **7,3 s** |
+| TBT | 122,7 s | **150 ms** |
+| Peso total | 6,2 MB | **1,15 MB** |
+| Acessibilidade | 96 | **100** |
+| CLS | 0 | 0,002 |
+
+O preview local não comprime; a Vercel serve brotli/gzip, por isso o LCP de
+produção deve ficar abaixo destes valores. **Falta a medição em GPU real e em
+produção** (LCP < 4 s, TBT < 500 ms) para fechar a #69. Como medir:
+
+```bash
+npm run build
+PORT=3200 node .output/server/index.mjs
+npx lighthouse@12 http://127.0.0.1:3200/ --chrome-flags='--headless=new --no-sandbox --enable-unsafe-swiftshader'
+```
+
+Para regenerar imagens depois de adicionar relíquias: `npm run images:optimize`
+e `npm run media:upload` (a CI corre `images:check`).

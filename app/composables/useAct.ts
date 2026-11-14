@@ -34,6 +34,8 @@ export function useAct() {
     document.documentElement.dataset.act = 'cosmos'
     // o clique é o gesto que autoriza o áudio; a trilha entra muda
     void useSoundtrack().prime()
+    // aquece o GL durante a transição do cosmos (sem bloquear a landing)
+    void ensureGlEngine().catch(() => {})
   }
 
   const enter = async (): Promise<void> => {
@@ -43,15 +45,20 @@ export function useAct() {
     document.documentElement.dataset.act = 'scene'
     document.documentElement.dataset.scene = 'portfolio'
     await nextTick()
-    const engine = useGlEngine()
-    engine.scan()
-    const track = document.querySelector<HTMLElement>('[data-carousel]')
-    if (track) {
-      engine.attachTrack(track)
-      engine.resetCarousel()
+    try {
+      const engine = await ensureGlEngine()
+      engine.scan()
+      const track = document.querySelector<HTMLElement>('[data-carousel]')
+      if (track) {
+        engine.attachTrack(track)
+        engine.resetCarousel()
+      }
+      // cartões novos nascem escondidos: dispara a entrada com a coreografia
+      engine.enterAll()
     }
-    // cartões novos nascem escondidos: dispara a entrada com a coreografia
-    engine.enterAll()
+    catch {
+      // WebGL indisponível: a cena mantém-se em DOM, sem a camada GL
+    }
     void useSoundtrack().play()
   }
 

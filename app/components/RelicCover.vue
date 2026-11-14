@@ -12,7 +12,17 @@
     :preload="autoplay ? 'auto' : 'metadata'"
     :aria-label="alt"
   />
-  <img v-else class="cover" :src="src" :alt="alt" loading="lazy" decoding="async">
+  <img
+    v-else
+    class="cover"
+    :src="src"
+    :srcset="srcset"
+    :sizes="srcset ? sizes : undefined"
+    :alt="alt"
+    :loading="priority ? 'eager' : 'lazy'"
+    :fetchpriority="priority ? 'high' : undefined"
+    :decoding="priority ? 'sync' : 'async'"
+  >
 </template>
 
 <script setup lang="ts">
@@ -24,11 +34,14 @@ const props = withDefaults(
     poster?: string
     alt: string
     autoplay?: boolean
+    sizes?: string
+    priority?: boolean
   }>(),
-  { autoplay: false, poster: undefined },
+  { autoplay: false, poster: undefined, sizes: '100vw', priority: false },
 )
 
 const video = computed(() => isVideoUrl(props.src))
+const srcset = computed(() => imageSrcset(props.src))
 const element = ref<HTMLVideoElement | null>(null)
 
 watch(() => props.autoplay, (on) => {

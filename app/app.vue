@@ -11,17 +11,35 @@
     <ScrollProgress />
     <ProfilePanel />
     <ProjectModal />
-    <BootLoader />
   </div>
 </template>
 
 <script setup lang="ts">
+import type { Link } from 'unhead/types'
+import newsreaderFont from '@fontsource-variable/newsreader/files/newsreader-latin-wght-normal.woff2?url'
+
 // fiação dos painéis (Escape, clique fora, engine)
 usePanels()
 
 const { lang } = useLocale()
 const { t } = useI18n()
-useHead(() => ({ htmlAttrs: { lang: lang.value === 'pt' ? 'pt-PT' : 'en' } }))
+const config = useRuntimeConfig()
+const supabaseUrl = String(config.public.supabase?.url ?? '')
+const headLink: Link[] = [
+  // a serifa do hero é o LCP: evitar o swap tardio
+  { rel: 'preload', as: 'font', type: 'font/woff2', href: newsreaderFont, crossorigin: '' },
+  ...(supabaseUrl
+    ? [
+        { rel: 'preconnect' as const, href: supabaseUrl },
+        { rel: 'dns-prefetch' as const, href: supabaseUrl },
+      ]
+    : []),
+]
+
+useHead(() => ({
+  htmlAttrs: { lang: lang.value === 'pt' ? 'pt-PT' : 'en' },
+  link: headLink,
+}))
 
 const { muted } = useSound()
 watch(muted, () => useSoundtrack().refresh())

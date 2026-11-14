@@ -200,8 +200,12 @@ defineExpose({ goTo })
             <img
               v-if="scene.kind === 'image'"
               class="rsheet__media"
-              :src="scene.src"
+              :src="imageVariant(scene.src, 960)"
+              :srcset="imageSrcset(scene.src)"
+              sizes="(max-width: 900px) 100vw, 55vw"
               :alt="relic.alt"
+              :loading="i === index ? 'eager' : 'lazy'"
+              :fetchpriority="i === index ? 'high' : undefined"
               decoding="async"
             />
             <video

@@ -5,35 +5,56 @@
 </template>
 
 <script setup lang="ts">
+import type { GlEngine } from '~/composables/gl/engine'
+
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const route = useRoute()
+const events = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const
+let started = false
 
-onMounted(async () => {
+function cleanup(): void {
+  for (const event of events) window.removeEventListener(event, start)
+}
+
+function start(): void {
+  if (started) return
+  started = true
+  cleanup()
+  void ensureGlEngine()
+    .then(attachNextFrame)
+    .catch(() => {
+      // WebGL indisponível: a landing continua a funcionar em DOM.
+    })
+}
+
+onMounted(() => {
   const canvas = canvasRef.value
   if (!canvas) return
-  const engine = useGlEngine()
-  await engine.init(canvas)
-  attachNextFrame()
-  if (import.meta.dev) {
-    ;(window as unknown as Record<string, unknown>).__gl = engine
-  }
+  setGlCanvas(canvas)
+  for (const event of events) window.addEventListener(event, start, { passive: true })
+})
+
+onBeforeUnmount(() => {
+  cleanup()
+  setGlCanvas(null)
+  if (glEngineLoaded()) void loadGlEngine().then(engine => engine.dispose())
 })
 
 watch(
   () => route.fullPath,
-  () => nextTick(attachNextFrame),
+  () => {
+    if (!glEngineLoaded()) return
+    void loadGlEngine().then(engine => nextTick(() => attachNextFrame(engine)))
+  },
 )
 
-function attachNextFrame(): void {
-  const engine = useGlEngine()
+function attachNextFrame(engine: GlEngine): void {
   engine.defer(0, () => {
     engine.scan()
     const track = document.querySelector<HTMLElement>('[data-carousel]')
     if (track !== null) engine.attachTrack(track)
   })
 }
-
-onBeforeUnmount(() => useGlEngine().dispose())
 </script>
 
 <style scoped>

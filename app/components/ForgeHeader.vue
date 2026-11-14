@@ -184,14 +184,14 @@ onBeforeUnmount(() => {
 <template>
   <header class="fr-header fr">
     <NuxtLink to="/" class="fr-logo" :aria-label="`Space Relics — ${t('nav.home')}`" @click="onLogoClick">
-      <img src="/images/nasa-logo.png" alt="NASA" width="2625" height="765" />
+      <img src="/images/nasa-logo-480.webp" alt="NASA" width="480" height="140" decoding="async" />
     </NuxtLink>
 
     <div class="fr-nav">
       <button
         type="button"
         class="fr-lang"
-        :aria-label="t('nav.langTo')"
+        :aria-label="`${lang === 'pt' ? 'PT' : 'EN'} — ${t('nav.langTo')}`"
         @click="toggleLang"
       >{{ lang === 'pt' ? 'PT' : 'EN' }}</button>
 

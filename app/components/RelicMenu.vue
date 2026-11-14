@@ -589,10 +589,11 @@ onBeforeUnmount(() => {
       <img
         :key="current.id"
         class="fr-rmenu__amb"
-        :src="current.image"
+        :src="imageVariant(current.image, 480)"
         alt=""
         aria-hidden="true"
         draggable="false"
+        decoding="async"
       />
       <div class="fr-rmenu__veil" aria-hidden="true" />
 
@@ -623,9 +624,10 @@ onBeforeUnmount(() => {
             >
               <img
                 v-if="itemFor(index)"
-                :src="itemFor(index)!.image"
+                :src="imageVariant(itemFor(index)!.image, 480)"
                 alt=""
                 draggable="false"
+                loading="lazy"
                 decoding="async"
               />
             </div>
@@ -633,7 +635,15 @@ onBeforeUnmount(() => {
 
           <figure class="fr-rmenu__focus" :class="{ 'is-hidden': mode !== 'flat' }">
             <div class="fr-rmenu__focusFrame">
-              <img :src="current.image" alt="" draggable="false" />
+              <img
+                :src="imageVariant(current.image, 960)"
+                :srcset="imageSrcset(current.image)"
+                sizes="(max-width: 900px) 92vw, 560px"
+                alt=""
+                draggable="false"
+                fetchpriority="high"
+                decoding="async"
+              />
               <button
                 ref="actionButton"
                 type="button"

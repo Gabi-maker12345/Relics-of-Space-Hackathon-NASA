@@ -192,6 +192,8 @@ Supabase Auth e garante a linha correspondente em `admin_users`.
 | `npm run smoke` | valida login, sessão, guarda admin e RLS |
 | `npm run seed:generate` | regenera `supabase/seed.sql` a partir de `data/relics.json` |
 | `npm run seed:check` | verifica que o seed gerado está atualizado e sem caminhos locais |
+| `npm run images:optimize` | gera as variantes WebP 480/960/1440 de `public/images/relics` |
+| `npm run images:check` | verifica que todas as variantes WebP existem (corre na CI) |
 | `npm run media:upload` | sobe `public/images` + `public/media` para o bucket e repara URLs locais |
 | `npm run narration:generate` | regenera os MP3 de narração com Edge TTS |
 | `npm run narration:check` | verifica que todos os MP3 de narração existem |

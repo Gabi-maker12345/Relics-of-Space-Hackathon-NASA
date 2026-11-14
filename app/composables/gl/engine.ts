@@ -555,52 +555,12 @@ export class GlEngine {
       } catch {
         // document.fonts indisponível: seguir
       }
-      await this.loadTextures()
+      // As texturas dos cartões são carregadas on-demand em `textureForCard`:
+      // pré-carregar as 12 capas completas atrasava o boot em ~5 MB.
       this.scan()
       this.bootedResolve?.()
     })()
     return this.bootPromise
-  }
-
-  private async loadTextures(): Promise<void> {
-    let manifest: Record<string, string>
-    try {
-      const response = await fetch('/textures/manifest.json')
-      const parsed: unknown = await response.json()
-      manifest = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, string>) : {}
-    } catch {
-      manifest = {}
-    }
-    const loader = new THREE.TextureLoader()
-    const jobs: Promise<void>[] = Object.entries(manifest).map(
-      ([key, value]) =>
-        new Promise<void>((done) => {
-          loader.load(
-            value,
-            (texture) => {
-              texture.colorSpace = THREE.SRGBColorSpace
-              texture.minFilter = THREE.LinearFilter
-              texture.generateMipmaps = false
-              this.textures.set(key, texture)
-              done()
-            },
-            undefined,
-            () => done(),
-          )
-        }),
-    )
-    await Promise.all(jobs)
-
-    // Planos de cartão criados antes das texturas ficam com um Texture vazio;
-    // aqui devolvemos-lhes o mapa certo (acontece quando o track ganha cópias).
-    for (const plane of this.planes) {
-      if (plane.kind !== 'card') continue
-      const texture = this.textureForCard(plane.el)
-      const material = plane.mesh.material as THREE.ShaderMaterial
-      if (material.uniforms.uMap) material.uniforms.uMap.value = texture
-      plane.mappedTexture = texture
-      plane.dirty = true
-    }
   }
 
   private queueScan(): void {

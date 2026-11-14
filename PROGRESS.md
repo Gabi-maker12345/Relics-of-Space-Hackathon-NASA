@@ -944,3 +944,15 @@ diário aberto pelo cartão.
 - **QA**: login real; Ingenuity traduzida em 7,9 s → `saved: relic + 2 mídias + 8 perguntas`;
   `GET …/translations/en` devolve resumo, alt, legendas e quiz em inglês; 152 testes,
   typecheck e lint verdes.
+
+## Iteração 43 — performance da landing (SEC #69)
+
+- **Engine GL lazy:** o Three.js (~587 KB) e o boot só carregam ao primeiro gesto, à cena ou ao painel; a landing pinta em DOM puro. O `BootLoader` que tapava o hero até ao boot foi removido.
+- **GSAP lazy:** o chunk (~445 KB) só carrega quando o primeiro diário abre; a transição usa um import dinâmico.
+- **Imagens:** `scripts/optimize-images.mjs` gera 72 variantes WebP (480/960/1440) para as 24 imagens do seed; `imageSrcset`/`imageVariant` usam-nas na órbita, cartões, ficha, lightbox e texturas GL. O logo passou a WebP 480 e o favicon a PNG 64/180.
+- **CSS/fonte:** estilos inline no HTML e preload da serifa Newsreader; preconnect ao Supabase.
+- **SSR:** o seed inicial passou a levar só os campos do painel (sem factos/cenas/passos), reduzindo o payload.
+- **A11y:** contraste da nota de “As relíquias” e nome acessível do botão PT; 100 de novo.
+- **Bug apanhado:** `media:upload` importava `storageAssetPath` (nome antigo) e rebentava; corrigido para `storageObjectPath`.
+- **Lighthouse local (built preview, SwiftShader, sem gzip):** performance **30 → 62**, LCP **12,8 → 7,3 s**, TBT **122,7 s → 150 ms**, peso **6,2 → 1,15 MB**, a11y **96 → 100**.
+- **Pendente:** medição em GPU real e em produção para fechar #69 (LCP < 4 s, TBT < 500 ms).
