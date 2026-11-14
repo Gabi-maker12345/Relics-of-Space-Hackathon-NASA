@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { filters, hasFilters, clear } = useRelicFilters()
-const { relics, pending } = usePublicRelics(filters)
+const { relics, pending, error, refresh } = usePublicRelics(filters)
 
 const { open } = useProjectModal()
 const track = ref<HTMLElement | null>(null)
@@ -62,7 +62,12 @@ function openRelic(id: string): void {
 </script>
 
 <template>
-  <div v-if="!pending && relics.length === 0" class="gate__empty fr" role="status">
+  <div v-if="error && relics.length === 0" class="gate__empty fr" role="alert">
+    <p class="fr-label">Não foi possível carregar o arquivo</p>
+    <p class="fr-body">{{ error.message || 'Tenta novamente.' }}</p>
+    <button type="button" class="fr-chip is-on" @click="refresh()">Tentar novamente</button>
+  </div>
+  <div v-else-if="!pending && relics.length === 0" class="gate__empty fr" role="status">
     <p class="fr-label">Sem relíquias com estes filtros</p>
     <p class="fr-body">Ajusta o local, o estado ou a pesquisa.</p>
     <button v-if="hasFilters" type="button" class="fr-chip is-on" @click="clear">Limpar filtros</button>

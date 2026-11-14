@@ -1221,6 +1221,15 @@ function requestClose(): void {
   background: #000;
 }
 
+/* Nos cartões de mídia o botão vive no fluxo, por baixo da pré-visualização. */
+.rform__scenePreview .rform__upload {
+  position: static;
+  justify-self: stretch;
+  width: 100%;
+  padding: 7px 8px;
+  text-align: center;
+}
+
 .rform__sceneFields {
   display: grid;
   gap: 10px;
