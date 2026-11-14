@@ -1,131 +1,212 @@
 <script setup lang="ts">
-import { missionMarquee } from '~/data/relics'
+import { isPublished } from '~/utils/relics'
+
 const { t } = useI18n()
+const { relics, load } = useRelics()
 
-const wrap = ref<HTMLElement | null>(null)
-const title = ref<HTMLElement | null>(null)
-const linePath = ref<SVGPathElement | null>(null)
+onMounted(() => { void load() })
+
+/** Só seis capas: a órbita é um enquadramento, não o arquivo todo. */
+const orbitItems = computed(() => relics.value.filter(isPublished).slice(0, 6))
+
+const orbitEl = ref<HTMLElement | null>(null)
 const items = ref<HTMLElement[]>([])
-const names = missionMarquee
-
 const setItem = (el: Element | ComponentPublicInstance | null, index: number) => {
   if (el instanceof HTMLElement) items.value[index] = el
 }
 
-const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
-const smoothstep = (edge0: number, edge1: number, x: number) => {
-  const t = clamp01((x - edge0) / (edge1 - edge0))
-  return t * t * (3 - 2 * t)
-}
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
+const easeOutQuint = (value: number) => 1 - Math.pow(1 - value, 5)
 
-/**
- * Formas: círculo → estrela (raios alternados) → dois anéis contrarrotativos.
- */
-const shapeFactor = (index: number, total: number, starMix: number, ellipseMix: number) => {
-  const star = index % 2 === 0 ? 1 : 0.46
-  // a estrela desfaz-se enquanto o anel se estica numa elipse
-  return 1 + (star - 1) * starMix * (1 - ellipseMix)
-}
+/* Constantes do Orbit Images original (ellipse, depth .5, volta de 40 s). */
+const LAP_SECONDS = 42
+const DEPTH = 0.5
+const INTRO_SPREAD = 1300
+const INTRO_FADE = 450
 
 let raf = 0
+let last = 0
+let phase = -Math.PI / 2
+let velocity = 0
+let introStart = -1
 let reduced = false
+let visible = false
+let dragging = false
+let lastX = 0
+let lastT = 0
+let width = 0
+let height = 0
+const rx = ref(0)
+const ry = ref(0)
+const started = ref(false)
+let observer: IntersectionObserver | null = null
+let resize: ResizeObserver | null = null
+
+function measure(): void {
+  const el = orbitEl.value
+  if (!el) return
+  width = el.clientWidth
+  height = el.clientHeight
+  rx.value = width * 0.42
+  ry.value = height * 0.3
+}
+
+function render(now: number): void {
+  raf = 0
+  const count = Math.min(items.value.length, orbitItems.value.length)
+  if (!count || !width || !height) return
+
+  const dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60
+  last = now
+
+  if (!reduced && !dragging) {
+    phase += ((Math.PI * 2) / LAP_SECONDS + velocity) * dt
+    velocity *= Math.exp(-dt * 1.6)
+  }
+
+  const intro = introStart < 0 ? 0 : Math.min(1, (now - introStart) / INTRO_SPREAD)
+  const spread = reduced ? 1 : easeOutQuint(intro)
+  // Antes da entrada, tudo escondido no ponto da frente: nada salta para a elipse.
+  const appear = introStart < 0 ? 0 : reduced ? 1 : Math.min(1, (now - introStart) / INTRO_FADE)
+
+  const radiusX = rx.value
+  const radiusY = ry.value
+
+  for (let index = 0; index < count; index += 1) {
+    const node = items.value[index]
+    if (!node) continue
+    const base = phase + (index / count) * Math.PI * 2
+    // A entrada nasce do ponto da frente e abre para a elipse.
+    const angle = intro <= 0 || intro >= 1 ? base : Math.PI / 2 + (base - Math.PI / 2) * spread
+    const x = Math.cos(angle) * radiusX
+    const y = Math.sin(angle) * radiusY
+    const front = (Math.sin(angle) + 1) / 2
+    const scale = 1 + DEPTH * (0.3 * front - 0.45 * (1 - front))
+    const opacity = (1 - DEPTH * 0.55 * (1 - front)) * appear
+    node.style.transform = `translate(-50%, -50%) translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${scale.toFixed(3)})`
+    node.style.opacity = opacity.toFixed(3)
+    node.style.zIndex = String(Math.round(front * 100))
+  }
+
+  if (visible && !reduced) raf = requestAnimationFrame(render)
+}
+
+function wake(): void {
+  if (raf || !visible) return
+  last = 0
+  raf = requestAnimationFrame(render)
+}
+
+/** Arrastar gira a órbita; a velocidade extra morre na inércia. */
+function onPointerDown(event: PointerEvent): void {
+  if (event.pointerType === 'mouse' && event.button !== 0) return
+  if (reduced || orbitItems.value.length < 2) return
+  dragging = true
+  velocity = 0
+  lastX = event.clientX
+  lastT = performance.now()
+  ;(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
+  wake()
+}
+
+function onPointerMove(event: PointerEvent): void {
+  if (!dragging) return
+  const dx = event.clientX - lastX
+  if (dx === 0) return
+  lastX = event.clientX
+  const now = performance.now()
+  const dt = Math.max(1, now - lastT) / 1000
+  lastT = now
+  phase += dx * 0.006
+  velocity = clamp((dx * 0.006) / dt, -6, 6)
+}
+
+function onPointerUp(event: PointerEvent): void {
+  if (!dragging) return
+  dragging = false
+  ;(event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId)
+}
+
+function startIntro(): void {
+  if (introStart >= 0) return
+  introStart = performance.now()
+  started.value = true
+  wake()
+}
+
+watch(orbitItems, () => {
+  measure()
+  wake()
+}, { flush: 'post' })
 
 onMounted(() => {
   reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const total = names.length
+  measure()
 
-  const loop = (now: number) => {
-    raf = requestAnimationFrame(loop)
-    const el = wrap.value
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const span = rect.height - window.innerHeight
-    const p = span > 0 ? clamp01(-rect.top / span) : 0
-
-    const starMix = smoothstep(0.66, 0.8, p)
-    const infMix = smoothstep(0.82, 0.95, p)
-    const radius = Math.min(window.innerWidth, window.innerHeight) * (window.innerWidth < 650 ? 0.4 : 0.33)
-    const shapeMix = Math.max(starMix, infMix)
-    // as formas ficam mais legíveis com a rotação mais lenta
-    let rotation = reduced ? 0 : (now / 1000) * 0.09 * (1 - shapeMix) + p * 1.1
-    if (!reduced && shapeMix > 0.001) {
-      // alinha o padrão a um passo da grelha para a estrela nascer "direita"
-      const step = (Math.PI * 2) / total
-      const anchor = -Math.PI / 2
-      const snapped = Math.round((rotation - anchor) / step) * step + anchor
-      rotation += (snapped - rotation) * shapeMix
-    }
-
-    // o título sai de cena quando o anel se fecha — liberta o centro para as formas
-    if (title.value) {
-      const out = smoothstep(0.3, 0.5, p)
-      title.value.style.opacity = (1 - out).toFixed(3)
-      title.value.style.transform = `scale(${(1 + out * 0.12).toFixed(3)})`
-      title.value.style.filter = out > 0.02 ? `blur(${(out * 8).toFixed(1)}px)` : 'none'
-    }
-
-    const cx = window.innerWidth / 2
-    const cy = window.innerHeight / 2
-    let d = ''
-
-    for (let i = 0; i < total; i += 1) {
-      const node = items.value[i]
-      if (!node) continue
-      const angle = (i / total) * Math.PI * 2 + rotation
-      const shape = shapeFactor(i, total, starMix, infMix)
-      const squash = 1 + (0.58 - 1) * infMix
-      const x = Math.cos(angle) * radius * shape
-      const y = Math.sin(angle) * radius * shape * squash
-      d += `${i === 0 ? 'M' : 'L'}${(cx + x).toFixed(1)} ${(cy + y).toFixed(1)}`
-
-      const start = reduced ? 0 : 0.14 + i * 0.028
-      const opacity = reduced ? 1 : clamp01((p - start) / 0.035)
-
-      const scale = (0.86 + opacity * 0.14) * (1 - 0.2 * shapeMix)
-      node.style.transform = `translate(-50%, -50%) translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${scale.toFixed(3)})`
-      node.style.opacity = opacity.toFixed(3)
-      node.style.filter = opacity < 1 ? `blur(${((1 - opacity) * 6).toFixed(1)}px)` : 'none'
-
-      if (opacity > 0.55 && node.dataset.lit !== '1') {
-        node.dataset.lit = '1'
-        node.classList.add('is-lit')
-      }
-    }
-
-    if (linePath.value) {
-      linePath.value.setAttribute('d', `${d}Z`)
-      linePath.value.style.opacity = (0.1 + 0.34 * starMix + 0.06 * smoothstep(0.1, 0.5, p)).toFixed(3)
-    }
+  if (typeof ResizeObserver !== 'undefined') {
+    resize = new ResizeObserver(() => {
+      measure()
+      wake()
+    })
+    if (orbitEl.value) resize.observe(orbitEl.value)
   }
 
-  requestAnimationFrame(loop)
+  if (typeof IntersectionObserver !== 'undefined') {
+    observer = new IntersectionObserver((entries) => {
+      visible = entries.some(entry => entry.isIntersecting)
+      if (visible) {
+        startIntro()
+        wake()
+      }
+    }, { threshold: 0.2 })
+    if (orbitEl.value) observer.observe(orbitEl.value)
+  }
+  else {
+    visible = true
+    startIntro()
+  }
 })
 
-onBeforeUnmount(() => cancelAnimationFrame(raf))
+onBeforeUnmount(() => {
+  cancelAnimationFrame(raf)
+  observer?.disconnect()
+  resize?.disconnect()
+})
 </script>
 
 <template>
-  <section id="relics" ref="wrap" class="fr-approach" aria-labelledby="relics-approach-title">
+  <section id="relics" class="fr-approach" aria-labelledby="relics-approach-title">
     <div class="fr-approach__stage">
-      <header class="fr-approach__head">
-        <h2 id="relics-approach-title" ref="title" class="fr-serif fr-approach__title">{{ t('approach.title') }}</h2>
-      </header>
+      <div
+        ref="orbitEl"
+        class="fr-orbit"
+        :class="{ 'is-dragging': dragging }"
+        @pointerdown="onPointerDown"
+        @pointermove="onPointerMove"
+        @pointerup="onPointerUp"
+        @pointercancel="onPointerUp"
+      >
+        <span
+          class="fr-orbit__path"
+          :class="{ 'is-visible': started }"
+          aria-hidden="true"
+          :style="{ width: `${rx * 2}px`, height: `${ry * 2}px` }"
+        />
 
-      <svg class="fr-orbit__lines" aria-hidden="true">
-        <path ref="linePath" d="" />
-      </svg>
-
-      <ul class="fr-orbit" aria-label="Missões do arquivo">
-        <li
-          v-for="(name, index) in names"
-          :key="name"
+        <figure
+          v-for="(relic, index) in orbitItems"
+          :key="relic.id"
           :ref="el => setItem(el, index)"
           class="fr-orbit__item"
+          aria-hidden="true"
         >
-          <span class="fr-orbit__label">{{ name }}</span>
-          <span class="fr-orbit__spark" aria-hidden="true">✦</span>
-        </li>
-      </ul>
+          <img :src="relic.image" alt="" draggable="false" decoding="async" />
+        </figure>
+
+        <header class="fr-approach__head">
+          <h2 id="relics-approach-title" class="fr-serif fr-approach__title">{{ t('approach.title') }}</h2>
+        </header>
+      </div>
 
       <p class="fr-approach__note">
         Entre 1969 e 1982, a humanidade deixou na Lua e em Marte máquinas que continuam exactamente onde pararam.

@@ -902,3 +902,18 @@ diário aberto pelo cartão.
 - **QA**: 1440×900 e 390×844 — arrasto forma o globo com a cópia escondida, largar encaixa e
   volta a plano; seta→gaveta→fecho em móvel; sem overflow horizontal; 152 testes, typecheck,
   lint e detector Impeccable vazios.
+
+## Iteração 45 — "As relíquias" em Orbit Images
+
+- **Efeito substituído**: a secção `#relics` deixou de ser um sticky de 260vh com a constelação
+  de nomes (SVG de linhas, brilhos, morph estrela/infinito guiado pelo scroll) e passou a uma
+  órbita de capas — a adaptação do Orbit Images: 6 relíquias publicadas em elipse, uma volta a
+  cada 42 s, com profundidade (frente maior/mais opaca, trás menor/esbatida) e z-index por
+  camada, como no componente original (depth 0.5, intro de 1,3 s a abrir do ponto da frente).
+- **Linha da órbita**: borda de 1 px a 18% do paper, elipse centrada nas capas (2·rx × 2·ry),
+  aparece com a entrada da secção.
+- **Interação**: arrastar gira a órbita (com inércia); `touch-action: pan-y` mantém o scroll
+  vertical; o rAF só corre com a secção visível (IntersectionObserver + ResizeObserver);
+  `prefers-reduced-motion` fixa as capas sem rotação.
+- **QA**: 1440×900 e 390×844 — 6 capas, linha visível, sem overflow horizontal, arrasto altera
+  a fase; typecheck/lint sem erros e detector Impeccable vazio.
