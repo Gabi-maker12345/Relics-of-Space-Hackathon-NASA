@@ -125,7 +125,7 @@ const hiddenStyle = {
   marginLeft: '',
   marginTop: '',
   opacity: '0',
-  visibility: 'hidden' as const,
+  pointerEvents: 'none' as const,
 }
 
 const flatStyle = (index: number) => {
@@ -138,7 +138,7 @@ const flatStyle = (index: number) => {
     marginLeft: `calc(${slot.size} / -2)`,
     marginTop: `calc(${slot.size} / -2)`,
     opacity: slot.opacity,
-    visibility: 'visible' as const,
+    pointerEvents: 'auto' as const,
   }
 }
 
@@ -154,7 +154,7 @@ const globeStyle = (index: number) => {
     marginLeft: '',
     marginTop: '',
     opacity: '1',
-    visibility: 'visible' as const,
+    pointerEvents: 'auto' as const,
   }
 }
 
@@ -301,7 +301,7 @@ function scheduleFlatten(): void {
     flattenTimer = null
     if (moving.value || grabbing.value || mode.value !== 'globe') return
     enterFlat()
-  }, reduced ? 0 : 900)
+  }, reduced ? 0 : 60)
 }
 
 function enterFlat(): void {
@@ -339,7 +339,7 @@ function frame(now: number): void {
 
     // O encaixe é assintótico; a partir do instante-limite alinha-se de uma
     // vez, para o ciclo terminar e a cena poder assentar.
-    if (!snapDeadline && Math.abs(speed) < 0.06) snapDeadline = now + 650
+    if (!snapDeadline && Math.abs(speed) < 0.06) snapDeadline = now + 420
     if (snapDeadline && now >= snapDeadline) {
       const goal = target >= 0 ? target : nearestTile()
       const currentPoint = rotateQ(orientation, tiles[goal]!)
@@ -611,7 +611,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <figure class="fr-rmenu__focus" :class="{ 'is-hidden': mode !== 'flat' || moving }">
+          <figure class="fr-rmenu__focus" :class="{ 'is-hidden': mode !== 'flat' }">
             <div class="fr-rmenu__focusFrame">
               <img :src="current.image" alt="" draggable="false" />
               <button

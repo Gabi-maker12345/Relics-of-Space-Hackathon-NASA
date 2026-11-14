@@ -892,8 +892,7 @@ diário aberto pelo cartão.
 - **Dois estados**: em repouso o globo não existe — fica a capa da relíquia em foco em grande
   (≈54vh) no centro, as restantes capas **retas**, encostadas às bordas do ecrã, e a cópia em
   duas colunas (nome à esquerda, texto/fatos à direita). Ao arrastar, as capas convergem e
-  formam o globo (trackball com inércia); ao largar, encaixa na capa mais frontal e volta a
-  assentar em plano 900 ms depois. O globo ocupa ≈38vh de raio (684 px a 900 px de altura).
+  formam o globo (trackball com inércia); ao largar, encaixa na capa mais frontal e volta a assentar em plano em simultâneo. O globo ocupa ≈38vh de raio (684 px a 900 px de altura).
 - **Encaixe garantido**: o alinhamento assintótico tem um instante-limite de 650 ms que alinha
   a capa frontal de uma vez — sem ciclos de rAF infinitos a adiar o regresso ao plano.
 - **Mobile**: a cópia sai do fluxo e passa a gaveta de ecrã inteiro; a seta do original
