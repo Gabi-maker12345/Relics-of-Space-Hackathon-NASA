@@ -804,3 +804,11 @@ diário aberto pelo cartão.
   sem caminhos locais; **152 unitários** e **38 integração** verdes.
 - **Docs/env:** `SUPABASE_STORAGE_BASE` no `.env.example` e CI; ordem
   migrações → `media:upload` → seed no checklist.
+## Iteração 39 — produção e smoke final
+
+- **Deploy público:** https://relics-of-space.vercel.app (Vercel, Node 24).
+- **Smoke:** 12 relíquias; detalhe Spirit com imagem/áudio do bucket; range **206**; login admin e lista admin 12.
+- **Admin em produção:** TTS (`msedge-tts`) devolveu MP3 de 18 KB e URL 200; upload direto 200; ficheiros de teste removidos.
+- **Cache:** `/api/public/relics` `x-vercel-cache: HIT` e `public, max-age=60`; assets do Storage com `cf-cache-status: HIT`.
+- **Lighthouse produção:** performance 45 (LCP 3,7 s, TBT 40,1 s), a11y 100, best practices 100, SEO 92; TBT segue em #69.
+- **Issues:** BE-10 e BE-15 fechadas; riscos em #69–#73.

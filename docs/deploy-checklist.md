@@ -31,15 +31,15 @@
 - [x] Bucket `relic-media` público, limite 50 MB, MIME types de imagem/vídeo/áudio.
 - [x] RLS verificado: anon lê 12 relíquias; escrita anon devolve `401 / 42501`.
 - [x] Smoke Nuxt contra o cloud: lista 12, detalhe Spirit com áudio, login admin, lista admin 12.
-- [ ] Vercel (Gabi): env + deploy + domínio.
-- [ ] Smoke de produção: `206` para áudio/vídeo, imagens, login, admin.
-- [ ] Scope final/FE pendentes.
+- [x] Vercel (Gabi): deploy em **https://relics-of-space.vercel.app** (Node 24, env de produção/preview).
+- [x] Smoke de produção: lista/detalhe, imagens/áudio do Storage, `206` range, login admin, lista admin 12, TTS e upload no admin.
+- [ ] Scope final/FE pendentes (13 categorias, quiz IA/key, performance).
 
 ## Revisão final (14 nov)
 
 - **145 testes unitários / 38 de integração** verdes; `typecheck`, `lint` (0 erros) e `build` limpos.
 - **Fluxos reais contra o cloud:** login, upload, criar rascunho, quiz manual, publicar, detalhe público sem `correct_index`, correção de resposta, tradução EN, NASA search/import, TTS (22 KB), unpublish e limpeza (volta a 12).
-- **Lighthouse mobile headless:** performance **25** (LCP 17,4 s, TBT 50,5 s), a11y **100**, best practices **100**, SEO **92**. Medir em GPU real antes da demo.
+- **Lighthouse mobile headless:** performance **45** em produção (LCP 3,7 s, TBT 40,1 s), a11y **100**, best practices **100**, SEO **92**. Medir em GPU real antes da demo; seguido em #69.
 - **Riscos abertos:** #69 (performance do GL), #70 (quiz IA/key), #71 (npm audit), #72 (categorias oficiais), #73 (master Next vs milestone Nuxt).
 - **Pendente:** deploy Vercel, `206` em produção e validação do TTS na Vercel.
 
