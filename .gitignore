@@ -48,3 +48,5 @@ next-env.d.ts
 
 # venv do gerador de narração (scripts/generate-narration.mjs)
 .venv-tts/
+.vercel
+.env*
