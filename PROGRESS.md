@@ -744,3 +744,12 @@ diário aberto pelo cartão.
   responsiva, 0.42 no desktop, mínima de 0.16 em ecrãs pequenos), largura do painel = palco +
   padding, `contain: paint` no palco e `.sheet` preso ao contentor de 1240×747
   (`width/height: calc(100% - 4rem)`) — acabou o transbordo do conteúdo para fora da janela.
+## Iteração 36 — Supabase cloud
+
+- Projeto `atcfpxpbhmxeqrnmrblq` criado e ligado ao CLI.
+- Migrações `20261109000100` e `20261114000100` aplicadas com `supabase db push --remote`.
+- Seed aplicado: 12 relíquias, 48 factos, 24 mídias, 12 intros e 24 cenas com áudio.
+- Admin criado; bucket `relic-media` público (50 MB, imagem/vídeo/áudio).
+- RLS verificado (anon lê 12; escrita anon devolve 401/42501).
+- Smoke Nuxt contra o cloud: lista 12, detalhe Spirit com áudio, login admin e lista admin 12.
+- Pendente: deploy Vercel (Gabi), smoke de produção (206 range, imagens, login) e scope final.
