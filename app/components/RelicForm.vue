@@ -24,6 +24,21 @@
                 </svg>
                 {{ t('form.preview') }}
               </button>
+              <button
+                type="button"
+                class="rform__previewBtn"
+                :aria-pressed="quizOpen"
+                :disabled="!isEdit"
+                :title="isEdit ? 'Criar ou editar o quiz desta relíquia' : 'Guarda a relíquia primeiro'"
+                @click="quizOpen = !quizOpen"
+              >
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <circle cx="10" cy="10" r="8.2" />
+                  <path d="M7.9 7.6a2.3 2.3 0 1 1 3.2 2.2c-.7.3-.9.8-.9 1.5" />
+                  <circle cx="10" cy="14.3" r=".9" fill="currentColor" stroke="none" />
+                </svg>
+                Quiz
+              </button>
               <button type="button" class="rform__x" aria-label="Fechar" @click="requestClose">
                 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" /></svg>
               </button>
@@ -31,6 +46,7 @@
           </header>
 
           <div class="rform__body" data-lenis-prevent>
+            <template v-if="!quizOpen">
             <section class="rform__group">
               <div class="rform__groupHead">
                 <span class="rform__num">01</span>
@@ -431,9 +447,17 @@
                 </template>
               </div>
             </section>
+            </template>
+
+            <RelicQuizEditor
+              v-else
+              :relic-id="props.relic?.id ?? draft.id"
+              :relic-name="draft.name"
+              @close="quizOpen = false"
+            />
           </div>
 
-          <footer class="rform__foot">
+          <footer v-if="!quizOpen" class="rform__foot">
             <p class="rform__footNote">{{ t('form.footNote') }}</p>
             <label class="rform__publish">
               <input v-model="draft.published" type="checkbox">
@@ -549,6 +573,7 @@ const { t } = useI18n()
 const draft = reactive<Draft>(blank())
 const errors = reactive<Record<string, string>>({})
 const previewOpen = ref(false)
+const quizOpen = ref(false)
 const translationBusy = ref(false)
 const translationError = ref('')
 const translationSaved = ref(false)
@@ -715,6 +740,7 @@ watch(
   (open) => {
     if (!open) return
     translationSaved.value = false
+    quizOpen.value = false
     Object.assign(draft, blank())
     if (props.relic) {
       Object.assign(draft, JSON.parse(JSON.stringify(props.relic)))

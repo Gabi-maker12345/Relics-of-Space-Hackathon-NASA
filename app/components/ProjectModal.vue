@@ -69,6 +69,7 @@ watch(lang, () => {
   void loadDetail(activeSlug.value)
 })
 const index = ref(0)
+const quizOpen = ref(false)
 const lightbox = ref<RelicScene | null>(null)
 const glitching = ref(false)
 const typing = ref(false)
@@ -117,6 +118,8 @@ function clearGlitch(): void {
 
 const sceneCount = computed(() => Math.max(1, relic.value?.scenes?.length ?? 1))
 const progress = computed(() => (index.value + 1) / sceneCount.value)
+const hasQuiz = computed(() => (relic.value?.quiz?.length ?? 0) > 0)
+const atLastScene = computed(() => index.value >= sceneCount.value - 1)
 
 const step = (direction: number): void => {
   const next = Math.min(sceneCount.value - 1, Math.max(0, index.value + direction))
@@ -221,6 +224,7 @@ watch(relic, (value) => {
   if (index.value !== 0) skipIndexSync = true
   index.value = 0
   lightbox.value = null
+  quizOpen.value = false
   if (!import.meta.client) return
   if (value !== null) {
     lastFocus = (document.activeElement as HTMLElement | null) ?? null
@@ -271,6 +275,10 @@ const focusables = (): HTMLElement[] => {
 }
 
 function onKey(e: KeyboardEvent): void {
+  if (quizOpen.value && e.key === 'Escape') {
+    quizOpen.value = false
+    return
+  }
   if (relic.value === null || lightbox.value !== null) return
   if (e.key === 'Escape') {
     close()
@@ -344,6 +352,8 @@ onBeforeUnmount(() => {
             @typing="typing = $event"
           />
         </SheetFrame>
+        <RelicQuizButton v-if="relic && armed && hasQuiz && atLastScene" @click="quizOpen = true" />
+        <RelicQuiz v-if="relic && quizOpen" :relic="relic" @close="quizOpen = false" />
         <Transition name="bot">
           <BotNarrator v-if="relic && armed" :talking="typing || typedNarration.playing.value" />
         </Transition>

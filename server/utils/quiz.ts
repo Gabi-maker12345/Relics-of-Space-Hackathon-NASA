@@ -8,8 +8,8 @@ type QuizRow = Database['public']['Tables']['quiz_questions']['Row']
 type QuizInsert = Database['public']['Tables']['quiz_questions']['Insert']
 type QuizUpdate = Database['public']['Tables']['quiz_questions']['Update']
 
-/** The front-end shows two or three; the API keeps room for five. */
-export const MAX_QUIZ_QUESTIONS = 5
+/** Default quiz size: 8 questions × 15 points = 120. */
+export const MAX_QUIZ_QUESTIONS = 8
 
 const questionSchema = z.string()
   .trim()
@@ -59,6 +59,14 @@ export const quizOrderSchema = z.object({
   ids: z.array(z.string().uuid('Identificador de pergunta inválido.'))
     .min(1, 'A ordem precisa de pelo menos uma pergunta.'),
 })
+
+export const quizBulkSchema = z.object({
+  questions: z.array(quizQuestionInputSchema)
+    .min(1, 'O quiz precisa de pelo menos uma pergunta.')
+    .max(MAX_QUIZ_QUESTIONS, `Uma relíquia pode ter no máximo ${MAX_QUIZ_QUESTIONS} perguntas.`),
+})
+
+export type ParsedQuizBulk = z.infer<typeof quizBulkSchema>
 
 export type ParsedQuizQuestionInput = z.infer<typeof quizQuestionInputSchema>
 export type ParsedQuizQuestionPatch = z.infer<typeof quizQuestionPatchSchema>
@@ -249,6 +257,47 @@ export async function deleteQuestion(
 ): Promise<QuizMutationResult> {
   const { error } = await client.from('quiz_questions').delete().eq('id', question.id)
   return error ? { error: error.message } : {}
+}
+
+/**
+ * Replaces the whole quiz in one write. Used by the admin editor (manual save)
+ * and by the AI generator, so both paths end with positions 0..n-1.
+ *
+ * supabase-js has no transaction: the previous rows are re-inserted if the new
+ * insert fails.
+ */
+export async function replaceQuiz(
+  client: SupabaseClient<Database>,
+  relic: RelicRow,
+  questions: ParsedQuizQuestionInput[],
+): Promise<QuizMutationResult> {
+  const previous = await questionsOfRelic(client, relic.id)
+
+  const { error: deleteError } = await client.from('quiz_questions').delete().eq('relic_id', relic.id)
+  if (deleteError) return { error: deleteError.message }
+
+  if (questions.length === 0) return {}
+
+  const rows: QuizInsert[] = questions.map((input, position) => ({
+    relic_id: relic.id,
+    question: input.question,
+    options: input.options,
+    correct_index: input.correct_index,
+    explanation: input.explanation ?? '',
+    position,
+  }))
+
+  const { error } = await client.from('quiz_questions').insert(rows)
+  if (error) {
+    if (previous.length > 0) {
+      await client
+        .from('quiz_questions')
+        .insert(previous.map(row => ({ ...row })) as QuizInsert[])
+    }
+    return { error: error.message }
+  }
+
+  return {}
 }
 
 /**

@@ -90,8 +90,8 @@ describe.skipIf(!serviceKey || !anonKey)('quiz CRUD (BE-13 integration)', () => 
     if (relic?.id) await admin.from('relics').delete().eq('id', relic.id)
   })
 
-  it('adds questions in order and caps the quiz at five', async () => {
-    for (let index = 0; index < 5; index++) {
+  it('adds questions in order and caps the quiz at eight', async () => {
+    for (let index = 0; index < 8; index++) {
       const result = await addQuestion(admin, relic, input({
         question: `Pergunta ${index}`,
         correct_index: index % 3,
@@ -100,11 +100,11 @@ describe.skipIf(!serviceKey || !anonKey)('quiz CRUD (BE-13 integration)', () => 
     }
 
     const rows = await questionsOfRelic(admin, relic.id)
-    expect(rows.map(row => row.position)).toEqual([0, 1, 2, 3, 4])
+    expect(rows.map(row => row.position)).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
 
-    const sixth = await addQuestion(admin, relic, input({ question: 'Pergunta 6' }))
-    expect(sixth.error).toMatch(/no máximo 5 perguntas/)
-    expect(await questionsOfRelic(admin, relic.id)).toHaveLength(5)
+    const ninth = await addQuestion(admin, relic, input({ question: 'Pergunta 9' }))
+    expect(ninth.error).toMatch(/no máximo 8 perguntas/)
+    expect(await questionsOfRelic(admin, relic.id)).toHaveLength(8)
   })
 
   it('inserts at a position and shifts the following questions', async () => {
