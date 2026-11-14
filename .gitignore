@@ -41,3 +41,7 @@ SPACE_RELICS.md
 
 # locks do LibreOffice
 .~lock.*
+
+# artefactos do build Next (branch main usa outro app)
+.next/
+next-env.d.ts

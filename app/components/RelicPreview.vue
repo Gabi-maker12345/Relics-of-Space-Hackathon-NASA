@@ -6,7 +6,7 @@
         ref="panelRef"
         class="preview"
         :class="{ 'is-dragging': dragging, 'is-expanded': expanded }"
-        :style="{ left: `${pos.x}px`, top: `${pos.y}px`, width: `${stageW}px` }"
+        :style="{ left: `${pos.x}px`, top: `${pos.y}px`, width: `${stageW + PANEL_PADDING * 2}px` }"
         aria-label="Pré-visualização ao vivo"
       >
         <header
@@ -111,6 +111,7 @@ const dragging = ref(false)
 const panelRef = ref<HTMLElement | null>(null)
 const pos = reactive({ x: 24, y: 24 })
 
+const PANEL_PADDING = 14
 const STAGE_W = 1240
 const STAGE_H = 747
 const MARGIN = 12
@@ -143,18 +144,20 @@ function clampPosition(): void {
   if (!el) return
   const maxX = Math.max(0, window.innerWidth - el.offsetWidth - MARGIN)
   const maxY = Math.max(0, window.innerHeight - el.offsetHeight - MARGIN)
-  pos.x = Math.min(Math.max(MARGIN, pos.x), maxX)
-  pos.y = Math.min(Math.max(MARGIN, pos.y), maxY)
+  pos.x = Math.min(Math.max(Math.min(MARGIN, maxX), pos.x), maxX)
+  pos.y = Math.min(Math.max(Math.min(MARGIN, maxY), pos.y), maxY)
 }
 
+/**
+ * O palco nunca pode exceder o ecrã: o modo compacto é 0.42 no desktop e
+ * encolhe em ecrãs pequenos; o expandido ocupa o máximo que couber.
+ */
 function computeScale(): void {
-  if (!expanded.value) {
-    scale.value = 0.42
-    return
-  }
-  const maxW = window.innerWidth - MARGIN * 2
-  const maxH = window.innerHeight - 140
-  scale.value = Math.max(0.42, Math.min(0.8, maxW / STAGE_W, maxH / STAGE_H))
+  const chrome = PANEL_PADDING * 2 // padding lateral do painel
+  const availableW = window.innerWidth - MARGIN * 2 - chrome
+  const availableH = window.innerHeight - MARGIN * 2 - 130
+  const max = expanded.value ? 0.8 : 0.42
+  scale.value = Math.max(0.16, Math.min(max, availableW / STAGE_W, availableH / STAGE_H))
 }
 
 function placeAtBottomLeft(): void {
@@ -208,14 +211,34 @@ function onResize(): void {
 // a janela muda de tamanho nas transições (expandir/modo): reencaixa depois
 let observer: ResizeObserver | null = null
 
+function attachObserver(): void {
+  const el = panelRef.value
+  if (!el) return
+  observer?.disconnect()
+  observer = new ResizeObserver(clampPosition)
+  observer.observe(el)
+}
+
+// monta quando a janela aparece (o <aside> só existe com `open`)
+watch(
+  () => props.open,
+  (open) => {
+    if (!open) {
+      observer?.disconnect()
+      observer = null
+      return
+    }
+    computeScale()
+    void nextTick(() => {
+      attachObserver()
+      placeAtBottomLeft()
+    })
+  },
+  { immediate: true },
+)
+
 onMounted(() => {
-  computeScale()
-  void nextTick(placeAtBottomLeft)
   window.addEventListener('resize', onResize)
-  if (panelRef.value) {
-    observer = new ResizeObserver(clampPosition)
-    observer.observe(panelRef.value)
-  }
 })
 
 onBeforeUnmount(() => {
@@ -228,6 +251,8 @@ onBeforeUnmount(() => {
 .preview {
   position: fixed;
   z-index: 140;
+  max-width: calc(100vw - 24px);
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -336,6 +361,8 @@ onBeforeUnmount(() => {
 .preview__stage {
   position: relative;
   overflow: hidden;
+  contain: paint;
+  max-width: 100%;
   background: #0a0c14;
   border: 1px solid rgb(255 255 255 / 10%);
   transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1), height 0.3s cubic-bezier(0.22, 1, 0.36, 1);
@@ -347,6 +374,17 @@ onBeforeUnmount(() => {
   height: 747px;
   transform-origin: top left;
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/*
+ * O sheet público mede-se pelo viewport (118rem / 100dvh), o que aqui
+ * transbordava o palco. No preview fica preso ao contentor de 1240×747.
+ */
+.preview__scale :deep(.sheet) {
+  width: calc(100% - 4rem);
+  height: calc(100% - 4rem);
+  max-height: none;
+  margin: 2rem auto;
 }
 
 .preview__card {

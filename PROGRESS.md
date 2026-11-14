@@ -740,3 +740,7 @@ diário aberto pelo cartão.
   site publico; os dados vêm do rascunho em tempo real.
 - Correção de suporte: a grelha do admin deixou de renderizar a lista pública (sem cenas) logo
   após o login — passou a esperar por `loadedFor === 'admin'`.
+- Correção de contenção da pré-visualização: o palco passa a medir-se pelo viewport (escala
+  responsiva, 0.42 no desktop, mínima de 0.16 em ecrãs pequenos), largura do painel = palco +
+  padding, `contain: paint` no palco e `.sheet` preso ao contentor de 1240×747
+  (`width/height: calc(100% - 4rem)`) — acabou o transbordo do conteúdo para fora da janela.
