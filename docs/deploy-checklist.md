@@ -4,6 +4,24 @@
 > `master` continua na linha Next.js e **não** é a base do deploy até haver
 > reconciliação com a Gabi.
 
+## Responsabilidades
+
+| Frente | Dono | O que faz |
+|---|---|---|
+| **Supabase cloud** | nós (backend) | criar projeto, aplicar migrações, seed, admin, bucket, RLS, chaves e smoke do backend |
+| **Vercel** | Gabi (front) | importar o repositório, configurar env com as chaves que passarmos, build/deploy, domínio e smoke do front |
+| **Conteúdo/QA** | ambos | confirmar scope, créditos/fontes, narração, mobile/a11y e ecrã final |
+
+**Handoff para a Vercel (o que a Gabi precisa de nós):**
+
+- `NUXT_PUBLIC_SUPABASE_URL`
+- `NUXT_PUBLIC_SUPABASE_KEY` (anon/publishable; pode ser pública)
+- `NUXT_SUPABASE_SECRET_KEY` (service role; **secreta**, enviar por canal seguro, nunca no repositório nem em `NUXT_PUBLIC_*`)
+- branch `feat/backend-milestone-1`
+- build `npm run build`, Node 22/24
+
+**O que não vai para a Vercel:** `ADMIN_PASSWORD`, seed SQL, chaves privadas em texto no chat/repo. O admin é criado por nós no Supabase; a Gabi não precisa da password.
+
 ## 0. Antes de tocar em produção
 
 - [ ] Scope da demo confirmado (12 relíquias atuais ou 13 categorias oficiais).
@@ -15,7 +33,7 @@
 - [ ] Aviso “projeto independente, não afiliado à NASA” visível no site/README.
 - [ ] Credenciais Vercel/Supabase cloud disponíveis.
 
-## 1. Supabase cloud
+## 1. Supabase cloud (nós)
 
 1. Criar o projeto no Supabase cloud (região mais próxima).
 2. Guardar:
@@ -64,7 +82,7 @@ npm run setup:admin
    - `select count(*) from relics;` = 12 (ou o scope decidido);
    - `select count(*) from relic_media where audio_url is not null;` = 24.
 
-## 2. Vercel
+## 2. Vercel (Gabi)
 
 1. Importar o repositório na Vercel e escolher o branch
    `feat/backend-milestone-1` (ou o branch de release acordado).
@@ -77,8 +95,11 @@ npm run setup:admin
 5. Deploy. Confirmar que `public/images/relics/` e
    `public/media/narration/` são servidos pela CDN da Vercel.
 6. Configurar domínio + HTTPS e forçar HTTPS.
+7. Confirmar que `NUXT_SUPABASE_SECRET_KEY` está apenas nas variáveis de
+   servidor (nunca em `NUXT_PUBLIC_*`).
+8. A Gabi devolve-nos a URL do deployment para o smoke conjunto.
 
-## 3. Smoke tests (produção)
+## 3. Smoke tests (conjunto)
 
 ### Público
 

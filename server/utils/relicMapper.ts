@@ -39,7 +39,7 @@ export function buildSteps(relic: RelicRow, media: MediaRow[]): RelicStep[] {
     index: 0,
     type: 'intro',
     title: relic.name,
-    caption: relic.summary || relic.story_text || relic.name,
+    caption: relic.story_text || relic.summary || relic.name,
     audio_url: relic.intro_audio_url ?? null,
   }]
 

@@ -284,7 +284,7 @@ describe('narration steps (BE-07)', () => {
     expect(dto.steps.map(step => step.type)).toEqual(['intro', 'image', 'video'])
     expect(dto.steps[0]).toMatchObject({
       title: 'Módulo Lunar Apollo',
-      caption: 'Seis pousos.',
+      caption: 'Ficou na superfície.',
       audio_url: '/media/intro.mp3',
     })
     expect(dto.steps[1]).toMatchObject({
@@ -539,7 +539,7 @@ describe('internationalization and translation fallback (BE-12)', () => {
       lang: 'en',
       name: 'Lunar Module',
       summary: 'English summary',
-      story_text: null,
+      story_text: 'The descent stage stayed behind.',
       mission: null,
       alt: null,
       intro_audio_url: '/media/en-intro.mp3',
@@ -561,7 +561,7 @@ describe('internationalization and translation fallback (BE-12)', () => {
 
     expect(dto.steps[0]).toMatchObject({
       title: 'Lunar Module',
-      caption: 'English summary',
+      caption: 'The descent stage stayed behind.',
       audio_url: '/media/en-intro.mp3',
     })
     expect(dto.steps[1]).toMatchObject({
