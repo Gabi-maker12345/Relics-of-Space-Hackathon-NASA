@@ -7,7 +7,7 @@
 set -euo pipefail
 
 PROJECT="${PROJECT:-relics-of-space}"
-ENV_FILE="${ENV_FILE:-.env.vercel}"
+ENV_FILE="${ENV_FILE:-.env}"
 VERCEL="${VERCEL:-vercel}"
 
 if ! command -v "$VERCEL" >/dev/null 2>&1; then
@@ -26,14 +26,19 @@ echo "→ a ligar ao projeto $PROJECT"
 "$VERCEL" link --yes --project "$PROJECT"
 
 add_env() {
-  local name="$1" value="$2" target="$3"
+  local name="$1" value="$2" target="$3" type="$4"
   if [ -z "$value" ]; then
     echo "  ! $name vazio em $ENV_FILE — ignorado"
-    return
+    return 1
   fi
-  printf '%s' "$value" | "$VERCEL" env add "$name" "$target" >/dev/null 2>&1 \
-    && echo "  + $name ($target)" \
-    || echo "  = $name ($target) já existia"
+  local args=(--environment "$target" --value "$value" --force --yes)
+  [ -n "$type" ] && args+=(--type "$type")
+  if "$VERCEL" env add "$name" "${args[@]}" >/dev/null 2>&1; then
+    echo "  + $name ($target)"
+  else
+    echo "  ✗ $name ($target) falhou"
+    return 1
+  fi
 }
 
 set -a
@@ -42,9 +47,10 @@ set -a
 set +a
 
 for target in production preview; do
-  add_env NUXT_PUBLIC_SUPABASE_URL "${NUXT_PUBLIC_SUPABASE_URL:-}" "$target"
-  add_env NUXT_PUBLIC_SUPABASE_KEY "${NUXT_PUBLIC_SUPABASE_KEY:-}" "$target"
-  add_env NUXT_SUPABASE_SECRET_KEY "${NUXT_SUPABASE_SECRET_KEY:-}" "$target"
+  add_env NUXT_PUBLIC_SUPABASE_URL "${NUXT_PUBLIC_SUPABASE_URL:-}" "$target" config || exit 1
+  # a chave publicável é pública (RLS protege os dados), mas o Vercel exige o tipo explícito
+  add_env NUXT_PUBLIC_SUPABASE_KEY "${NUXT_PUBLIC_SUPABASE_KEY:-}" "$target" config || exit 1
+  add_env NUXT_SUPABASE_SECRET_KEY "${NUXT_SUPABASE_SECRET_KEY:-}" "$target" secret || exit 1
 done
 
 echo "→ deploy de produção"

@@ -777,3 +777,14 @@ diário aberto pelo cartão.
 - **Fluxos reais contra o cloud:** CRUD, upload, quiz manual, tradução EN, NASA search/import, TTS, publicar/despublicar e limpeza; 12 relíquias no fim.
 - **Performance:** Lighthouse mobile headless 25 (LCP 17,4 s, TBT 50,5 s), a11y 100, best practices 100, SEO 92; precisa de medição em GPU real.
 - **Riscos registados:** #69 performance, #70 quiz IA/key, #71 npm audit, #72 categorias oficiais, #73 master Next vs milestone Nuxt.
+
+## Deploy — Vercel (relics-of-space)
+
+- Projeto `gabriel-de-carvalho/relics-of-space` ligado ao repo; produção em
+  **https://relics-of-space.vercel.app** (branch `feat/backend-milestone-1`, Node 24 via `.nvmrc`).
+- Env de produção e preview no projeto: `NUXT_PUBLIC_SUPABASE_URL`, `NUXT_PUBLIC_SUPABASE_KEY`
+  (config) e `NUXT_SUPABASE_SECRET_KEY` (secret). `.vercelignore` passou a excluir `.env*`,
+  `.output`, `.next`, `tests`, `docs` — o build usa a env do projeto, não ficheiros locais.
+- `scripts/vercel-setup.sh` encadeia link + env + `vercel --prod` com as flags não interativas.
+- Smoke de produção: `/` 200, `/admin` 200, `/api/public/relics` 12 relíquias, imagem do bucket 200,
+  login admin 200 e lista admin 12; modal `/#ingenuity` com fotografia e narração.
