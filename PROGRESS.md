@@ -832,3 +832,11 @@ diário aberto pelo cartão.
 - **Risco residual:** `deepmerge@4.3.1` (prototype poisoning) no build via `@rollup/plugin-node-resolve`; sem versão corrigida, com configuração de confiança e documentado no `deploy-checklist` §7.
 - **Regressão do Nuxt 4.6.4:** `devServer.host` vazio resolvia para `{}` e rebentava `nuxt dev`; fixado `127.0.0.1` no `nuxt.config.ts` (override com `--host`).
 - **Verificação:** `npm ci` limpo; lint, typecheck, 152 unitários, 38 integração e build verdes em Node 22.23.4 e 24.22.3; dev server e fluxo público/admin (login + diálogo NASA) sem erros de consola.
+
+## Iteração 42 — navegação presa na cena e primeiro clique nos cartões
+
+- **Admin preso:** navegar da cena para `/admin` deixava o overlay do segundo acto aberto (`act` em `useState` sobrevive à navegação SPA) e o body com `overflow: hidden`. Um watcher em `app.vue` fecha o acto, o diário e o painel sempre que a rota deixa de ser `/`; o `useAct` ganhou `reset()` (sem mexer no scroll).
+- **Header:** em `/admin` o link passa a **Arquivo** (volta à landing) em vez de um link para a própria página; o logo fecha a cena e volta ao topo.
+- **Primeiro clique:** o motor do carrossel mexia a faixa a qualquer píxel e o `openRelic` descartava cliques com >=6 px de tremura. Agora há um limiar de **10 px** (`DRAG_THRESHOLD_PX`), o arrasto só começa depois dele e `dragDistance()` devolve 0 para gestos curtos.
+- **QA (desktop 1440×900 e mobile 390×844):** clique com 3–9 px abre o diário à primeira; 12–40 px só arrasta; cena → Painel → admin limpo; Arquivo/logo voltam sem overlay; 0 erros de consola.
+- **Testes:** 152 unitários, typecheck, lint e build verdes.

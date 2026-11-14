@@ -26,13 +26,26 @@ useHead(() => ({ htmlAttrs: { lang: lang.value === 'pt' ? 'pt-PT' : 'en' } }))
 const { muted } = useSound()
 watch(muted, () => useSoundtrack().refresh())
 
+const route = useRoute()
+
+/**
+ * O segundo acto (cosmos/cena) é um overlay fixo da landing. Se o utilizador
+ * navegar para o admin com a cena aberta, o overlay continuava a cobrir a
+ * página e o scroll ficava bloqueado — só um hard refresh resolvia.
+ */
+watch(() => route.path, (path) => {
+  if (path === '/') return
+  useAct().reset()
+  useProjectModal().close()
+  usePanels().close()
+})
+
 onMounted(async () => {
   useSound().load()
   useLocale().load()
   await useAuth().restore()
   await useRelics().load(true)
   initSmoothScroll()
-  const route = useRoute()
   if (route.path !== '/') window.scrollTo({ top: 0 })
 })
 

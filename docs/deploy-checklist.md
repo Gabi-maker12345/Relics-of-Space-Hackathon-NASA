@@ -178,6 +178,8 @@ curl -s -r 0-1023 "$BASE/media/narration/spirit-intro.mp3" -o /tmp/part
 | Movimento reduzido | `prefers-reduced-motion` | sem parallax/transições longas |
 | Áudio | autoplay após clique, play/pause, mute, legendas | nunca dois áudios ao mesmo tempo |
 | Deep link | `/#slug` e recarregar | abre a relíquia correta |
+| Navegação | cena → **Painel** → **Arquivo**; logo na cena | overlay fecha, scroll restaura, admin visível |
+| Cartões | clique com tremura de 2–8 px vs. arrasto >10 px | clique abre o diário; arrasto só roda o carrossel |
 | Dados | cada imagem/áudio | 200, crédito e fonte visíveis |
 | Performance | Lighthouse mobile | sem erros críticos; mídia não bloqueia |
 | Conteúdo | 12 relíquias | factos, cenas, áudio e links oficiais |

@@ -53,10 +53,10 @@ watch(() => relics.value.map(relic => relic.id).join('|'), async () => {
   engine.enterAll()
 })
 
-function openRelic(id: string): void {
+function openRelic(id: string, fromPointer = true): void {
   if (!import.meta.client) return
-  // arrastar o carrossel não deve abrir a relíquia
-  if (useGlEngine().dragDistance() > 6) return
+  // arrastar o carrossel não deve abrir a relíquia; o teclado não é um arrasto
+  if (fromPointer && useGlEngine().dragDistance() > 6) return
   open(id)
 }
 </script>
@@ -93,8 +93,8 @@ function openRelic(id: string): void {
       role="button"
       :aria-label="`${card.name} — ${card.tagline}`"
       @click="openRelic(card.id)"
-      @keydown.enter.prevent="openRelic(card.id)"
-      @keydown.space.prevent="openRelic(card.id)"
+      @keydown.enter.prevent="openRelic(card.id, false)"
+      @keydown.space.prevent="openRelic(card.id, false)"
     >
       <p class="pointer-events-none absolute bottom-10 inset-x-10 s:bottom-10 s:inset-x-20 flex items-end justify-between">
         <span class="relative block min-w-0 flex-1 mr-10">

@@ -18,6 +18,7 @@ export type GlRole = 'title' | 'text' | 'label'
 
 const FOLLOW_LERP = 0.1 // damp do original (a.a = lerp(a.a, a.t, .1*ratio))
 const MAX_DPR = 2
+const DRAG_THRESHOLD_PX = 10 // clique vs. arrasto no carrossel (jitter do rato)
 const DIGIT_ROLL_DUR = 0.9
 const CAROUSEL_EASE_DUR = 0.85
 const HOLE_RADIUS_FACTOR = 0.225 // raio medido no portal do original (576 css de diâmetro @1280)
@@ -241,7 +242,7 @@ export class GlEngine {
   private hasCenteredInitial = false
   private readonly carousel = { p: 0, target: 0, max: 1, axis: 'x' as 'x' | 'y', infinite: false, copySpan: 0, perCopy: 0 }
   private mobileRange = { start: 0, end: 0 }
-  private readonly pointer = { down: false, id: -1, x: 0, y: 0 }
+  private readonly pointer = { down: false, id: -1, x: 0, y: 0, startX: 0, startY: 0, moved: false }
   private carouselDriven = false
   private trackJump = 0
   private trackX = 0
@@ -1061,6 +1062,9 @@ export class GlEngine {
     this.pointer.id = e.pointerId
     this.pointer.x = e.clientX
     this.pointer.y = e.clientY
+    this.pointer.startX = e.clientX
+    this.pointer.startY = e.clientY
+    this.pointer.moved = false
     this.lastDragPx = 0
     this.carousel.target = this.carousel.p
   }
@@ -1070,18 +1074,32 @@ export class GlEngine {
     this.carouselDriven = false
   }
 
-  /** Distância total arrastada no último gesto (para distinguir clique de drag). */
+  /**
+   * Distância total arrastada no último gesto (para distinguir clique de drag).
+   * Devolve 0 enquanto o gesto não passou o limiar: um clique com dois ou três
+   * píxeis de tremura continua a abrir a relíquia em vez de rodar o carrossel.
+   */
   dragDistance(): number {
-    return this.lastDragPx
+    return this.pointer.moved ? this.lastDragPx : 0
   }
 
   private onPointerMove = (e: PointerEvent): void => {
     if (!this.pointer.down || e.pointerId !== this.pointer.id) return
+    const totalX = e.clientX - this.pointer.startX
+    const totalY = e.clientY - this.pointer.startY
+    const fromStart = Math.hypot(totalX, totalY)
+
+    // Só começa a arrastar depois do limiar; antes disso o gesto é um clique.
+    if (!this.pointer.moved) {
+      if (fromStart < DRAG_THRESHOLD_PX) return
+      this.pointer.moved = true
+    }
+
     const dx = e.clientX - this.pointer.x
     const dy = e.clientY - this.pointer.y
     this.pointer.x = e.clientX
     this.pointer.y = e.clientY
-    this.lastDragPx += Math.abs(dx) + Math.abs(dy)
+    this.lastDragPx = Math.max(this.lastDragPx, fromStart)
     const delta = this.carousel.axis === 'x' ? -dx : -dy
     const scaled = this.carousel.target + (delta / this.carousel.max) * 1.6
     this.carousel.target = this.carousel.infinite

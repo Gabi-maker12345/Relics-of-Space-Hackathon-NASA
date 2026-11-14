@@ -1,9 +1,20 @@
 <script setup lang="ts">
 const { active, toggle } = usePanels()
+const { act, reset } = useAct()
 const { user } = useAuth()
 const { lang, toggle: toggleLang } = useLocale()
 const { muted, toggle: toggleSound } = useSound()
 const { t } = useI18n()
+const route = useRoute()
+
+/** Na landing, o logo fecha o segundo acto e volta ao topo em vez de "não fazer nada". */
+function onLogoClick(event: MouseEvent): void {
+  if (route.path !== '/') return
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return
+  event.preventDefault()
+  if (act.value !== 'page') reset()
+  window.scrollTo({ top: 0 })
+}
 
 const socials = [
   {
@@ -50,7 +61,7 @@ const socials = [
       </a>
     </nav>
 
-    <NuxtLink to="/" class="fr-logo" :aria-label="`Space Relics — ${t('nav.home')}`">
+    <NuxtLink to="/" class="fr-logo" :aria-label="`Space Relics — ${t('nav.home')}`" @click="onLogoClick">
       <img src="/images/nasa-logo.png" alt="NASA" width="2625" height="765" />
     </NuxtLink>
 
@@ -76,7 +87,16 @@ const socials = [
         </svg>
       </button>
 
-      <NuxtLink v-if="user" to="/admin" class="fr-profile fr-label">{{ t('nav.panel') }}</NuxtLink>
+      <NuxtLink
+        v-if="user && route.path !== '/admin'"
+        to="/admin"
+        class="fr-profile fr-label"
+      >{{ t('nav.panel') }}</NuxtLink>
+      <NuxtLink
+        v-else-if="user"
+        to="/"
+        class="fr-profile fr-label"
+      >{{ t('nav.archive') }}</NuxtLink>
       <button
         v-else
         type="button"

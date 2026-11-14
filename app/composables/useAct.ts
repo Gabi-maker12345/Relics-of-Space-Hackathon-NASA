@@ -55,13 +55,18 @@ export function useAct() {
     void useSoundtrack().play()
   }
 
-  const back = (): void => {
+  const reset = (): void => {
     if (act.value === 'page') return
     act.value = 'page'
     delete document.documentElement.dataset.act
     delete document.documentElement.dataset.scene
     lockPage(false)
     useSoundtrack().stop()
+  }
+
+  const back = (): void => {
+    if (act.value === 'page') return
+    reset()
     const archive = document.querySelector<HTMLElement>('.fr-archive')
     if (archive) {
       window.scrollTo({ top: archive.offsetTop + archive.offsetHeight - window.innerHeight })
@@ -96,5 +101,5 @@ export function useAct() {
     })
   }
 
-  return { act, open, enter, back }
+  return { act, open, enter, back, reset }
 }
