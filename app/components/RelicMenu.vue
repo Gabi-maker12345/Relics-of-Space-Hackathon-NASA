@@ -275,7 +275,7 @@ function neighbor(from: number, direction: [number, number]): number {
 }
 
 function report(): void {
-  if (moving.value || total.value === 0) return
+  if (mode.value !== 'globe' || moving.value || total.value === 0) return
   const tile = nearestTile()
   const item = assign.value[tile]! % total.value
   frontTile.value = tile
@@ -305,8 +305,13 @@ function scheduleFlatten(): void {
 }
 
 function enterFlat(): void {
-  mode.value = 'flat'
+  cancelAnimationFrame(raf)
+  raf = 0
+  lastTime = 0
   snapDeadline = 0
+  target = -1
+  speed = 0
+  mode.value = 'flat'
   orientation = [0, 0, 0, 1]
   matrix.value = IDENTITY
 }
@@ -325,6 +330,10 @@ function enterGlobe(): void {
 
 function frame(now: number): void {
   raf = 0
+  if (mode.value !== 'globe') {
+    lastTime = 0
+    return
+  }
   const dt = lastTime ? Math.min(0.05, (now - lastTime) / 1000) : 1 / 60
   lastTime = now
 
@@ -406,6 +415,7 @@ function goToTile(index: number): void {
 
 let dragging = false
 let pointerId = -1
+let captured = false
 let lastX = 0
 let lastY = 0
 let lastMove = 0
@@ -417,6 +427,7 @@ function onPointerDown(event: PointerEvent): void {
   if (total.value < 2) return
   dragging = true
   grabbing.value = true
+  captured = false
   pointerId = event.pointerId
   dragged = 0
   suppressClick = false
@@ -426,7 +437,6 @@ function onPointerDown(event: PointerEvent): void {
   speed = 0
   target = -1
   snapDeadline = 0
-  ;(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
 }
 
 function onPointerMove(event: PointerEvent): void {
@@ -440,6 +450,13 @@ function onPointerMove(event: PointerEvent): void {
 
   // O globo só se forma depois de um gesto real; um clique foca sem o montar.
   if (dragged > 4) enterGlobe()
+
+  // Só se captura o ponteiro quando o gesto é mesmo um arrasto: capturá-lo à
+  // partida reencaminhava o `click` para o globo e as capas não abriam.
+  if (!captured && dragged > 4) {
+    captured = true
+    ;(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
+  }
 
   if (mode.value !== 'globe') return
 
@@ -467,7 +484,10 @@ function onPointerUp(event: PointerEvent): void {
   if (!dragging || event.pointerId !== pointerId) return
   dragging = false
   grabbing.value = false
-  ;(event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId)
+  if (captured) {
+    captured = false
+    ;(event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId)
+  }
   if (mode.value !== 'globe') return
   if (dragged >= 6) {
     suppressClick = true
