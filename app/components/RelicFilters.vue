@@ -6,6 +6,8 @@ const { t } = useI18n()
 const { relics, pending } = usePublicRelics(filters)
 
 const count = computed(() => relics.value.length)
+const { isExplored } = usePassport()
+const exploredCount = computed(() => relics.value.filter(relic => isExplored(relic.id)).length)
 </script>
 
 <template>
@@ -69,7 +71,7 @@ const count = computed(() => relics.value.length)
     </div>
 
     <p class="fr-filters__count" :class="{ 'is-pending': pending }" aria-live="polite">
-      {{ t('filters.results', { count }) }}
+      {{ t('passport.progress', { count: exploredCount, total: count }) }}
     </p>
   </form>
 </template>

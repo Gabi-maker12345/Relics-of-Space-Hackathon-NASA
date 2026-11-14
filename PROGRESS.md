@@ -879,3 +879,6 @@ diário aberto pelo cartão.
   painel (`MARTE · Silencioso · Explorado`), o contador saiu da landing e vive no **/full**
   (“X de 12 exploradas”, contando só as publicadas); o arquivo deixou de ser centrado em absoluto
   e passou a página rolável para a lista de 12 caber inteira.
+- **Contador do passaporte no sítio certo**: passou para a barra de filtros da cena
+  (`RelicFilters`), substituindo “12 relíquias” por “X de N exploradas” — conta apenas as relíquias
+  visíveis com os filtros ativos. O `/full` voltou ao estado anterior (sem contador).
