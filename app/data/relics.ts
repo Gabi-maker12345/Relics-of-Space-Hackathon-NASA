@@ -72,7 +72,7 @@ function withSteps(relic: Relic): Relic {
       index: 0,
       type: 'intro',
       title: relic.name,
-      caption: relic.tagline || relic.body || relic.name,
+      caption: relic.body || relic.tagline || relic.name,
       audio_url: relic.intro_audio_url ?? null,
     },
     ...relic.scenes.map((scene, position) => ({

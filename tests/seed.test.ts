@@ -141,7 +141,7 @@ describe('relic seed dataset (BE-14)', () => {
       expect(relic.scenes[0].is_cover).toBe(true)
       expect(relic.scenes.every(scene => scene.source_url && scene.credit)).toBe(true)
       expect(relic.steps).toHaveLength(source.media.length + 1)
-      expect(relic.steps[0]).toMatchObject({ index: 0, type: 'intro', caption: source.summary })
+      expect(relic.steps[0]).toMatchObject({ index: 0, type: 'intro', caption: source.story_text })
       expect(relic.steps[0].audio_url).toBe(source.intro_audio_url)
       source.media.forEach((item, position) => {
         expect(relic.steps[position + 1].audio_url).toBe(item.audio_url)

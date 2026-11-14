@@ -119,6 +119,7 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 & BE-09
       lang: 'en',
       name: 'Curiosity Mars Rover (EN)',
       summary: 'Active rover on Mars (EN)',
+      story_text: 'Long story in Mars (EN).',
       intro_audio_url: '/media/en-intro.mp3',
     })
 
@@ -386,7 +387,7 @@ describe.skipIf(!serviceKey || !anonKey)('public relics endpoints (BE-08 & BE-09
     // Steps reflect the English narration
     expect(detail.steps[0]).toMatchObject({
       title: 'Curiosity Mars Rover (EN)',
-      caption: 'Active rover on Mars (EN)',
+      caption: 'Long story in Mars (EN).',
       audio_url: '/media/en-intro.mp3',
     })
     expect(detail.steps[1]).toMatchObject({
