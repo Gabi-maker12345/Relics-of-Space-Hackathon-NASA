@@ -93,6 +93,15 @@ the admin guard, publish/unpublish visibility and that anon cannot insert.
   first” hint.
 - Close the dialog with Esc, the X button and a click on the backdrop.
 
+## Scene and navigation (manual)
+
+- Enter the second act (archive CTA) and click **Painel**: the admin must open
+  with the scene overlay gone and the page scroll unlocked. **Arquivo** returns
+  to the landing; the logo closes the overlay and scrolls to the top.
+- Click a relic card with the usual 2–8 px of hand jitter: the diary must open
+  on the first click. A real drag (>10 px) should only move the carousel.
+- Check the same two flows with a 390×844 touch viewport.
+
 ## CI
 
 The main CI workflow runs `npm ci`, the runtime audit (`--audit-level=high`),
