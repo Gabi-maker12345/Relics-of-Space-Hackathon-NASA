@@ -12,6 +12,7 @@ const mode = ref<NarrationMode>('idle')
 const currentTime = ref(0)
 const duration = ref(0)
 const speechWord = ref(-1)
+const speechProgress = ref(0)
 
 let audio: HTMLAudioElement | null = null
 let speechSession = 0
@@ -73,6 +74,7 @@ function stopSpeech(): void {
   stopSpeechLoop()
   if (import.meta.client && 'speechSynthesis' in window) window.speechSynthesis.cancel()
   speechWord.value = -1
+  speechProgress.value = 0
 }
 
 /**
@@ -95,6 +97,7 @@ function startSpeechEstimate(session: number, text: string): void {
     if (performance.now() - lastBoundaryAt > 400) {
       const progress = Math.min(0.999, (performance.now() - speechStartedAt) / estimateMs)
       speechWord.value = Math.floor(progress * words.length)
+      speechProgress.value = progress
     }
     speechFrame = requestAnimationFrame(tick)
   }
@@ -120,12 +123,14 @@ function speak(text: string): void {
     if (session !== speechSession || event.name !== 'word') return
     lastBoundaryAt = performance.now()
     speechWord.value = wordIndexAtChar(text, event.charIndex)
+    speechProgress.value = Math.min(1, event.charIndex / Math.max(1, text.length))
   }
   const finish = (): void => {
     // Utterances canceladas também disparam onend: ignora sessões antigas.
     if (session !== speechSession) return
     playing.value = false
     speechWord.value = -1
+    speechProgress.value = 0
     stopSpeechLoop()
     useSoundtrack().duck(false)
   }
@@ -133,6 +138,7 @@ function speak(text: string): void {
   next.onerror = finish
 
   speechWord.value = 0
+  speechProgress.value = 0
   mode.value = 'speech'
   synth.speak(next)
   startSpeechEstimate(session, text)
@@ -275,6 +281,7 @@ export function useNarration() {
     currentTime,
     duration,
     speechWord,
+    speechProgress,
     setSteps,
     goTo,
     play,

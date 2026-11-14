@@ -797,27 +797,3 @@ a {
   color: rgb(255 255 255 / 0.45);
   letter-spacing: 0.12em;
 }
-
-.rsheet__body--narr {
-  min-height: 3em;
-}
-
-.narr__word {
-  color: rgb(255 255 255 / 0.34);
-  transition: color 0.18s linear;
-}
-
-.narr__word.is-past {
-  color: rgb(255 255 255 / 0.62);
-}
-
-.narr__word.is-on {
-  color: var(--fr-paper);
-  text-shadow: 0 0 18px rgb(255 255 255 / 0.18);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .narr__word {
-    transition: none;
-  }
-}

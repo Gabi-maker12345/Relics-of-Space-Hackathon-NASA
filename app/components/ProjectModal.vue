@@ -144,7 +144,6 @@ const onLeave = (el: Element, done: () => void): void => {
 }
 
 const typedNarration = useNarration()
-const introPlaying = computed(() => typedNarration.stepIndex.value === 0 && typedNarration.playing.value)
 
 /** `/#slug` abre o diário; fechar limpa o hash (link direto partilhável). */
 function syncHash(): void {
@@ -248,7 +247,6 @@ watch(index, (next) => {
     skipIndexSync = false
     return
   }
-  if (introPlaying.value) return
   const step = next + 1
   if (typedNarration.stepIndex.value !== step) typedNarration.goTo(step)
 })

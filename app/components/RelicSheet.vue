@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import type { Relic, RelicScene } from '~/data/relics'
-import { buildWordTimings, wordIndexAt } from '~/utils/narration'
 import { LOCATION_LABEL, relicLocation, relicStatus } from '~/utils/relics'
 
 const props = defineProps<{ relic: Relic; index: number; armed?: boolean }>()
 const emit = defineEmits<{ 'update:index': [index: number]; 'open-media': [scene: RelicScene]; typing: [active: boolean] }>()
 
-const { mode: narrationMode, captions: narrationCaptions, currentTime, duration, speechWord, steps: narrationSteps, stepIndex } = useNarration()
+const { mode: narrationMode, captions: narrationCaptions, currentTime, duration, speechProgress, steps: narrationSteps, stepIndex } = useNarration()
 
 const scroller = ref<HTMLElement | null>(null)
 
@@ -22,7 +21,7 @@ const clearTyping = () => {
 /** O diário escreve-se à frente do leitor (ritmo com pausas na pontuação). */
 const typeScene = (delay = 220) => {
   clearTyping()
-  const text = current.value.body
+  const text = captionText.value || current.value.body
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   typed.value = ''
   if (reduced) {
@@ -56,13 +55,15 @@ const current = computed<RelicScene>(() => scenes.value[props.index] ?? scenes.v
 
 const narrationActive = computed(() => narrationMode.value === 'audio' || narrationMode.value === 'speech')
 const captionText = computed(() => narrationSteps.value[stepIndex.value]?.caption || current.value.body)
-const captionTimings = computed(() => buildWordTimings(captionText.value, duration.value))
-const activeWord = computed(() => {
-  if (narrationMode.value === 'speech') return speechWord.value
-  if (narrationMode.value !== 'audio') return -1
-  return wordIndexAt(captionTimings.value, currentTime.value)
+
+/** Quantos caracteres da transcrição o áudio já "escreveu". */
+const narrationChars = computed(() => {
+  if (!narrationActive.value || !narrationCaptions.value) return 0
+  const progress = narrationMode.value === 'audio'
+    ? (duration.value > 0 ? Math.min(1, currentTime.value / duration.value) : 0)
+    : speechProgress.value
+  return Math.floor(progress * captionText.value.length)
 })
-const showCaption = computed(() => narrationCaptions.value && narrationActive.value)
 
 const resetTyping = () => {
   clearTyping()
@@ -73,25 +74,36 @@ const resetTyping = () => {
 
 // o texto só começa quando o glitch termina (o pai "arma" o diário)
 watch(() => props.armed, (armed) => {
-  if (armed) typeScene()
-  else resetTyping()
+  if (!armed) {
+    resetTyping()
+    return
+  }
+  if (!narrationActive.value) typeScene()
 })
 
 watch(() => props.index, () => {
-  if (props.armed) typeScene()
+  resetTyping()
+  if (props.armed && !narrationActive.value) typeScene()
 }, { immediate: true })
 
-// Com narração, quem manda no texto é a legenda palavra-a-palavra.
+// A narração escreve a transcrição ao ritmo da voz; nunca apaga o que já saiu.
+watch([narrationActive, narrationChars, captionText], () => {
+  const text = captionText.value
+  if (typed.value && !text.startsWith(typed.value)) typed.value = ''
+  if (!narrationActive.value) return
+
+  clearTyping()
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const next = (!narrationCaptions.value || reduced) ? text.length : Math.min(text.length, narrationChars.value)
+  if (next > typed.value.length) typed.value = text.slice(0, next)
+  typing.value = typed.value.length < text.length
+  emit('typing', typing.value)
+})
+
+// Sem narração ativa (passo sem áudio e em pausa), volta à máquina de escrever.
 watch(narrationActive, (active) => {
-  if (active) {
-    clearTyping()
-    typed.value = ''
-    typing.value = false
-    emit('typing', false)
-  }
-  else if (props.armed) {
-    typeScene()
-  }
+  if (active || !props.armed) return
+  if (typed.value.length < captionText.value.length) typeScene()
 }, { immediate: true })
 
 const onScroll = (): void => {
@@ -155,13 +167,7 @@ defineExpose({ goTo })
         <Transition name="swap" mode="out-in">
           <div :key="index">
             <p class="rsheet__kicker">{{ current.kicker }}</p>
-            <p v-if="showCaption" class="rsheet__body rsheet__body--narr" :aria-label="captionText">
-              <NarrationCaption :text="captionText" :active="activeWord" />
-            </p>
-            <p v-else-if="narrationActive" class="rsheet__body" :aria-label="captionText">
-              {{ captionText }}
-            </p>
-            <p v-else class="rsheet__body" :aria-label="current.body">
+            <p class="rsheet__body" :aria-label="captionText">
               {{ typed }}<span v-if="typing" class="rsheet__caret" aria-hidden="true" />
             </p>
           </div>
