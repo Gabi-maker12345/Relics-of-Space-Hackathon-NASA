@@ -3,8 +3,6 @@ const { filters, hasFilters, clear } = useRelicFilters()
 const { relics, pending, error, refresh } = usePublicRelics(filters)
 
 const { open } = useProjectModal()
-const { t } = useI18n()
-const { isExplored } = usePassport()
 const track = ref<HTMLElement | null>(null)
 const copies = ref(1)
 
@@ -98,7 +96,6 @@ function openRelic(id: string, fromPointer = true): void {
       @keydown.enter.prevent="openRelic(card.id, false)"
       @keydown.space.prevent="openRelic(card.id, false)"
     >
-      <span v-if="isExplored(card.id)" class="fr-stamp" aria-hidden="true">{{ t('passport.stamp') }}</span>
       <p class="pointer-events-none absolute bottom-10 inset-x-10 s:bottom-10 s:inset-x-20 flex items-end justify-between">
         <span class="relative block min-w-0 flex-1 mr-10">
           <span

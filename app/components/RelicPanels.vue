@@ -3,6 +3,7 @@ import type { Relic, RelicPanelCover } from '#shared/types/relic'
 import { isPublished, relicLocation, relicStatus } from '~/utils/relics'
 
 const { t } = useI18n()
+const { isExplored } = usePassport()
 
 onMounted(() => { void load() })
 
@@ -123,6 +124,7 @@ const cardInset = (index: number) => {
             <span class="fr-step__meta">
               {{ t(`location.${relicLocation(relic)}` as 'location.moon') }}
               <StatusBadge :status="relicStatus(relic)" />
+              <span v-if="isExplored(relic.id)" class="fr-step__explored">{{ t('passport.stamp') }}</span>
               <span v-if="relic.is_extra" class="fr-step__extra">{{ t('panels.extra') }}</span>
             </span>
           </p>

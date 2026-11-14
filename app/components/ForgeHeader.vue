@@ -294,7 +294,7 @@ onBeforeUnmount(() => {
         @pointerenter="onContactEnter"
         @pointerleave="onContactLeave"
       >
-        <div class="fr-contact-layer__row" :aria-label="t('nav.contactChannels')">
+        <div class="fr-contact-layer__row" role="group" :aria-label="t('nav.contactChannels')">
           <a
             v-for="(channel, index) in channels"
             :key="channel.label"

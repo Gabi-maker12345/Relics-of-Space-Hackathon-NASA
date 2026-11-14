@@ -854,3 +854,28 @@ diário aberto pelo cartão.
 - **Idioma único**: removido o seletor próprio do admin (`useAdminLocale`/`provideI18nLang`); o botão
   do cabeçalho muda **todo** o sistema, incluindo o painel. A secção de traduções do formulário
   continua independente (é conteúdo, não idioma de UI).
+
+## Iteração 43 — navegação mobile no estilo Bubble Menu (React Bits)
+
+- **Bug:** no mobile o logo (centrado, absoluto) colidia com os controlos (PT/som/Entrar) — a nav
+  ficava sobreposta a partir de ~420px. O header passou a barra de duas pontas: logo à esquerda,
+  `PT/EN` + hambúrguer à direita; o resto mudou para dentro do menu.
+- **Menu** (`ForgeHeader`): take-over preto com lista vertical de uma entrada por secção da landing
+  (`#top`, `#relics`, `#missions`, `#archive`), tipografia serif pequena, separadores hairline e sem
+  as pílulas brancas do Bubble Menu original. Stagger de entrada, `Escape` em camadas, `Tab` preso ao
+  diálogo, foco devolvido ao hambúrguer, scroll travado (`lenis.stop` + `overflow: hidden`) e
+  `scrollToElement` no fecho.
+- **Contacto:** entrada própria (dourada) no fim da lista; hover (rato) ou toque revela os três canais
+  (Instagram/X/LinkedIn) em círculos grandes centrados, com o email em linha discreta. O `pointerType`
+  separa rato de toque: no rato o clique só confirma (fecha-se ao sair da área, com 350 ms de janela
+  para alcançar os ícones); no toque o toque alterna.
+- **Secções:** ids `top`/`relics`/`missions`/`archive` adicionados para os anchors; `nav.menu`,
+  `nav.relics`, `nav.missions`, `nav.contact`, `nav.sound` e `nav.closeMenu` em pt/en.
+- **QA:** 390×844, 320×568, 768×1024, 844×390 e 1440×900 — sem overflow horizontal, sem sobreposição
+  logo/nav, todas as entradas de secção param em `top: 0`; hover/leave do contacto, toque (abre/fecha),
+  `Escape`, toggle de som e Entrar→painel verificados em Chromium. 152 testes, typecheck e lint sem
+  erros; detector Impeccable vazio; 0 erros de consola (só pedidos abortados por reload).
+- **Ajuste FE-20**: o carimbo saiu dos cartões do carrossel; o estado passou a texto na meta do
+  painel (`MARTE · Silencioso · Explorado`), o contador saiu da landing e vive no **/full**
+  (“X de 12 exploradas”, contando só as publicadas); o arquivo deixou de ser centrado em absoluto
+  e passou a página rolável para a lista de 12 caber inteira.

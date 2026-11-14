@@ -298,6 +298,7 @@
   font-weight: 200;
   line-height: 1.1;
   letter-spacing: -0.01em;
+  text-transform: lowercase;
   text-align: center;
   cursor: pointer;
   transition: color 0.3s var(--fr-ease-inout);
@@ -345,7 +346,7 @@
 }
 
 .fr-menu.is-open.is-contact .fr-menu__item--contact .fr-menu__link {
-  padding-top: clamp(2.4rem, 4.4vh, 3.6rem);
+  padding-top: max(32px, clamp(2.4rem, 4.4vh, 3.6rem));
 }
 
 .fr-menu.is-open.is-contact .fr-menu__utils {
@@ -2016,25 +2017,7 @@ html[data-act='scene'] .gl {
 
 
 /* ── Passaporte (FE-20) ── */
-.fr-stamp {
-  position: absolute;
-  top: 1.2rem;
-  left: 1.2rem;
-  z-index: 4;
-  padding: 0.4rem 0.8rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+.fr-step__explored {
   color: #9ef0c0;
-  border: 1.5px solid currentColor;
-  border-radius: 0.35rem;
-  transform: rotate(-7deg);
-  pointer-events: none;
-  mix-blend-mode: screen;
-}
-
-.fr-approach__passport {
-  margin-top: 1rem;
-  opacity: 0.55;
+  letter-spacing: 0.16em;
 }
