@@ -9,6 +9,10 @@ Nuxt 4 + Three.js no front, **Supabase** como base de dados, autenticação e ar
 
 ## Stack
 
+> **Stack final:** Nuxt 4 + Supabase (ver [`docs/adr-001-nuxt-final.md`](docs/adr-001-nuxt-final.md)).
+> A linha Next.js em `master` está **congelada** — não fazer push nem merge lá.
+
+
 | Camada | Tecnologia |
 |---|---|
 | Framework | Nuxt 4 / Vue 3 / Nitro |
