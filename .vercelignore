@@ -1,0 +1,8 @@
+.output/
+.next/
+space-relics/
+tests/
+docs/
+*.md
+.git/
+.gitignore
