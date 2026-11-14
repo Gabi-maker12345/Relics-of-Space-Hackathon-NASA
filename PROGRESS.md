@@ -761,3 +761,12 @@ diário aberto pelo cartão.
   sheet e nos painéis (selos escuros sobre a folha clara, labels a 0.62/0.72).
 - **Verificação**: axe-core 4.10 (WCAG 2.0/2.1 AA) sem violações na landing, painéis, admin, modal
   aberto e formulário; fluxo completo por teclado; `prefers-reduced-motion` reduz transições a ~0.
+## Iteração 36 — Supabase cloud
+
+- Projeto `atcfpxpbhmxeqrnmrblq` criado e ligado ao CLI.
+- Migrações `20261109000100` e `20261114000100` aplicadas com `supabase db push --remote`.
+- Seed aplicado: 12 relíquias, 48 factos, 24 mídias, 12 intros e 24 cenas com áudio.
+- Admin criado; bucket `relic-media` público (50 MB, imagem/vídeo/áudio).
+- RLS verificado (anon lê 12; escrita anon devolve 401/42501).
+- Smoke Nuxt contra o cloud: lista 12, detalhe Spirit com áudio, login admin e lista admin 12.
+- Pendente: deploy Vercel (Gabi), smoke de produção (206 range, imagens, login) e scope final.
