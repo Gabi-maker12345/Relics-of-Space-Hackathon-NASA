@@ -804,6 +804,7 @@ diário aberto pelo cartão.
   sem caminhos locais; **152 unitários** e **38 integração** verdes.
 - **Docs/env:** `SUPABASE_STORAGE_BASE` no `.env.example` e CI; ordem
   migrações → `media:upload` → seed no checklist.
+
 ## Iteração 39 — produção e smoke final
 
 - **Deploy público:** https://relics-of-space.vercel.app (Vercel, Node 24).
@@ -812,3 +813,13 @@ diário aberto pelo cartão.
 - **Cache:** `/api/public/relics` `x-vercel-cache: HIT` e `public, max-age=60`; assets do Storage com `cf-cache-status: HIT`.
 - **Lighthouse produção:** performance 45 (LCP 3,7 s, TBT 40,1 s), a11y 100, best practices 100, SEO 92; TBT segue em #69.
 - **Issues:** BE-10 e BE-15 fechadas; riscos em #69–#73.
+
+## Iteração 40 — importação NASA no admin (FE-17)
+
+- **UI:** `NasaImportDialog.vue` com pesquisa (mínimo 2 caracteres), filtros Tudo/Imagens/Vídeos, grelha de miniaturas com crédito e «Carregar mais» (12 por página).
+- **Fluxo:** botão «Importar da NASA» no gestor de mídias; importa para a relíquia aberta e junta a cena ao rascunho. Relíquias novas mostram o aviso para guardar primeiro.
+- **Estados:** loading, erro da API, sem resultados, importado/a importar e nota de que a importação é imediata.
+- **Robustez:** legenda cai para o título quando a NASA não devolve descrição (evita perder a mídia no próximo save); respostas antigas são ignoradas ao mudar de pesquisa.
+- **i18n:** novas chaves PT/EN `form.nasa*` e `nasa.*`.
+- **QA real (cloud):** login admin, pesquisa «apollo 11» (1617 resultados), carregar mais (24 cartões), importação de imagem e vídeo com crédito/fonte, cena no rascunho, save e limpeza da BD; botão desativado em relíquia nova; sem erros de consola.
+- **Testes:** 152 unitários verdes; typecheck, lint, build e `seed:check` limpos.

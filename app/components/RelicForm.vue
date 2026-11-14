@@ -198,7 +198,15 @@
                 <h3 class="rform__legend">{{ t('form.media') }}</h3>
                 <div class="rform__addRow">
                   <button type="button" class="rform__add" @click="addScene()">{{ t('form.addMedia') }}</button>
+                  <button
+                    type="button"
+                    class="rform__add"
+                    :disabled="!relic"
+                    :title="relic ? undefined : t('nasa.needsRelic')"
+                    @click="nasaOpen = true"
+                  >{{ t('form.nasaImport') }}</button>
                 </div>
+                <p v-if="relic" class="rform__hint">{{ t('form.nasaHint') }}</p>
                 <p class="rform__hint">{{ t('form.mediaHint') }}</p>
               </div>
 
@@ -481,6 +489,13 @@
           :relic="previewRelic"
           @close="previewOpen = false"
         />
+
+        <NasaImportDialog
+          :open="nasaOpen"
+          :relic-id="relic?.id ?? null"
+          @close="nasaOpen = false"
+          @imported="onNasaImported"
+        />
       </div>
     </Transition>
   </Teleport>
@@ -573,6 +588,7 @@ const { t } = useI18n()
 const draft = reactive<Draft>(blank())
 const errors = reactive<Record<string, string>>({})
 const previewOpen = ref(false)
+const nasaOpen = ref(false)
 const quizOpen = ref(false)
 const translationBusy = ref(false)
 const translationError = ref('')
@@ -828,6 +844,27 @@ function setCover(scene: RelicScene): void {
   }
   errors.image = ''
   draft.image = source
+}
+
+/** A importação NASA já gravou a mídia na BD; juntamos a cena ao rascunho. */
+function onNasaImported(scene: RelicScene): void {
+  const imported: RelicScene = {
+    ...scene,
+    poster: scene.poster ?? '',
+    kicker: scene.kicker || 'NASA',
+    title: scene.title ?? '',
+    // O formulário só guarda cenas com legenda; nunca perder a mídia importada.
+    body: scene.body?.trim() || (scene.title ?? ''),
+    credit: scene.credit ?? '',
+    source_url: scene.source_url ?? '',
+    audio_url: scene.audio_url ?? '',
+    mute_video: scene.mute_video ?? scene.kind === 'video',
+  }
+  draft.scenes.push(imported)
+  if (!draft.image.trim()) {
+    const cover = scene.kind === 'video' ? (scene.poster ?? '') : scene.src
+    if (cover) draft.image = cover
+  }
 }
 
 function onImageLoad(event: Event): void {
