@@ -89,7 +89,15 @@ SSR do front (`app/data/relics.ts`). Depois de editar o JSON:
 ```bash
 npm run seed:generate     # regenera supabase/seed.sql
 npm run seed:check        # falha se o SQL estiver desatualizado (corre na CI)
+npm run narration:generate # gera os MP3 com Edge TTS e atualiza o JSON/seed
+npm run narration:check    # falha se faltar algum MP3 (corre na CI)
 ```
+
+A narração é sintética, gerada com Edge TTS (`pt-PT-RaquelNeural`) a partir dos
+nossos textos PT, e fica em `public/media/narration/`. Não é áudio NASA; o
+`speechSynthesis` do browser continua como fallback. Ver
+[`docs/data-sources.md`](docs/data-sources.md) e
+[`docs/deploy-checklist.md`](docs/deploy-checklist.md).
 
 O seed é idempotente: apaga as relíquias de demonstração por `slug` e volta a
 inseri-las com factos e mídias (o `on delete cascade` limpa os filhos). Correr
@@ -175,6 +183,8 @@ Supabase Auth e garante a linha correspondente em `admin_users`.
 | `npm run smoke` | valida login, sessão, guarda admin e RLS |
 | `npm run seed:generate` | regenera `supabase/seed.sql` a partir de `data/relics.json` |
 | `npm run seed:check` | verifica que o seed gerado está atualizado |
+| `npm run narration:generate` | regenera os MP3 de narração com Edge TTS |
+| `npm run narration:check` | verifica que todos os MP3 de narração existem |
 | `npm run supabase:start` | arranca o Supabase local |
 | `npm run supabase:reset` | recria a BD, migrações e seed |
 | `npm run supabase:stop` | pára o Supabase local |
@@ -194,6 +204,13 @@ supabase/
   migrations/         esquema + RLS + storage policies
   seed.sql            seed de demonstração gerado (idempotente)
 docs/                 arquitetura e esquema
+  database.md         esquema, RLS e seed
+  testing.md          testes unitários/integração
+  data-sources.md     fontes oficiais, créditos e conformidade
+  deploy-checklist.md deploy e QA de aceitação
+public/
+  images/relics/      imagens oficiais do seed
+  media/narration/    narração sintética (36 MP3)
 ```
 
 ### API

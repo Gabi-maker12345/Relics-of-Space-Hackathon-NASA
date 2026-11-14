@@ -243,6 +243,10 @@ the same JSON for its SSR fallback (`app/data/relics.ts`).
 - **Idempotent:** the script deletes the demo rows by `slug` and reinserts them;
   facts, media and translations follow the `on delete cascade`. Running it twice
   leaves exactly 12 relics, 48 facts and 24 media rows.
+- **Narration:** every relic has `intro_audio_url` and every media row has
+  `audio_url`, pointing at the 36 synthetic MP3s in
+  `public/media/narration/` (Edge TTS, PT-PT). The seed stores only the URLs;
+  the files ship with the front-end.
 - **Official references:** `relics.reference_url` points at the mission page or
   NSSDC record listed by the Space Apps challenge. `relics.is_extra` marks
   Voyager 1/2 as outside the official resource list, so the UI can label them.

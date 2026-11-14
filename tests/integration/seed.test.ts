@@ -23,7 +23,7 @@ describe.skipIf(!serviceKey || !anonKey)('demo seed (BE-14 integration)', () => 
   it('applies exactly once, even after a second seed run', async () => {
     const { data, error } = await admin
       .from('relics')
-      .select('id, slug, published, cover_media_id')
+      .select('id, slug, published, cover_media_id, intro_audio_url')
       .in('slug', slugs)
 
     expect(error).toBeNull()
@@ -36,6 +36,7 @@ describe.skipIf(!serviceKey || !anonKey)('demo seed (BE-14 integration)', () => 
       expect(row!.id).toBe(relic.id)
       expect(row!.published).toBe(true)
       expect(row!.cover_media_id).toBe(relic.media[0].id)
+      expect(row!.intro_audio_url).toBe(relic.intro_audio_url)
     }
   })
 
@@ -44,7 +45,7 @@ describe.skipIf(!serviceKey || !anonKey)('demo seed (BE-14 integration)', () => 
 
     const [factsRes, mediaRes] = await Promise.all([
       admin.from('relic_facts').select('relic_id, label, value, position').in('relic_id', relicIds),
-      admin.from('relic_media').select('relic_id, id, position, credit, source_url').in('relic_id', relicIds),
+      admin.from('relic_media').select('relic_id, id, position, credit, source_url, audio_url').in('relic_id', relicIds),
     ])
 
     expect(factsRes.error).toBeNull()
@@ -64,6 +65,9 @@ describe.skipIf(!serviceKey || !anonKey)('demo seed (BE-14 integration)', () => 
       for (const item of media) {
         expect(item.credit, `${relic.slug}/${item.id}`).not.toBe('')
         expect(item.source_url, `${relic.slug}/${item.id}`).toMatch(/^https:\/\/images\.nasa\.gov\/details\//)
+        const source = relic.media.find(entry => entry.id === item.id)
+        expect(source, `${relic.slug}/${item.id}`).toBeDefined()
+        expect(item.audio_url, `${relic.slug}/${item.id}`).toBe(source!.audio_url)
       }
     }
   })

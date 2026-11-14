@@ -48,6 +48,13 @@ function jpegSize(path: string): { width: number, height: number } {
   throw new Error(`${path}: no JPEG dimensions found`)
 }
 
+/** Minimal MP3 check: ID3 tag or an MPEG frame sync. */
+function isMp3(path: string): boolean {
+  const buffer = readFileSync(path)
+  return (buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33)
+    || buffer[0] === 0xff
+}
+
 const seed = dataset.relics
 const media = seed.flatMap(relic => relic.media.map(item => ({ slug: relic.slug, ...item })))
 
@@ -94,6 +101,24 @@ describe('relic seed dataset (BE-14)', () => {
     }
   })
 
+  it('ships narration audio for the intro and every scene', () => {
+    for (const relic of seed) {
+      expect(relic.intro_audio_url, relic.slug).toBe(`/media/narration/${relic.slug}-intro.mp3`)
+      const intro = resolve('public', relic.intro_audio_url!.replace(/^\//, ''))
+      expect(existsSync(intro), intro).toBe(true)
+      expect(statSync(intro).size, intro).toBeGreaterThan(20_000)
+      expect(isMp3(intro), intro).toBe(true)
+
+      relic.media.forEach((item, index) => {
+        expect(item.audio_url, `${relic.slug}/${item.file}`).toBe(`/media/narration/${relic.slug}-scene-${index + 1}.mp3`)
+        const path = resolve('public', item.audio_url!.replace(/^\//, ''))
+        expect(existsSync(path), path).toBe(true)
+        expect(statSync(path).size, path).toBeGreaterThan(10_000)
+        expect(isMp3(path), path).toBe(true)
+      })
+    }
+  })
+
   it('keeps the SSR fallback in sync with the dataset', () => {
     expect(relics).toHaveLength(seed.length)
 
@@ -117,6 +142,10 @@ describe('relic seed dataset (BE-14)', () => {
       expect(relic.scenes.every(scene => scene.source_url && scene.credit)).toBe(true)
       expect(relic.steps).toHaveLength(source.media.length + 1)
       expect(relic.steps[0]).toMatchObject({ index: 0, type: 'intro', caption: source.summary })
+      expect(relic.steps[0].audio_url).toBe(source.intro_audio_url)
+      source.media.forEach((item, position) => {
+        expect(relic.steps[position + 1].audio_url).toBe(item.audio_url)
+      })
       expect(relic.total_steps).toBe(relic.steps.length)
     }
   })

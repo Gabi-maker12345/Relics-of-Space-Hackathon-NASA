@@ -39,7 +39,8 @@
           "title": "O Águia na superfície",
           "caption": "O estágio de descida do Águia, fotografado por Neil Armstrong a 20 de julho de 1969. A película dourada é isolamento térmico; as pernas continuam apoiadas no regolito.",
           "credit": "NASA / JSC",
-          "source_url": "https://images.nasa.gov/details/as11-40-5927"
+          "source_url": "https://images.nasa.gov/details/as11-40-5927",
+          "audio_url": "/media/narration/apollo-lunar-module-scene-1.mp3"
         },
         {
           "id": "00000000-0000-4000-8000-000000001002",
@@ -49,11 +50,13 @@
           "title": "O reflexo do Águia",
           "caption": "Buzz Aldrin junto ao módulo lunar. No visor do capacete refletem-se o próprio Águia e o fotógrafo, Neil Armstrong.",
           "credit": "NASA / JSC",
-          "source_url": "https://images.nasa.gov/details/as11-40-5903"
+          "source_url": "https://images.nasa.gov/details/as11-40-5903",
+          "audio_url": "/media/narration/apollo-lunar-module-scene-2.mp3"
         }
       ],
       "reference_url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1969-059C",
-      "is_extra": false
+      "is_extra": false,
+      "intro_audio_url": "/media/narration/apollo-lunar-module-intro.mp3"
     },
     {
       "id": "00000000-0000-4000-8000-000000000002",
@@ -94,7 +97,8 @@
           "title": "Autorretrato em Perseverance Valley",
           "caption": "Mosaico de imagens tirado pelo próprio rover em janeiro de 2014. A poeira cobre os painéis solares; o mastro da câmara ergue-se acima do corpo.",
           "credit": "NASA/JPL-Caltech/Cornell Univ./Arizona State Univ.",
-          "source_url": "https://images.nasa.gov/details/PIA17759"
+          "source_url": "https://images.nasa.gov/details/PIA17759",
+          "audio_url": "/media/narration/opportunity-scene-1.mp3"
         },
         {
           "id": "00000000-0000-4000-8000-000000002002",
@@ -104,11 +108,13 @@
           "title": "A cratera Endeavour",
           "caption": "Vista orbital do caminho percorrido pelo Opportunity na borda da cratera Endeavour, o destino final da maratona de 45 km. A linha clara é a rota do rover.",
           "credit": "NASA/JPL-Caltech/University of Arizona",
-          "source_url": "https://images.nasa.gov/details/PIA14537"
+          "source_url": "https://images.nasa.gov/details/PIA14537",
+          "audio_url": "/media/narration/opportunity-scene-2.mp3"
         }
       ],
       "reference_url": "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/",
-      "is_extra": false
+      "is_extra": false,
+      "intro_audio_url": "/media/narration/opportunity-intro.mp3"
     },
     {
       "id": "00000000-0000-4000-8000-000000000003",
@@ -149,7 +155,8 @@
           "title": "O lander Viking 1",
           "caption": "Modelo em escala do lander, fotografado no laboratório. O corpo hexagonal, os três painéis solares e a antena de alto ganho foram projetados para sobreviver ao pouso e operar durante anos.",
           "credit": "NASA/JPL-Caltech/University of Arizona",
-          "source_url": "https://images.nasa.gov/details/PIA09703"
+          "source_url": "https://images.nasa.gov/details/PIA09703",
+          "audio_url": "/media/narration/viking-1-scene-1.mp3"
         },
         {
           "id": "00000000-0000-4000-8000-000000003002",
@@ -159,11 +166,13 @@
           "title": "O primeiro panorama de Marte",
           "caption": "Primeira vista panorâmica da superfície marciana, enviada pelo Viking 1 em julho de 1976. O solo é coberto de rochas e o céu tem a cor da poeira em suspensão.",
           "credit": "NASA/JPL",
-          "source_url": "https://images.nasa.gov/details/PIA00383"
+          "source_url": "https://images.nasa.gov/details/PIA00383",
+          "audio_url": "/media/narration/viking-1-scene-2.mp3"
         }
       ],
       "reference_url": "https://science.nasa.gov/mission/viking-1/",
-      "is_extra": false
+      "is_extra": false,
+      "intro_audio_url": "/media/narration/viking-1-intro.mp3"
     },
     {
       "id": "00000000-0000-4000-8000-000000000004",
@@ -204,7 +213,8 @@
           "title": "Spirit nas Columbia Hills",
           "caption": "Imagem produzida com a tecnologia Virtual Presence in Space, da NASA, para mostrar o rover no terreno acidentado das Columbia Hills.",
           "credit": "NASA/JPL-Solar System Visualization Team",
-          "source_url": "https://images.nasa.gov/details/PIA03230"
+          "source_url": "https://images.nasa.gov/details/PIA03230",
+          "audio_url": "/media/narration/spirit-scene-1.mp3"
         },
         {
           "id": "00000000-0000-4000-8000-000000004002",
@@ -214,11 +224,13 @@
           "title": "O Spirit visto de cima",
           "caption": "A câmara do Mars Global Surveyor encontrou o Spirit em janeiro de 2004: o ponto claro no centro é o rover, com as marcas do pouso à volta.",
           "credit": "NASA/JPL/Malin Space Science Systems",
-          "source_url": "https://images.nasa.gov/details/PIA05248"
+          "source_url": "https://images.nasa.gov/details/PIA05248",
+          "audio_url": "/media/narration/spirit-scene-2.mp3"
         }
       ],
       "reference_url": "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/",
-      "is_extra": false
+      "is_extra": false,
+      "intro_audio_url": "/media/narration/spirit-intro.mp3"
     },
     {
       "id": "00000000-0000-4000-8000-000000000005",
@@ -259,7 +271,8 @@
           "title": "Sojourner em Ares Vallis",
           "caption": "O rover de 10,6 kg depois de descer da Pathfinder. As rodas e o painel solar plano foram desenhados para um veículo do tamanho de um micro-ondas.",
           "credit": "NASA/JPL",
-          "source_url": "https://images.nasa.gov/details/PIA01551"
+          "source_url": "https://images.nasa.gov/details/PIA01551",
+          "audio_url": "/media/narration/sojourner-scene-1.mp3"
         },
         {
           "id": "00000000-0000-4000-8000-000000005002",
@@ -269,11 +282,13 @@
           "title": "Três gerações de rovers",
           "caption": "Sojourner posa ao lado dos gémeos Spirit e Opportunity no laboratório do JPL, em 2003. O pequeno antepassado abriu o caminho aos rover marcianos que se seguiram.",
           "credit": "NASA/JPL",
-          "source_url": "https://images.nasa.gov/details/PIA04422"
+          "source_url": "https://images.nasa.gov/details/PIA04422",
+          "audio_url": "/media/narration/sojourner-scene-2.mp3"
         }
       ],
       "reference_url": "https://science.nasa.gov/mission/mars-pathfinder/",
-      "is_extra": false
+      "is_extra": false,
+      "intro_audio_url": "/media/narration/sojourner-intro.mp3"
     },
     {
       "id": "00000000-0000-4000-8000-000000000006",
@@ -314,7 +329,8 @@
           "title": "Ingenuity em Marte",
           "caption": "Conceito artístico do helicóptero de 1,8 kg na superfície marciana, com a Perseverance parcialmente visível ao fundo.",
           "credit": "NASA/JPL-Caltech",
-          "source_url": "https://images.nasa.gov/details/PIA23720"
+          "source_url": "https://images.nasa.gov/details/PIA23720",
+          "audio_url": "/media/narration/ingenuity-scene-1.mp3"
         },
         {
           "id": "00000000-0000-4000-8000-000000006002",
@@ -324,11 +340,13 @@
           "title": "A primeira imagem aérea a cores",
           "caption": "Imagem captada pelo Ingenuity enquanto voava, a 22 de abril de 2021: a primeira fotografia aérea a cores da superfície de Marte.",
           "credit": "NASA/JPL-Caltech",
-          "source_url": "https://images.nasa.gov/details/PIA24593"
+          "source_url": "https://images.nasa.gov/details/PIA24593",
+          "audio_url": "/media/narration/ingenuity-scene-2.mp3"
         }
       ],
       "reference_url": "https://science.nasa.gov/mission/mars-2020-perseverance/ingenuity-mars-helicopter/",
-      "is_extra": false
+      "is_extra": false,
+      "intro_audio_url": "/media/narration/ingenuity-intro.mp3"
     },
     {
       "id": "00000000-0000-4000-8000-000000000007",
@@ -369,7 +387,8 @@
           "title": "O LRV sozinho",
           "caption": "O rover lunar do Apollo 15 fotografado contra a paisagem lunar durante a terceira caminhada espacial. As rodas independentes e o assento duplo permitiam explorar a superfície em segurança.",
           "credit": "NASA / JSC",
-          "source_url": "https://images.nasa.gov/details/as15-88-11901"
+          "source_url": "https://images.nasa.gov/details/as15-88-11901",
+          "audio_url": "/media/narration/apollo-lunar-roving-vehicle-scene-1.mp3"
         },
         {
           "id": "00000000-0000-4000-8000-000000007002",
@@ -379,11 +398,13 @@
           "title": "James Irwin ao volante",
           "caption": "O astronauta James Irwin trabalha junto ao rover durante a primeira EVA do Apollo 15, em julho de 1971.",
           "credit": "NASA / JSC",
-          "source_url": "https://images.nasa.gov/details/as15-86-11603"
+          "source_url": "https://images.nasa.gov/details/as15-86-11603",
+          "audio_url": "/media/narration/apollo-lunar-roving-vehicle-scene-2.mp3"
         }
       ],
       "reference_url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1971-063C",
-      "is_extra": false
+      "is_extra": false,
+      "intro_audio_url": "/media/narration/apollo-lunar-roving-vehicle-intro.mp3"
     },
     {
       "id": "00000000-0000-4000-8000-000000000008",
@@ -426,7 +447,8 @@
           "title": "Surveyor 3 na cratera",
           "caption": "O lander Surveyor 3 fotografado pela tripulação do Apollo 12 em novembro de 1969, na cratera em que pousou dois anos e meio antes.",
           "credit": "NASA / JSC",
-          "source_url": "https://images.nasa.gov/details/as12-48-7121"
+          "source_url": "https://images.nasa.gov/details/as12-48-7121",
+          "audio_url": "/media/narration/surveyor-3-scene-1.mp3"
         },
         {
           "id": "00000000-0000-4000-8000-000000008002",
@@ -436,9 +458,11 @@
           "title": "Dois veículos na Lua",
           "caption": "O astronauta Alan Bean junto ao Surveyor 3, com o módulo lunar Intrepid ao fundo. A Apollo 12 recolheu peças do lander para estudar os efeitos do ambiente lunar.",
           "credit": "NASA / JSC",
-          "source_url": "https://images.nasa.gov/details/AS12-48-7133"
+          "source_url": "https://images.nasa.gov/details/AS12-48-7133",
+          "audio_url": "/media/narration/surveyor-3-scene-2.mp3"
         }
-      ]
+      ],
+      "intro_audio_url": "/media/narration/surveyor-3-intro.mp3"
     },
     {
       "id": "00000000-0000-4000-8000-000000000009",
@@ -479,7 +503,8 @@
           "title": "A Voyager 1",
           "caption": "Conceito artístico da nave com a antena de alto ganho apontada para a Terra. A Voyager 1 é o objeto construído pelo homem que está mais longe do planeta.",
           "credit": "NASA/JPL",
-          "source_url": "https://images.nasa.gov/details/PIA04495"
+          "source_url": "https://images.nasa.gov/details/PIA04495",
+          "audio_url": "/media/narration/voyager-1-scene-1.mp3"
         },
         {
           "id": "00000000-0000-4000-8000-000000009002",
@@ -489,11 +514,13 @@
           "title": "O Disco de Ouro",
           "caption": "Técnicos preparam o Disco de Ouro para ser instalado na Voyager 1, em 1977. O disco contém saudações em 55 línguas, música e imagens da Terra.",
           "credit": "NASA/JPL-Caltech",
-          "source_url": "https://images.nasa.gov/details/PIA21741"
+          "source_url": "https://images.nasa.gov/details/PIA21741",
+          "audio_url": "/media/narration/voyager-1-scene-2.mp3"
         }
       ],
       "reference_url": "https://science.nasa.gov/mission/voyager/",
-      "is_extra": true
+      "is_extra": true,
+      "intro_audio_url": "/media/narration/voyager-1-intro.mp3"
     },
     {
       "id": "00000000-0000-4000-8000-000000000010",
@@ -534,7 +561,8 @@
           "title": "A Voyager 2 no laboratório",
           "caption": "Engenheiros trabalham na Voyager 2 numa sala limpa do JPL, em março de 1977. A nave foi lançada cinco meses depois.",
           "credit": "NASA/JPL-Caltech",
-          "source_url": "https://images.nasa.gov/details/PIA21736"
+          "source_url": "https://images.nasa.gov/details/PIA21736",
+          "audio_url": "/media/narration/voyager-2-scene-1.mp3"
         },
         {
           "id": "00000000-0000-4000-8000-000000010002",
@@ -544,11 +572,13 @@
           "title": "Urano visto pela Voyager 2",
           "caption": "Imagem de Urano obtida pela Voyager 2 em 1986. A nave revelou um mundo gelado, com anéis ténues e uma inclinação extrema.",
           "credit": "NASA/JPL-Caltech",
-          "source_url": "https://images.nasa.gov/details/PIA18182"
+          "source_url": "https://images.nasa.gov/details/PIA18182",
+          "audio_url": "/media/narration/voyager-2-scene-2.mp3"
         }
       ],
       "reference_url": "https://science.nasa.gov/mission/voyager/",
-      "is_extra": true
+      "is_extra": true,
+      "intro_audio_url": "/media/narration/voyager-2-intro.mp3"
     },
     {
       "id": "00000000-0000-4000-8000-000000000011",
@@ -589,7 +619,8 @@
           "title": "Pioneer 10 em Júpiter",
           "caption": "Ilustração de Rick Guidice para a NASA: a Pioneer 10 passa por Júpiter em dezembro de 1973, a primeira nave a chegar ao planeta.",
           "credit": "NASA/Ames Research Center · Rick Guidice",
-          "source_url": "https://images.nasa.gov/details/ARC-1973-AC73-4247"
+          "source_url": "https://images.nasa.gov/details/ARC-1973-AC73-4247",
+          "audio_url": "/media/narration/pioneer-10-scene-1.mp3"
         },
         {
           "id": "00000000-0000-4000-8000-000000011002",
@@ -599,11 +630,13 @@
           "title": "A caminho do espaço interestelar",
           "caption": "Pintura de Don Moore usada numa animação sobre a missão Pioneer. A nave levava a bordo a placa com a localização da Terra.",
           "credit": "NASA/Ames Research Center · Don Moore",
-          "source_url": "https://images.nasa.gov/details/ARC-1969-AC72-1353"
+          "source_url": "https://images.nasa.gov/details/ARC-1969-AC72-1353",
+          "audio_url": "/media/narration/pioneer-10-scene-2.mp3"
         }
       ],
       "reference_url": "https://science.nasa.gov/mission/pioneer-10/",
-      "is_extra": false
+      "is_extra": false,
+      "intro_audio_url": "/media/narration/pioneer-10-intro.mp3"
     },
     {
       "id": "00000000-0000-4000-8000-000000000012",
@@ -644,7 +677,8 @@
           "title": "Pioneer 11 em Saturno",
           "caption": "Pintura de Wilson Hurley para a NASA: a Pioneer 11 aproxima-se de Saturno em 1979, antes do primeiro sobrevoo da nave pelo planeta.",
           "credit": "NASA/Ames Research Center · Wilson Hurley",
-          "source_url": "https://images.nasa.gov/details/ARC-2000-80-HC-251"
+          "source_url": "https://images.nasa.gov/details/ARC-2000-80-HC-251",
+          "audio_url": "/media/narration/pioneer-11-scene-1.mp3"
         },
         {
           "id": "00000000-0000-4000-8000-000000012002",
@@ -654,11 +688,13 @@
           "title": "A família Pioneer",
           "caption": "Composição de Fornalski com as sondas Pioneer 6 a 11. A Pioneer 11 foi a primeira a visitar Saturno e a segunda a deixar o sistema solar.",
           "credit": "NASA/Ames Research Center · Fornalski",
-          "source_url": "https://images.nasa.gov/details/ARC-1982-AC82-0178"
+          "source_url": "https://images.nasa.gov/details/ARC-1982-AC82-0178",
+          "audio_url": "/media/narration/pioneer-11-scene-2.mp3"
         }
       ],
       "reference_url": "https://science.nasa.gov/mission/pioneer-10/",
-      "is_extra": false
+      "is_extra": false,
+      "intro_audio_url": "/media/narration/pioneer-11-intro.mp3"
     }
   ]
 }

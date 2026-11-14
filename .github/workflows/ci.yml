@@ -47,6 +47,9 @@ jobs:
       - name: Seed is up to date
         run: npm run seed:check
 
+      - name: Narration files are present
+        run: npm run narration:check
+
       - name: Typecheck
         run: npm run typecheck
 

@@ -122,7 +122,7 @@ push(
   ');',
   '',
   'insert into public.relics',
-  '  (id, slug, name, mission, summary, story_text, status, location, published, alt, ratio, reference_url, is_extra)',
+  '  (id, slug, name, mission, summary, story_text, status, location, published, alt, ratio, reference_url, is_extra, intro_audio_url)',
   'values',
 )
 
@@ -142,6 +142,7 @@ const relicRows = dataset.relics.map(relic => [
     sql(relic.ratio || '16 / 9'),
     sql(relic.reference_url),
     relic.is_extra ? 'true' : 'false',
+    sql(relic.intro_audio_url ?? null),
   ].join(', '),
   ')',
 ].join(''))
@@ -181,13 +182,14 @@ for (const relic of dataset.relics) {
       sql(media.caption),
       sql(media.credit),
       sql(media.source_url ?? null),
+      sql(media.audio_url ?? null),
       sqlNumber(position),
     ].join(', ')})`)
   })
 }
 push(
   'insert into public.relic_media',
-  '  (id, relic_id, type, url, poster_url, kicker, title, caption, credit, source_url, position)',
+  '  (id, relic_id, type, url, poster_url, kicker, title, caption, credit, source_url, audio_url, position)',
   'values',
   mediaRows.join(',\n') + ';',
   '',
