@@ -245,7 +245,9 @@ Admin (requer sessão Supabase com `is_admin`):
   `source_url`; aceita `media_type`, `page` e `page_size`
 - `POST /api/admin/relics/:id/media/import` — `{ "nasa_id": "…" }` importa um
   resultado da NASA como mídia da relíquia, com `credit` e `source_url`
-  preenchidos e sem copiar o ficheiro para o Storage
+  preenchidos e sem copiar o ficheiro para o Storage. No painel, o botão
+  **Importar da NASA** abre a pesquisa e acrescenta a cena ao rascunho; numa
+  relíquia nova é preciso guardar primeiro.
 - `POST /api/admin/relics/:id/media` — adiciona uma mídia (capa opcional via
   `is_cover`); sem `position` fica no fim
 - `PATCH|DELETE /api/admin/media/:id` — edita/remove uma mídia

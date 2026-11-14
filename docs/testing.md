@@ -83,6 +83,16 @@ npm run smoke
 `scripts/smoke.mjs` checks public reads, login/session cookies, `/api/auth/me`,
 the admin guard, publish/unpublish visibility and that anon cannot insert.
 
+## Admin UI (manual, before the demo)
+
+- Edit an existing relic → **Importar da NASA**: search, switch filters, use
+  **Carregar mais** and import an image and a video.
+- Confirm the scene appears in the media manager with credit and source, and
+  that it survives saving the form.
+- Open a new relic and confirm the NASA button is disabled with the “save
+  first” hint.
+- Close the dialog with Esc, the X button and a click on the backdrop.
+
 ## CI
 
 The main CI workflow runs lint, typecheck and unit tests. Integration tests are

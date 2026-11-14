@@ -300,7 +300,9 @@ export async function importNasaMedia(
     poster: asset.poster,
     kicker: asset.kind === 'video' ? 'Vídeo NASA' : 'Imagem NASA',
     title: item.title.slice(0, 300),
-    body: item.description.slice(0, 4000),
+    // A caption is required by the admin form; fall back to the title so an
+    // item without a description is never dropped on the next save.
+    body: (item.description || item.title).slice(0, 4000),
     credit: (item.credit || 'NASA').slice(0, 300),
     source_url: item.source_url,
     mute_video: asset.kind === 'video',
