@@ -13,16 +13,18 @@
 
       <label class="afield__action" :class="{ 'is-busy': uploading }">
         <input type="file" accept="audio/*" class="sr-only" @change="onFile">
-        <span>{{ uploading ? `${progress}%` : 'Carregar áudio' }}</span>
+        <span>{{ uploading ? t('form.uploading', { progress }) : t('form.upload') }}</span>
       </label>
 
       <button
         type="button"
         class="afield__action afield__action--ghost"
-        disabled
-        title="Disponível quando o BE-10 (TTS) estiver implementado"
+        :disabled="generating || uploading || !text.trim()"
+        :title="text.trim() ? t('form.generate') : t('form.errBody')"
+        @click="generate"
       >
-        Gerar áudio <em>TTS</em>
+        <template v-if="generating">{{ t('form.generating') }}</template>
+        <template v-else>{{ t('form.generate') }} <em>{{ t('form.tts') }}</em></template>
       </button>
     </div>
 
@@ -30,7 +32,7 @@
       <button
         type="button"
         class="afield__play"
-        :aria-label="playing ? 'Pausar áudio' : 'Ouvir áudio'"
+        :aria-label="playing ? t('form.audioPause') : t('form.audioListening')"
         :aria-pressed="playing"
         @click="toggle"
       >
@@ -44,7 +46,7 @@
 
       <span class="afield__time">{{ clock }}</span>
 
-      <button type="button" class="afield__clear" @click="clear">Limpar</button>
+      <button type="button" class="afield__clear" @click="clear">{{ t('form.audioClear') }}</button>
     </div>
 
     <p v-if="error" class="afield__err" role="alert">{{ error }}</p>
@@ -54,14 +56,18 @@
 <script setup lang="ts">
 import { uploadToStorage } from '~/composables/useUpload'
 
+const { t } = useI18n()
+
 const props = withDefaults(
   defineProps<{
     modelValue?: string | null
     label: string
     relicId: string
     placeholder?: string
+    /** Texto que o botão "Gerar áudio" envia ao TTS. */
+    text?: string
   }>(),
-  { placeholder: '/media/narracao.mp3' },
+  { placeholder: '/media/narracao.mp3', text: '', modelValue: null },
 )
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
@@ -70,6 +76,7 @@ const value = computed(() => props.modelValue ?? '')
 
 const uploading = ref(false)
 const progress = ref(0)
+const generating = ref(false)
 const error = ref('')
 const playing = ref(false)
 const currentTime = ref(0)
@@ -152,6 +159,32 @@ async function onFile(event: Event): Promise<void> {
     uploading.value = false
     progress.value = 0
     input.value = ''
+  }
+}
+
+async function generate(): Promise<void> {
+  const text = props.text.trim()
+  if (!text) {
+    error.value = 'Escreve o texto antes de gerar o áudio.'
+    return
+  }
+
+  stop()
+  error.value = ''
+  generating.value = true
+  try {
+    const result = await $fetch<{ url: string }>('/api/admin/narration/generate', {
+      method: 'POST',
+      body: { text, relicId: props.relicId },
+    })
+    emit('update:modelValue', result.url)
+  }
+  catch (err: unknown) {
+    const apiError = err as { data?: { message?: string }, statusMessage?: string, message?: string }
+    error.value = apiError.data?.message || apiError.statusMessage || 'Falha ao gerar a narração.'
+  }
+  finally {
+    generating.value = false
   }
 }
 

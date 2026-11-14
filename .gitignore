@@ -45,3 +45,6 @@ SPACE_RELICS.md
 # artefactos do build Next (branch main usa outro app)
 .next/
 next-env.d.ts
+
+# venv do gerador de narração (scripts/generate-narration.mjs)
+.venv-tts/

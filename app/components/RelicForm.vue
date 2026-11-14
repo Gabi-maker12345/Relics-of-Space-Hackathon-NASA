@@ -93,6 +93,7 @@
                   v-model="draft.intro_audio_url"
                   label="Áudio de introdução (opcional)"
                   :relic-id="draft.id"
+                  :text="draft.body"
                   placeholder="/media/intro.mp3"
                 />
                 <p class="rform__hint">A voz que abre o diário antes da primeira cena.</p>
@@ -319,6 +320,7 @@
                         v-model="scene.audio_url"
                         label="Áudio narrado (opcional)"
                         :relic-id="draft.id"
+                        :text="scene.body"
                         placeholder="/media/narracao.mp3"
                       />
 
