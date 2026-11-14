@@ -720,3 +720,87 @@ a {
     animation: none;
   }
 }
+
+/* ── Narração e legendas (FE-09/FE-11) ── */
+.narr-controls {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(12px, 3vh, 28px);
+  z-index: 96;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 999px;
+  background: rgb(8 10 16 / 0.72);
+  backdrop-filter: blur(10px);
+  transform: translateX(-50%);
+}
+
+.narr-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fr-paper);
+  font: 600 10px/1 var(--fr-sans);
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.narr-btn--wide {
+  width: 38px;
+}
+
+.narr-btn:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+.narr-btn[aria-pressed="true"] {
+  background: var(--fr-paper);
+  color: var(--fr-ink);
+}
+
+.narr-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.narr-btn:focus-visible {
+  outline: 2px solid var(--fr-gold);
+  outline-offset: 2px;
+}
+
+.narr-count {
+  margin: 0 4px 0 2px;
+  color: rgb(255 255 255 / 0.45);
+  letter-spacing: 0.12em;
+}
+
+.rsheet__body--narr {
+  min-height: 3em;
+}
+
+.narr__word {
+  color: rgb(255 255 255 / 0.34);
+  transition: color 0.18s linear;
+}
+
+.narr__word.is-past {
+  color: rgb(255 255 255 / 0.62);
+}
+
+.narr__word.is-on {
+  color: var(--fr-paper);
+  text-shadow: 0 0 18px rgb(255 255 255 / 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .narr__word {
+    transition: none;
+  }
+}

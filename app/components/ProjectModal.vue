@@ -120,6 +120,9 @@ const onLeave = (el: Element, done: () => void): void => {
   }
 }
 
+const typedNarration = useNarration()
+const introPlaying = computed(() => typedNarration.stepIndex.value === 0 && typedNarration.playing.value)
+
 watch(relic, (value) => {
   index.value = 0
   lightbox.value = null
@@ -128,6 +131,7 @@ watch(relic, (value) => {
     lastFocus = (document.activeElement as HTMLElement | null) ?? null
     // a trilha do arquivo cala-se enquanto o diário está aberto
     soundtrack.stop()
+    typedNarration.setSteps(value.steps ?? [])
     armed.value = false
     typing.value = false
     clearGlitch()
@@ -136,11 +140,27 @@ watch(relic, (value) => {
   } else {
     clearGlitch()
     armed.value = false
+    typedNarration.stop()
     if (act.value === 'scene') void soundtrack.play()
     lastFocus?.focus?.()
     lastFocus = null
   }
 }, { flush: 'post' })
+
+// A introdução só arranca depois do glitch (o clique que abriu já autorizou áudio).
+watch(armed, (ready) => {
+  if (!ready) return
+  const steps = relic.value?.steps ?? []
+  typedNarration.goTo(steps[0]?.audio_url ? 0 : Math.min(1, Math.max(0, steps.length - 1)))
+  if (steps[0]?.audio_url) void typedNarration.play()
+})
+
+// Cada cena corresponde ao passo seguinte (steps[0] é a introdução).
+watch(index, (next) => {
+  if (introPlaying.value) return
+  const step = next + 1
+  if (typedNarration.stepIndex.value !== step) typedNarration.goTo(step)
+})
 
 const focusables = (): HTMLElement[] => {
   const root = document.querySelector<HTMLElement>('[role="dialog"]')
@@ -192,6 +212,7 @@ onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey)
   clearGlitch()
+  typedNarration.stop()
 })
 </script>
 
@@ -218,8 +239,9 @@ onBeforeUnmount(() => {
           />
         </SheetFrame>
         <Transition name="bot">
-          <BotNarrator v-if="relic && armed" :talking="typing" />
+          <BotNarrator v-if="relic && armed" :talking="typing || typedNarration.playing.value" />
         </Transition>
+        <NarrationControls v-if="relic && armed" />
         <Transition name="lb">
           <MediaLightbox v-if="lightbox" :media="lightbox" @close="lightbox = null" />
         </Transition>

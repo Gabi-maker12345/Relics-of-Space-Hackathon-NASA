@@ -88,5 +88,11 @@ export function useSoundtrack() {
     else void play()
   }
 
-  return { prime, play, stop, toggle, playing }
+  /** Lowers the track while the narration speaks, then brings it back. */
+  const duck = (on: boolean): void => {
+    if (!audio || !playing.value) return
+    fadeTo(on ? 0.08 : SOUNDTRACK_VOLUME, on ? 400 : 900)
+  }
+
+  return { prime, play, stop, toggle, playing, duck }
 }

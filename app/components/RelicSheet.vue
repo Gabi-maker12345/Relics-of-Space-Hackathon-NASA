@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import type { Relic, RelicScene } from '~/data/relics'
+import { buildWordTimings, wordIndexAt } from '~/utils/narration'
 
 const props = defineProps<{ relic: Relic; index: number; armed?: boolean }>()
 const emit = defineEmits<{ 'update:index': [index: number]; 'open-media': [scene: RelicScene]; typing: [active: boolean] }>()
+
+const { mode: narrationMode, captions: narrationCaptions, currentTime, duration, speechWord, steps: narrationSteps, stepIndex } = useNarration()
 
 const scroller = ref<HTMLElement | null>(null)
 const typed = ref('')
@@ -49,6 +52,16 @@ const scenes = computed(() => props.relic.scenes ?? [])
 const emptyScene: RelicScene = { kind: 'image', src: '', kicker: '', body: '' }
 const current = computed<RelicScene>(() => scenes.value[props.index] ?? scenes.value[0] ?? emptyScene)
 
+const narrationActive = computed(() => narrationMode.value === 'audio' || narrationMode.value === 'speech')
+const captionText = computed(() => narrationSteps.value[stepIndex.value]?.caption || current.value.body)
+const captionTimings = computed(() => buildWordTimings(captionText.value, duration.value))
+const activeWord = computed(() => {
+  if (narrationMode.value === 'speech') return speechWord.value
+  if (narrationMode.value !== 'audio') return -1
+  return wordIndexAt(captionTimings.value, currentTime.value)
+})
+const showCaption = computed(() => narrationCaptions.value && narrationActive.value)
+
 const resetTyping = () => {
   clearTyping()
   typed.value = ''
@@ -64,6 +77,19 @@ watch(() => props.armed, (armed) => {
 
 watch(() => props.index, () => {
   if (props.armed) typeScene()
+}, { immediate: true })
+
+// Com narração, quem manda no texto é a legenda palavra-a-palavra.
+watch(narrationActive, (active) => {
+  if (active) {
+    clearTyping()
+    typed.value = ''
+    typing.value = false
+    emit('typing', false)
+  }
+  else if (props.armed) {
+    typeScene()
+  }
 }, { immediate: true })
 
 const onScroll = (): void => {
@@ -111,7 +137,13 @@ defineExpose({ goTo })
         <Transition name="swap" mode="out-in">
           <div :key="index">
             <p class="rsheet__kicker">{{ current.kicker }}</p>
-            <p class="rsheet__body" :aria-label="current.body">
+            <p v-if="showCaption" class="rsheet__body rsheet__body--narr" :aria-label="captionText">
+              <NarrationCaption :text="captionText" :active="activeWord" />
+            </p>
+            <p v-else-if="narrationActive" class="rsheet__body" :aria-label="captionText">
+              {{ captionText }}
+            </p>
+            <p v-else class="rsheet__body" :aria-label="current.body">
               {{ typed }}<span v-if="typing" class="rsheet__caret" aria-hidden="true" />
             </p>
           </div>
