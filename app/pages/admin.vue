@@ -29,6 +29,7 @@
           <div class="card__body">
             <p class="card__flags">
               <StatusBadge :status="relicStatus(relic)" />
+              <span v-if="relic.is_extra" class="card__draft">Extra</span>
               <span v-if="relic.published === false" class="card__draft">Rascunho</span>
             </p>
             <p class="card__mission">{{ relic.mission }}</p>

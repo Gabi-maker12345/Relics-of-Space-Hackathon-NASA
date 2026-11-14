@@ -39,6 +39,8 @@ export interface SeedRelic {
   published: boolean
   alt: string
   ratio: string
+  reference_url: string
+  is_extra: boolean
   facts: RelicFact[]
   media: SeedMedia[]
 }
@@ -106,6 +108,8 @@ export const relics: Relic[] = seed.map((entry) => {
     published: entry.published,
     status: entry.status,
     location: entry.location,
+    reference_url: entry.reference_url,
+    is_extra: entry.is_extra,
   })
 })
 

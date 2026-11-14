@@ -91,7 +91,7 @@ describe('demo seed', () => {
       'sojourner',
       'ingenuity',
       'apollo-lunar-roving-vehicle',
-      'lunokhod-1',
+      'surveyor-3',
       'voyager-1',
       'voyager-2',
       'pioneer-10',
@@ -104,5 +104,11 @@ describe('demo seed', () => {
   it('replaces facts and media by cascading from the relic rows', () => {
     expect(seedSql).toMatch(/delete from public\.relics/i)
     expect(migrationSql).toMatch(/references public\.relics\s*\(id\)[^,;]*on delete cascade/i)
+  })
+
+  it('adds official reference links and the extra flag', () => {
+    expect(migrationSql).toMatch(/add column reference_url text/i)
+    expect(migrationSql).toMatch(/add column is_extra boolean/i)
+    expect(seedSql).toMatch(/reference_url, is_extra/i)
   })
 })

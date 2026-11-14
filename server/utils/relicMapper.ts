@@ -237,13 +237,15 @@ export function mapDbToRelic(
     quiz: quizQuestions,
     warnings: options.includeWarnings ? buildWarnings(sortedMedia) : undefined,
     intro_audio_url: relic.intro_audio_url,
+    reference_url: relic.reference_url ?? null,
+    is_extra: relic.is_extra ?? false,
     published: relic.published,
   }
 }
 
 export type RelicPanelSource = Pick<
   RelicRow,
-  'slug' | 'name' | 'summary' | 'story_text' | 'status' | 'location' | 'mission' | 'ratio'
+  'slug' | 'name' | 'summary' | 'story_text' | 'status' | 'location' | 'mission' | 'ratio' | 'reference_url' | 'is_extra'
 >
 
 /**
@@ -284,6 +286,8 @@ export function mapDbToRelicPanel(
     facts: [...facts]
       .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
       .map(fact => ({ label: fact.label, value: fact.value })),
+    reference_url: relic.reference_url ?? null,
+    is_extra: relic.is_extra ?? false,
   }
 }
 

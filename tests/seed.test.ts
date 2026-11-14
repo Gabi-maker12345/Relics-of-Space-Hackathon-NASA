@@ -12,7 +12,7 @@ const expectedSlugs = [
   'sojourner',
   'ingenuity',
   'apollo-lunar-roving-vehicle',
-  'lunokhod-1',
+  'surveyor-3',
   'voyager-1',
   'voyager-2',
   'pioneer-10',
@@ -66,9 +66,13 @@ describe('relic seed dataset (BE-14)', () => {
       expect(relic.media.length, relic.slug).toBeGreaterThanOrEqual(1)
       expect(relic.media[0].type, relic.slug).toBe('image')
       expect(relic.ratio, relic.slug).toBe('16 / 9')
+      expect(relic.reference_url, relic.slug).toMatch(/^https:\/\//)
+      expect(typeof relic.is_extra, relic.slug).toBe('boolean')
       expect(['moon', 'mars', 'deep_space']).toContain(relic.location)
       expect(['active', 'silent', 'lost']).toContain(relic.status)
     }
+
+    expect(seed.filter(relic => relic.is_extra).map(relic => relic.slug)).toEqual(['voyager-1', 'voyager-2'])
   })
 
   it('attributes every media item to an official source', () => {
@@ -105,6 +109,8 @@ describe('relic seed dataset (BE-14)', () => {
       expect(relic.status).toBe(source.status)
       expect(relic.location).toBe(source.location)
       expect(relic.published).toBe(source.published)
+      expect(relic.reference_url).toBe(source.reference_url)
+      expect(relic.is_extra).toBe(source.is_extra)
       expect(relic.image).toBe(`/images/relics/${source.media[0].file}`)
       expect(relic.scenes).toHaveLength(source.media.length)
       expect(relic.scenes[0].is_cover).toBe(true)

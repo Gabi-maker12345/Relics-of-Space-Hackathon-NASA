@@ -56,10 +56,16 @@ for (const relic of dataset.relics) {
   if (seenSlugs.has(relic.slug)) fail(`duplicate slug: ${relic.slug}`)
   seenSlugs.add(relic.slug)
 
-  for (const field of ['name', 'mission', 'summary', 'story_text', 'alt']) {
+  for (const field of ['name', 'mission', 'summary', 'story_text', 'alt', 'reference_url']) {
     if (typeof relic[field] !== 'string' || relic[field].trim() === '') {
       fail(`${relic.slug}: missing ${field}`)
     }
+  }
+  if (!/^https?:\/\//i.test(relic.reference_url)) {
+    fail(`${relic.slug}: reference_url must be an http(s) URL`)
+  }
+  if (typeof relic.is_extra !== 'boolean') {
+    fail(`${relic.slug}: is_extra must be a boolean`)
   }
   if (!STATUSES.has(relic.status)) fail(`${relic.slug}: invalid status ${relic.status}`)
   if (!LOCATIONS.has(relic.location)) fail(`${relic.slug}: invalid location ${relic.location}`)
@@ -116,7 +122,7 @@ push(
   ');',
   '',
   'insert into public.relics',
-  '  (id, slug, name, mission, summary, story_text, status, location, published, alt, ratio)',
+  '  (id, slug, name, mission, summary, story_text, status, location, published, alt, ratio, reference_url, is_extra)',
   'values',
 )
 
@@ -134,6 +140,8 @@ const relicRows = dataset.relics.map(relic => [
     relic.published ? 'true' : 'false',
     sql(relic.alt),
     sql(relic.ratio || '16 / 9'),
+    sql(relic.reference_url),
+    relic.is_extra ? 'true' : 'false',
   ].join(', '),
   ')',
 ].join(''))

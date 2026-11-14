@@ -78,6 +78,11 @@
                   <span class="rform__label">Áudio de introdução <em>(opcional)</em></span>
                   <input v-model="draft.intro_audio_url" class="rform__input rform__input--mono" placeholder="/media/intro.mp3">
                 </label>
+
+                <label class="rform__field">
+                  <span class="rform__label">Fonte oficial <em>(opcional)</em></span>
+                  <input v-model="draft.reference_url" class="rform__input rform__input--mono" placeholder="https://science.nasa.gov/mission/...">
+                </label>
               </div>
             </section>
 
@@ -298,6 +303,10 @@
               <input v-model="draft.published" type="checkbox">
               <span>Publicada no arquivo</span>
             </label>
+            <label class="rform__publish">
+              <input v-model="draft.is_extra" type="checkbox">
+              <span>Fora do brief oficial</span>
+            </label>
             <span v-if="errors.general" class="rform__err">{{ errors.general }}</span>
             <div class="rform__actions">
               <button type="button" class="rform__cancel" @click="requestClose">Cancelar</button>
@@ -339,6 +348,8 @@ type Draft = {
   location: RelicLocation
   published: boolean
   intro_audio_url: string
+  reference_url: string
+  is_extra: boolean
   facts: RelicFact[]
   scenes: RelicScene[]
 }
@@ -356,6 +367,8 @@ const blank = (): Draft => ({
   location: 'moon',
   published: false,
   intro_audio_url: '',
+  reference_url: '',
+  is_extra: false,
   facts: [
     { label: '', value: '' },
     { label: '', value: '' },
@@ -409,6 +422,8 @@ watch(
       draft.status = props.relic.status ?? 'active'
       draft.location = props.relic.location ?? 'moon'
       draft.intro_audio_url = props.relic.intro_audio_url ?? ''
+      draft.reference_url = props.relic.reference_url ?? ''
+      draft.is_extra = props.relic.is_extra ?? false
       draft.scenes = props.relic.scenes.map(scene => ({
         ...scene,
         title: scene.title ?? '',
@@ -664,6 +679,8 @@ function save(): void {
     location: draft.location,
     published: draft.published,
     intro_audio_url: draft.intro_audio_url.trim() || undefined,
+    reference_url: draft.reference_url.trim() || undefined,
+    is_extra: draft.is_extra,
     facts,
     scenes,
   })

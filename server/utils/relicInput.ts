@@ -37,6 +37,15 @@ const sceneSchema = z.object({
   mute_video: z.boolean().optional(),
 })
 
+const referenceUrlSchema = z.string()
+  .trim()
+  .max(2048)
+  .refine(
+    value => value === '' || /^https?:\/\//i.test(value),
+    'A fonte oficial tem de ser um URL http(s).',
+  )
+  .optional()
+
 export const relicInputSchema = z.object({
   slug: slugSchema.optional(),
   name: z.string().trim().min(1, 'Dá um nome à relíquia.').max(160),
@@ -50,6 +59,8 @@ export const relicInputSchema = z.object({
   status: z.enum(['active', 'silent', 'lost']).optional(),
   location: z.enum(['moon', 'mars', 'deep_space']).optional(),
   intro_audio_url: z.string().optional(),
+  reference_url: referenceUrlSchema,
+  is_extra: z.boolean().optional(),
   facts: z.array(factSchema).optional(),
   scenes: z.array(sceneSchema).optional(),
 })
@@ -89,6 +100,8 @@ export function toRelicInsert(input: ParsedRelicInput, slug: string): RelicInser
     status: input.status ?? 'active',
     location: input.location ?? 'moon',
     intro_audio_url: input.intro_audio_url ?? null,
+    reference_url: input.reference_url || null,
+    is_extra: input.is_extra ?? false,
   }
 }
 
@@ -105,6 +118,8 @@ export function toRelicPatch(input: ParsedRelicPatch): RelicUpdate {
   if (input.status !== undefined) patch.status = input.status
   if (input.location !== undefined) patch.location = input.location
   if (input.intro_audio_url !== undefined) patch.intro_audio_url = input.intro_audio_url
+  if (input.reference_url !== undefined) patch.reference_url = input.reference_url || null
+  if (input.is_extra !== undefined) patch.is_extra = input.is_extra
   return patch
 }
 

@@ -16,7 +16,7 @@ Unit tests are pure Node tests — no Supabase stack required:
 | `tests/upload.test.ts` | Upload rules: kind/MIME/size validation, extension by MIME, `relicId` normalisation, storage path safety, and a guard that the bucket `allowed_mime_types` matches the rules in `server/utils/upload.ts`. |
 | `tests/relic-contract.test.ts` | The front↔API contract: mapper (`id` = slug, cover only from images, no audio fallback), input schema, column mapping (`tagline`→`summary`, `body`→`story_text`), one-field publish patch and the cover-must-be-a-scene rule. |
 | `tests/i18n.test.ts` | Language normalization (`en`, `pt-BR`, invalid → `pt`) and the translation payload schema (partial saves, UUIDs, quiz options, safe URLs). |
-| `tests/seed.test.ts` | The demo catalogue: 12 relics, unique ids/slugs, fact sheets, official media with credits/sources, every image present as a 1600×900 JPEG, and the SSR fallback matching `data/relics.json` (cover, scenes, steps). |
+| `tests/seed.test.ts` | The demo catalogue: 12 relics, unique ids/slugs, fact sheets, official media with credits/sources, every image present as a 1600×900 JPEG, `reference_url`/`is_extra` on every relic, and the SSR fallback matching `data/relics.json` (cover, scenes, steps). |
 | `tests/quiz.test.ts` | Quiz input/patch schemas (2–5 options, answer index in range, UUIDs for ordering) and the DTO guarantee: the public mapper omits `correct_index`, the admin mapper includes it. |
 | `tests/nasa.test.ts` | NASA client: credit normalization (`JPL` → `NASA/JPL-Caltech`, unknown creators preserved), image/video/poster selection, search normalization that filters audio, and clear 400/502 errors. |
 

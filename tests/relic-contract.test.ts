@@ -55,6 +55,8 @@ const relic = (overrides: Partial<RelicRow> = {}): RelicRow => ({
   intro_audio_url: '/media/intro.mp3',
   alt: 'Módulo lunar',
   ratio: '1376 / 768',
+  reference_url: 'https://science.nasa.gov/mission/apollo-11/',
+  is_extra: false,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
   ...overrides,
@@ -375,6 +377,8 @@ describe('public reading endpoints (BE-08)', () => {
         poster_url: null,
       },
       facts: [],
+      reference_url: 'https://science.nasa.gov/mission/apollo-11/',
+      is_extra: false,
     })
 
     // Confirms heavy fields are NOT exposed on the panel item

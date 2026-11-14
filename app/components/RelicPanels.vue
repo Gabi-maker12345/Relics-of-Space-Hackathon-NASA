@@ -119,6 +119,7 @@ const cardInset = (index: number) => {
             <span class="fr-step__meta">
               {{ LOCATION_LABEL[relicLocation(relic)] }}
               <StatusBadge :status="relicStatus(relic)" />
+              <span v-if="relic.is_extra" class="fr-step__extra">Extra</span>
             </span>
           </p>
           <h3 :id="`relic-${relic.id}`" class="fr-serif fr-step__title">{{ relic.name }}</h3>
