@@ -129,10 +129,15 @@ const progress = computed(() => (index.value + 1) / sceneCount.value)
 const hasQuiz = computed(() => (relic.value?.quiz?.length ?? 0) > 0)
 const atLastScene = computed(() => index.value >= sceneCount.value - 1)
 
-// FE-20: chegar ao último degrau do diário marca a relíquia no passaporte
-watch([atLastScene, relic], ([last, current]) => {
-  if (last && current) mark(current.id)
-}, { immediate: true })
+// FE-20: só marca ao chegar ao último degrau — e depois de o diário estar
+// armado. Sem o guard de `scenes`, a lista leve (sem cenas) dava
+// `sceneCount = 1` e a relíquia era marcada mal o modal abria.
+watch([index, relic, armed], ([position, current, ready]) => {
+  if (!current || !ready) return
+  const total = current.scenes?.length ?? 0
+  if (total === 0) return
+  if (position >= total - 1) mark(current.id)
+})
 
 const step = (direction: number): void => {
   const next = Math.min(sceneCount.value - 1, Math.max(0, index.value + direction))
