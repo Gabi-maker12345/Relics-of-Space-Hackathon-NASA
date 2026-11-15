@@ -51,10 +51,10 @@ const secondStyle = computed(() => ({
 </script>
 
 <template>
-  <section id="top" ref="section" class="fr-hero" aria-label="Space Relics">
+  <section id="top" ref="section" class="fr-hero" aria-label="Zénite">
     <div class="fr-hero__sticky">
       <div class="fr-hero__layer" :style="firstStyle">
-        <h1 class="fr-serif fr-hero__title">Space Relics</h1>
+        <h1 class="fr-serif fr-hero__title">Zénite</h1>
         <p class="fr-hero__deck">{{ t('hero.deck') }}</p>
       </div>
 

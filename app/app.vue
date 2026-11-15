@@ -3,6 +3,7 @@
     <a class="skip-link" href="#main">{{ t('a11y.skip') }}</a>
     <CosmosBackground />
     <GlCanvas />
+    <ZenitePreloader />
     <ForgeHeader />
     <main id="main" class="site__main" tabindex="-1">
       <NuxtPage />

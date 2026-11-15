@@ -128,7 +128,7 @@ export const missionMarquee = [
 ]
 
 export const heroCopy = {
-  title: 'Space Relics',
+  title: 'Zénite',
   deck: 'Um arquivo vivo das máquinas que a humanidade deixou na Lua, em Marte e no espaço profundo.',
   phaseTwo: 'Abandonados, mas não esquecidos.',
   phaseTwoDeck: 'Cada relíquia guarda um diário de missão. Desça para ouvir o que elas têm para contar.',

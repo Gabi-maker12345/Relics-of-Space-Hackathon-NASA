@@ -1,4 +1,4 @@
-# Space Relics
+# Zénite
 
 > *Abandonados, mas não esquecidos.*
 
@@ -360,7 +360,7 @@ o `path`/`publicUrl` na relíquia. Os limites (imagem 5 MB, áudio 15 MB, vídeo
 
 ## English summary
 
-Space Relics is a Nuxt 4 + Three.js museum of abandoned space hardware. The
+Zénite is a Nuxt 4 + Three.js museum of abandoned space hardware. The
 backend is Supabase (Postgres, Auth, Storage); Nitro API routes in `server/`
 enforce validation and admin authorization. The browser uses the public anon key
 under RLS, while the service role key stays server-side. One branch and one PR

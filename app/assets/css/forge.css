@@ -137,22 +137,19 @@
   pointer-events: auto;
 }
 
-.fr-logo img {
+.fr-logo {
+  /* slot medido pelo preloader: a logo voa para este rect */
+  --logo-w: clamp(110px, 11vw, 170px);
+  width: min(var(--logo-w), calc((var(--fr-header) - 20px) * 1.36));
+  aspect-ratio: 1.36;
+}
+
+.fr-logo img,
+.fr-logo svg.zenite-logo {
   display: block;
-  height: 26px;
-  width: auto;
-}
-
-@media (min-width: 420px) {
-  .fr-logo img {
-    height: 30px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .fr-logo img {
-    height: 32px;
-  }
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .fr-nav {

@@ -183,8 +183,8 @@ onBeforeUnmount(() => {
 
 <template>
   <header class="fr-header fr">
-    <NuxtLink to="/" class="fr-logo" :aria-label="`Space Relics — ${t('nav.home')}`" @click="onLogoClick">
-      <img src="/images/nasa-logo-480.webp" alt="NASA" width="480" height="140" decoding="async" />
+    <NuxtLink id="logo-slot" to="/" class="fr-logo" :aria-label="`Zénite — ${t('nav.home')}`" @click="onLogoClick">
+      <img src="/images/zenite-logo-animavel.svg" alt="Zénite" width="498" height="366" decoding="async" />
     </NuxtLink>
 
     <div class="fr-nav">
