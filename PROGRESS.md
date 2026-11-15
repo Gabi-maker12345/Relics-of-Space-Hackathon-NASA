@@ -1176,9 +1176,10 @@ diário aberto pelo cartão.
 - Cópias do carrossel (chat abrir/fechar) re-entram no GL (`enterAll`) — os
   painéis já não ficam invisíveis; contador de exploradas mostra "A carregar…".
 
-## Iteração 62 — domínio zenite.vercel.app, docs e inglês por omissão
+## Iteração 62 — domínio real, docs e inglês por omissão
 
-- Canonical/OG e deploy: **https://zenite.vercel.app**; og:image absoluto.
+- Canonical/OG/deploy: **https://relics-of-space.vercel.app**; og:image absoluto.
+  (`zenite.vercel.app` está ocupado por outro projeto Vercel — não é deste site.)
 - Idioma por omissão **inglês** (o PT/EN do header guarda a escolha); hero e
   secção do arquivo traduzidos; título/descrição/OG em inglês.
 - Docs atualizados (README funcionalidades/API/idiomas/deploy, DEPENDENCIES
