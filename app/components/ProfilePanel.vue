@@ -255,8 +255,11 @@ async function submit(): Promise<void> {
 
 .portal__logo img {
   display: block;
-  width: min(190px, 58%);
+  width: 190px;
+  max-width: 100%;
   height: auto;
+  aspect-ratio: 958 / 693;
+  object-fit: contain;
   filter: drop-shadow(0 10px 28px rgb(0 0 0 / 0.35));
 }
 
@@ -516,7 +519,7 @@ async function submit(): Promise<void> {
   }
 
   .portal__logo img {
-    width: min(160px, 52%);
+    width: 150px;
   }
 
   .portal__row {
