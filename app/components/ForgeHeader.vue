@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { scrollToElement, setSmoothScrollEnabled } from '~/composables/useSmoothScroll'
 
-const { toggle: togglePanel } = usePanels()
+const { active: panelActive, toggle: togglePanel } = usePanels()
 const { act, reset } = useAct()
 const { user } = useAuth()
 const { lang, toggle: toggleLang } = useLocale()
@@ -275,7 +275,7 @@ onBeforeUnmount(() => {
           v-else
           type="button"
           class="fr-menu__util"
-          :aria-expanded="false"
+          :aria-expanded="panelActive === 'profile'"
           aria-controls="profile-panel"
           @click="openProfile"
         >{{ t('nav.enter') }}</button>

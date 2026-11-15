@@ -192,6 +192,7 @@ export const glslCardFragment = /* glsl */ `
 uniform sampler2D uMap;
 uniform float uOpacity;
 uniform float uAlpha;
+uniform float uMapFade;  // fade da textura quando a capa carrega
 uniform float uRadiusPx;
 uniform vec2 uRes;
 uniform float uShade;   // depth-shade strength (1 nos cards do strip)
@@ -229,7 +230,7 @@ void main() {
 
 	col = mix(col, vec3(1.0), uWhite);
 
-	float alpha = mask * uOpacity * uAlpha * sampled.a;
+	float alpha = mask * uOpacity * uAlpha * sampled.a * uMapFade;
 	if (alpha <= 0.002) discard;
 	gl_FragColor = vec4(col, alpha);
 }`

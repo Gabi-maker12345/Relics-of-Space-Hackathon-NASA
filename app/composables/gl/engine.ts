@@ -50,6 +50,7 @@ type EngineUniforms = {
   uMap: { value: THREE.Texture | null }
   uOpacity: { value: number }
   uAlpha: { value: number }
+  uMapFade: { value: number }
   uRadiusPx: { value: number }
   uRes: { value: THREE.Vector2 }
   uShade: { value: number }
@@ -101,6 +102,10 @@ type Plane = {
   lift: number
   scaleBridge: { x: number; y: number }
   hover: number
+  /** Fade da textura (cards): 0 até a capa carregar, depois 1. */
+  mapFade: number
+  /** Estilos computados em cache (só planos do carrossel). */
+  stylesCache: { opacity: number; display: string; visibility: string } | null
 }
 
 function planeUniforms(texture: THREE.Texture): EngineUniforms {
@@ -108,6 +113,7 @@ function planeUniforms(texture: THREE.Texture): EngineUniforms {
     uMap: { value: texture },
     uOpacity: { value: 0 },
     uAlpha: { value: 1 },
+    uMapFade: { value: 1 },
     uRadiusPx: { value: 0 },
     uRes: { value: new THREE.Vector2(1, 1) },
     uShade: { value: 0 },
@@ -238,6 +244,15 @@ export class GlEngine {
   private chatStage = { scale: 1, height: 0 }
   private stageRect = { top: 0, bottom: 0 }
   private filterBarBottom = 0
+  /** Elementos/probes de layout medidos a ~8 Hz, não a cada frame. */
+  private layoutProbedAt = 0
+  private sceneEl: HTMLElement | null = null
+  private barEl: HTMLElement | null = null
+  private barVisible = false
+  /** Estado por frame lido uma vez: ato, chat e estilos do track. */
+  private actName = ''
+  private chatOpenFlag = false
+  private stylesDirty = true
   private glMask = ''
   private bootPromise: Promise<void> | null = null
   private bootedResolve: (() => void) | null = null
@@ -548,8 +563,23 @@ export class GlEngine {
     if (this.bootPromise) return this.bootPromise
     this.startRenderer(canvas)
     this.onResize()
-    this.observer = new MutationObserver(() => this.queueScan())
-    this.observer.observe(document.body, { childList: true, subtree: true, characterData: true })
+    this.observer = new MutationObserver((records) => {
+      let needsScan = false
+      for (const record of records) {
+        // Classes/estilos mudam os estilos computados dos planos do carrossel:
+        // invalida só a cache, sem reconstruir as malhas.
+        if (record.type === 'attributes') this.stylesDirty = true
+        else needsScan = true
+      }
+      if (needsScan) this.queueScan()
+    })
+    this.observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['class', 'style'],
+    })
     window.addEventListener('resize', this.onResize)
     window.addEventListener('focusin', this.onFocusIn)
     this.startLoop()
@@ -631,7 +661,14 @@ export class GlEngine {
     // subdivisão: o dente do hover (dome por vértice) precisa de interpolação
     const geometry = new THREE.PlaneGeometry(1, 1, 24, 24)
     const textureSource = kind === 'card' ? this.textureForCard(el) : canvasTexture
+    // Só os cards com capa remota e ainda por carregar entram em fade.
+    const cardKey = kind === 'card' ? el.getAttribute('data-texture') ?? '' : ''
+    const cardPending = kind === 'card'
+      && textureSource === this.emptyTexture
+      && /^(?:https?:|data:image\/|\/)/.test(cardKey)
+    const mapFade = cardPending ? 0 : 1
     const uniforms = planeUniforms(textureSource)
+    if (mapFade < 1) uniforms.uMapFade.value = 0
     const material = new THREE.ShaderMaterial({
       vertexShader: glslCardVertex,
       fragmentShader: glslCardFragment,
@@ -659,7 +696,7 @@ export class GlEngine {
       canvas,
       context2d,
       canvasTexture,
-      mappedTexture: kind === 'card' ? textureSource : null,
+      mappedTexture: kind === 'card' && textureSource !== this.emptyTexture ? textureSource : null,
       text: {
         lines: [],
         fontSpec: readFontSpec(el, this.crispDpr()),
@@ -676,6 +713,8 @@ export class GlEngine {
       lift: 0,
       scaleBridge: { x: 1, y: 1 },
       hover: 0,
+      mapFade,
+      stylesCache: null,
     }
     if (kind === 'bar') {
       plane.uniforms.uOpacity.value = 1
@@ -1133,7 +1172,7 @@ export class GlEngine {
     this.rafId = requestAnimationFrame(tick)
     // aba em segundo plano tem RAF throttled: pump de 100ms segura o clock
     this.stallTimer = window.setInterval(() => {
-      if (this.disposed) return
+      if (this.disposed || document.hidden) return
       const idle = performance.now() - this.lastTickAt
       if (idle > 300) {
         this.tick()
@@ -1146,11 +1185,10 @@ export class GlEngine {
    * do fundo da barra (transparente em cima, fade curto, visível em baixo).
    * Assim os painéis "desaparecem" na barra em vez de a atravessarem.
    */
-  private applyBarMask(bar: HTMLElement | null): void {
+  private applyBarMask(): void {
     const canvas = this.renderer?.domElement ?? null
     if (canvas === null) return
-    const scene = document.querySelector('.gate.is-scene') !== null
-    const visible = bar !== null && scene && getComputedStyle(bar).visibility !== 'hidden' && bar.getBoundingClientRect().width > 0
+    const visible = this.barVisible && this.sceneEl !== null
     const mask = visible
       ? `linear-gradient(to bottom, transparent 0px, transparent ${Math.round(this.filterBarBottom - 8)}px, #000 ${Math.round(this.filterBarBottom + 28)}px, #000 100%)`
       : 'none'
@@ -1162,22 +1200,15 @@ export class GlEngine {
 
   private tick(): void {
     const renderer = this.renderer
-    if (!renderer) return
+    if (!renderer || document.hidden) return
     this.lastTickAt = performance.now()
     this.sheetClock = this.lastTickAt / 1000
     this.updateSheetVelocity()
     this.runTweens(this.lastTickAt)
     this.runMarks(this.lastTickAt)
     this.advanceCarousel()
-    const scene = document.querySelector<HTMLElement>('.gate.is-scene .gate__scene')
-    if (scene !== null) {
-      const r = scene.getBoundingClientRect()
-      this.stageRect.top = r.top
-      this.stageRect.bottom = r.bottom
-    }
-    const bar = document.querySelector<HTMLElement>('.gate-filters .fr-filters')
-    this.filterBarBottom = bar !== null ? bar.getBoundingClientRect().bottom : 0
-    this.applyBarMask(bar)
+    this.syncSceneState()
+    this.probeLayout()
     for (const plane of this.planes) {
       if (plane.kind === 'text' && plane.dirty) {
         this.buildTextCanvas(plane)
@@ -1186,11 +1217,60 @@ export class GlEngine {
       }
       this.syncPlane(plane)
     }
+    this.stylesDirty = false
     this.trackJump = 0
     this.syncHole()
     this.syncFloor()
     this.updateBall()
     renderer.render(this.scene, this.camera)
+  }
+
+  /**
+   * Ato e chat mudam os estilos computados dos planos do carrossel; ler uma vez
+   * por frame evita o `classList.contains` e invalida a cache só na mudança.
+   */
+  private syncSceneState(): void {
+    const act = document.documentElement.dataset.act ?? ''
+    const chatOpen = document.documentElement.classList.contains('chat-open')
+    if (act === this.actName && chatOpen === this.chatOpenFlag) return
+    this.actName = act
+    this.chatOpenFlag = chatOpen
+    this.stylesDirty = true
+  }
+
+  /**
+   * Rect da cena / barra: mudam com transições CSS de ~0,4 s, não a 60 fps.
+   * Uma leitura a cada 120 ms chega e evita dois getBoundingClientRect +
+   * getComputedStyle por frame. Os elementos são memorizados enquanto ligados.
+   */
+  private probeLayout(): void {
+    if (this.lastTickAt - this.layoutProbedAt < 120) return
+    this.layoutProbedAt = this.lastTickAt
+    const cachedScene = this.sceneEl
+    const scene = cachedScene !== null && cachedScene.isConnected
+      ? cachedScene
+      : document.querySelector<HTMLElement>('.gate.is-scene .gate__scene')
+    this.sceneEl = scene
+    if (scene !== null) {
+      const r = scene.getBoundingClientRect()
+      this.stageRect.top = r.top
+      this.stageRect.bottom = r.bottom
+    }
+    const cachedBar = this.barEl
+    const bar = cachedBar !== null && cachedBar.isConnected
+      ? cachedBar
+      : document.querySelector<HTMLElement>('.gate-filters .fr-filters')
+    this.barEl = bar
+    if (bar !== null) {
+      const r = bar.getBoundingClientRect()
+      this.filterBarBottom = r.bottom
+      this.barVisible = r.width > 0 && getComputedStyle(bar).visibility !== 'hidden'
+    }
+    else {
+      this.filterBarBottom = 0
+      this.barVisible = false
+    }
+    this.applyBarMask()
   }
 
   /**
@@ -1362,11 +1442,33 @@ export class GlEngine {
     const anchor = plane.kind === 'text'
       ? { w: plane.text.canvasWidth, h: plane.text.canvasHeight }
       : { w: rect.width, h: rect.height }
-    const styles = getComputedStyle(plane.el)
+    // Planos do carrossel releem estilos só quando algo mudou (ato, chat ou
+    // mutação de classe/estilo); painéis fora do track leem sempre.
+    let elOpacity: number
+    let styleDisplay: string
+    let styleVisibility: string
+    if (this.isInTrack(plane.el)) {
+      if (this.stylesDirty || plane.stylesCache === null) {
+        const styles = getComputedStyle(plane.el)
+        plane.stylesCache = {
+          opacity: parseFloat(styles.opacity) || 1,
+          display: styles.display,
+          visibility: styles.visibility,
+        }
+      }
+      elOpacity = plane.stylesCache.opacity
+      styleDisplay = plane.stylesCache.display
+      styleVisibility = plane.stylesCache.visibility
+    }
+    else {
+      const styles = getComputedStyle(plane.el)
+      elOpacity = parseFloat(styles.opacity) || 1
+      styleDisplay = styles.display
+      styleVisibility = styles.visibility
+    }
     const hiddenByGroup = plane.group ? !this.isShieldOpen(plane.group) : false
-    const elOpacity = parseFloat(styles.opacity) || 1
     // Com o chat aberto os cartões entram por uma borda superior suave.
-    const chatOpen = document.documentElement.classList.contains('chat-open')
+    const chatOpen = this.chatOpenFlag
     // A barra é o limite: o canvas GL é mascarado no fundo da barra (fade
     // screen-space), por isso não é preciso esmaecer plano a plano no topo.
     let topFade = 1
@@ -1382,7 +1484,7 @@ export class GlEngine {
     const hideTrack = chatOpen && this.viewport.w < 1024 && this.isInTrack(plane.el)
     const glOwned = plane.el.hasAttribute('data-gl') || plane.el.hasAttribute('data-title')
     const invisClass = plane.el.classList.contains('invisible')
-    const domHidden = styles.display === 'none' || (styles.visibility === 'hidden' && !glOwned) || (invisClass && plane.kind === 'text')
+    const domHidden = styleDisplay === 'none' || (styleVisibility === 'hidden' && !glOwned) || (invisClass && plane.kind === 'text')
     const visibility = domHidden ? 0 : hiddenByGroup ? 0 : 1
     // o portal escurece os cards e o piso; títulos/pills seguem visíveis
     const inStrip = plane.group === null && this.isInTrack(plane.el)
@@ -1395,6 +1497,12 @@ export class GlEngine {
       uniforms.uOpacity.value = 0
     } else {
       uniforms.uOpacity.value += (targetOpacity - uniforms.uOpacity.value) * FOLLOW_LERP
+    }
+    // A capa carregou: entra em fade em vez de "saltar" sobre o card.
+    if (plane.kind === 'card' && plane.mapFade < 1 && plane.mappedTexture !== null) {
+      plane.mapFade = Math.min(1, plane.mapFade + (1 - plane.mapFade) * 0.16)
+      if (plane.mapFade >= 0.995) plane.mapFade = 1
+      uniforms.uMapFade.value = plane.mapFade
     }
     plane.mesh.scale.set(anchor.w * plane.scaleBridge.x, anchor.h * plane.scaleBridge.y, 1)
     const worldX = rect.left + rect.width / 2 - this.viewport.w / 2

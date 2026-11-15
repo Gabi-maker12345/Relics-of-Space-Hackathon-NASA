@@ -132,18 +132,22 @@ onBeforeUnmount(() => {
 
 <template>
   <Teleport to="body">
-    <button
-      v-if="!open"
-      type="button"
-      class="chat-fab"
-      :aria-label="t('chat.open')"
-      @click="openChat"
-    >
-      <svg class="chat-fab__spark" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 3.5l1.7 5.1a4 4 0 0 0 2.6 2.6l5.2 1.7-5.2 1.7a4 4 0 0 0-2.6 2.6L12 22.3l-1.7-5.1a4 4 0 0 0-2.6-2.6L2.5 12.9l5.2-1.7a4 4 0 0 0 2.6-2.6L12 3.5Z" />
-      </svg>
-      <span>{{ t('chat.fab') }}</span>
-    </button>
+    <!-- type=transition: a animação infinita do glow faria o Vue esperar o
+         animationend (3 s) e o bot deixava de estar no DOM tarde demais. -->
+    <Transition name="chat-fab-fade" type="transition">
+      <button
+        v-if="!open"
+        type="button"
+        class="chat-fab"
+        :aria-label="t('chat.open')"
+        @click="openChat"
+      >
+        <svg class="chat-fab__spark" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3.5l1.7 5.1a4 4 0 0 0 2.6 2.6l5.2 1.7-5.2 1.7a4 4 0 0 0-2.6 2.6L12 22.3l-1.7-5.1a4 4 0 0 0-2.6-2.6L2.5 12.9l5.2-1.7a4 4 0 0 0 2.6-2.6L12 3.5Z" />
+        </svg>
+        <span>{{ t('chat.fab') }}</span>
+      </button>
+    </Transition>
 
     <Transition name="chat-panel">
       <aside v-if="open" class="chat" role="dialog" :aria-label="t('chat.title')">
@@ -409,6 +413,7 @@ onBeforeUnmount(() => {
   border-radius: 14px;
   font-size: 13px;
   line-height: 1.5;
+  animation: chat-msg-in 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .chat__msg p {
@@ -444,6 +449,7 @@ onBeforeUnmount(() => {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgb(242 241 237 / 0.5);
+  animation: chat-msg-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .chat__typing span {
@@ -475,6 +481,26 @@ onBeforeUnmount(() => {
   50% {
     opacity: 1;
   }
+}
+
+@keyframes chat-msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.chat-fab-fade-enter-active {
+  transition: opacity 0.26s ease;
+}
+
+.chat-fab-fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.chat-fab-fade-enter-from,
+.chat-fab-fade-leave-to {
+  opacity: 0;
 }
 
 .chat__error {
@@ -608,6 +634,16 @@ onBeforeUnmount(() => {
   .chat-fab__spark,
   .chat__typing span {
     animation: none;
+  }
+
+  .chat__msg,
+  .chat__typing {
+    animation: none;
+  }
+
+  .chat-fab-fade-enter-active,
+  .chat-fab-fade-leave-active {
+    transition: none;
   }
 }
 </style>

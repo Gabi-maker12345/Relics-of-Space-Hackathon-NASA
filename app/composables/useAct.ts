@@ -1,4 +1,5 @@
 import { getSmoothScroll } from './useSmoothScroll'
+import { usePanels } from './usePanels'
 
 export type Act = 'page' | 'cosmos' | 'scene'
 
@@ -10,6 +11,7 @@ let wired = false
  */
 export function useAct() {
   const act = useState<Act>('act', () => 'page')
+  const panelActive = usePanels().active
 
   const lockPage = (locked: boolean) => {
     if (!import.meta.client) return
@@ -102,8 +104,15 @@ export function useAct() {
         return
       }
       if (event.key !== 'Escape' || act.value === 'page') return
-      // com um diário aberto, o Escape pertence ao modal (fecha-o primeiro)
+      // O Escape pertence sempre à camada de topo: login, menu, chat, filtros
+      // abertos, painel de info da relíquia ou diário. Só quando nada disto
+      // está aberto é que a cena 3D recua para o arquivo.
+      if (panelActive.value !== null) return
       if (document.querySelector('[data-modal]')) return
+      if (document.documentElement.classList.contains('is-menu-open')) return
+      if (document.documentElement.classList.contains('chat-open')) return
+      if (document.querySelector('.fr-filters.is-open')) return
+      if (document.querySelector('#relic-info.is-open')) return
       back()
     })
   }

@@ -1,4 +1,5 @@
 let wiredClient = false
+let lastFocused: HTMLElement | null = null
 
 /**
  * Estado do painel de acesso. O login é DOM puro (sem o antigo "hole"/anel GL
@@ -14,8 +15,34 @@ export function usePanels() {
     document.documentElement.dataset.panel = next ?? ''
   }
 
+  /**
+   * Devolve o foco ao elemento que abriu o painel. O gatilho pode ter
+   * desaparecido (o menu fecha ao abrir o login), por isso o burger do
+   * cabeçalho serve de fallback visível.
+   */
+  const restoreFocus = (): void => {
+    const target = lastFocused
+    lastFocused = null
+    if (typeof document === 'undefined') return
+    const focusable = (el: HTMLElement | null): el is HTMLElement => {
+      if (!el || !el.isConnected || el.getClientRects().length === 0) return false
+      // O menu fechado fica `visibility: hidden`: o focus() falhava em silêncio.
+      return typeof el.checkVisibility === 'function'
+        ? el.checkVisibility({ visibilityProperty: true, opacityProperty: true })
+        : true
+    }
+    if (focusable(target)) {
+      target.focus({ preventScroll: true })
+      return
+    }
+    document.querySelector<HTMLElement>('.fr-burger')?.focus({ preventScroll: true })
+  }
+
   const open = (name: Exclude<PanelName, null>): void => {
     if (active.value === name) return
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      lastFocused = document.activeElement
+    }
     active.value = name
     applyEngine(name)
   }
@@ -24,6 +51,7 @@ export function usePanels() {
     if (active.value === null) return
     active.value = null
     applyEngine(null)
+    restoreFocus()
   }
 
   const toggle = (name: Exclude<PanelName, null>): void => {
@@ -35,7 +63,10 @@ export function usePanels() {
     wiredClient = true
 
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape' && active.value !== null) close()
+      if (e.key === 'Escape' && active.value !== null) {
+        e.preventDefault()
+        close()
+      }
     }
     const onDown = (e: PointerEvent): void => {
       if (active.value === null) return

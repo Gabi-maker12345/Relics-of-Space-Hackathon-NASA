@@ -3,14 +3,14 @@
     <div v-if="active === 'profile'" class="portal__veil" aria-hidden="true" />
   </Teleport>
 
-  <div class="portal" :class="active === 'profile' ? 'is-open' : ''">
+  <div id="profile-panel" class="portal" :class="active === 'profile' ? 'is-open' : ''" :inert="active !== 'profile'">
     <div
       data-gl-shield
       data-shield="profile"
       class="portal__inner"
       :class="active === 'profile' ? '' : 'pointer-events-none'"
     >
-      <section class="portal__card" role="dialog" aria-modal="true" aria-labelledby="portal-title">
+      <section ref="cardEl" class="portal__card" role="dialog" aria-modal="true" aria-labelledby="portal-title" @keydown="onCardKeydown">
         <div class="portal__logo" aria-hidden="true">
           <img src="/images/zenite-logo-web.png" alt="" width="958" height="693" decoding="async">
         </div>
@@ -25,6 +25,7 @@
             </span>
             <span class="sr-only">{{ t('login.email') }}</span>
             <input
+              ref="emailEl"
               v-model="email"
               type="email"
               name="email"
@@ -40,6 +41,7 @@
             </span>
             <span class="sr-only">{{ t('login.password') }}</span>
             <input
+              ref="passwordEl"
               v-model="password"
               :type="reveal ? 'text' : 'password'"
               name="password"
@@ -107,6 +109,38 @@ const reveal = ref(false)
 const remember = ref(true)
 const sending = ref(false)
 
+const cardEl = ref<HTMLElement | null>(null)
+const emailEl = ref<HTMLInputElement | null>(null)
+const passwordEl = ref<HTMLInputElement | null>(null)
+
+/** Foco inicial no campo útil: password se o email já está preenchido. */
+watch(() => active.value, async (name) => {
+  if (name !== 'profile') return
+  await nextTick()
+  const target = email.value.trim().length > 0 ? passwordEl.value : emailEl.value
+  target?.focus({ preventScroll: true })
+})
+
+/** Tab fica preso ao diálogo (o painel é modal). */
+function onCardKeydown(event: KeyboardEvent): void {
+  if (event.key !== 'Tab' || !cardEl.value) return
+  const focusables = Array.from(
+    cardEl.value.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled])'),
+  ).filter(el => el.getClientRects().length > 0)
+  if (focusables.length === 0) return
+  const first = focusables[0]!
+  const last = focusables[focusables.length - 1]!
+  const current = document.activeElement
+  if (event.shiftKey && (current === first || !cardEl.value.contains(current))) {
+    event.preventDefault()
+    last.focus()
+  }
+  else if (!event.shiftKey && current === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
 const forgotHref = computed(
   () => `mailto:contacto@zenite.team?subject=${encodeURIComponent(`Zénite — ${t('login.forgot')}`)}`,
 )
@@ -153,21 +187,23 @@ async function submit(): Promise<void> {
   width: min(460px, calc(100vw - 32px));
   transform: translate(-50%, -50%);
   opacity: 0;
-  visibility: hidden;
+  /* `inert` (no template) tira o painel fechado do foco e dos cliques; a
+     visibility não transita, senão o foco imediato no campo era recusado. */
   pointer-events: none;
-  transition: opacity 0.45s ease, visibility 0.45s ease;
+  transition: opacity 0.45s ease;
 }
 
 .portal.is-open {
   opacity: 1;
-  visibility: visible;
   pointer-events: auto;
 }
 
 .portal__veil {
   position: fixed;
   inset: 0;
-  z-index: 15;
+  /* Acima do cabeçalho (70) e do bot do chat (96): o login é modal a sério,
+     o resto da página não recebe cliques. Abaixo do cartão (110). */
+  z-index: 105;
   /* Fundo transparente: o cosmos/página fica visível; o véu só apanha o
      clique fora (o vidro do cartão é que faz o blur). */
   background: transparent;
@@ -506,6 +542,13 @@ async function submit(): Promise<void> {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal,
+  .portal__card {
+    transition: none;
+  }
 }
 
 @media (max-width: 520px) {

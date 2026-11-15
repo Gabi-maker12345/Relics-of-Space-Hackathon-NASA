@@ -1186,3 +1186,37 @@ diário aberto pelo cartão.
 - Docs atualizados (README funcionalidades/API/idiomas/deploy, DEPENDENCIES
   atual); beta `space-relics/`, `SPACE_RELICS.md`, `CLONE.md` e
   artefactos Next removidos.
+
+## Iteração 63 — fluidez entre rotas, login modal e custo do engine GL
+
+Auditoria em produção (zenitte.vercel.app): consola limpa, DCL 779 ms/load
+798 ms, 24 recursos e capas lazy; o custo estava no engine (1160
+`getComputedStyle`/s na cena) e nas transições inexistentes entre rotas.
+
+- **Transições de página**: Nuxt `pageTransition` out-in (landing ↔ /admin)
+  com fade de 0,32 s em `motion.css`; só opacidade, para não reposicionar os
+  elementos `fixed` do root. Reduced-motion desliga.
+- **Login**: Escape em camadas (painel, menu, chat, filtros abertos, info da
+  relíquia e diário) — antes fechava o login *e* a cena 3D; foco inicial no
+  campo útil (password se o email está guardado), Tab preso ao diálogo,
+  foco devolvido ao gatilho (fallback no burger) e `inert` no painel fechado.
+  Véu do login a z-index 105: o cabeçalho e o bot do chat deixam de ser
+  clicáveis por cima (elementFromPoint = véu).
+- **Imagens**: `RelicCover` com fade-in (inclui o caso já carregado antes da
+  hidratação); capas GL dos cards com `uMapFade` no shader (a textura entra em
+  fade em vez de aparecer de repente).
+- **Chat**: mensagens e indicador "a pensar" com entrada animada; bot FAB com
+  `<Transition type="transition">` (a animação infinita do glow fazia o Vue
+  esperar 3 s pelo `animationend` e deixar o bot morto no DOM).
+- **Engine GL**: cache dos estilos computados dos planos do carrossel,
+  invalidada por ato/chat e por mutações de classe/estilo observadas
+  (1160 → 7 `getComputedStyle`/s na cena); rect da cena/barra medido a ~8 Hz
+  em vez de 2 `getBoundingClientRect` + 1 `getComputedStyle` por frame;
+  tick e pump de 100 ms ignoram a aba oculta.
+- Verificado no dev: Escape fecha só o login (cena mantém-se), foco no
+  password, Tab do submit volta ao email, FAB removido em ~0,2 s, mensagem com
+  `chat-msg-in`, classes `page-leave/enter` a 129085/129445 ms, capas
+  `is-loaded` a opacity 1. Unit 159/159, typecheck e lint limpos.
+- Próximo: os ~1281 `getBoundingClientRect`/s dos planos do track (derivar do
+  transform do carrossel), dormir o render quando nada se move, streaming do
+  chat, preloader e ficha/mobile.

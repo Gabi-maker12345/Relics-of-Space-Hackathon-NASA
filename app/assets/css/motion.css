@@ -1,0 +1,27 @@
+/*
+ * Movimento global — transições de página.
+ *
+ * O Nuxt troca a rota sem animar: o login fechava e o /admin "aparecia" de
+ * imediato. Aqui o conteúdo faz fade cruzado (out-in) com o cabeçalho fixo a
+ * persistir. Só opacidade: um transform no root da página reposicionaria os
+ * elementos `fixed` que vivem lá dentro (menu, toast) durante a transição.
+ */
+.page-enter-active {
+  transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.page-leave-active {
+  transition: opacity 0.16s ease;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-active,
+  .page-leave-active {
+    transition: none;
+  }
+}

@@ -11,7 +11,7 @@ export default defineNuxtConfig({
   // default bind; `nuxt dev --host 0.0.0.0` still overrides it.
   devServer: { host: '127.0.0.1' },
   modules: ['@nuxtjs/supabase', '@nuxt/eslint'],
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css', '~/assets/css/motion.css'],
   vite: { plugins: [tailwindcss()] },
   // Auth is enforced by route handlers and by the /admin page guard.
   // The module's automatic redirect is disabled so the existing admin panel
@@ -26,6 +26,8 @@ export default defineNuxtConfig({
     },
   },
   app: {
+    // Fade cruzado entre rotas (landing <-> /admin); o CSS vive em motion.css.
+    pageTransition: { name: 'page', mode: 'out-in' },
     head: {
       title: 'Zénite — abandoned, but not forgotten',
       script: [
