@@ -866,7 +866,7 @@ export class GlEngine {
   private measureTrack(): void {
     const el = this.trackEl
     if (!el) return
-    const mobile = window.innerWidth < 650
+    const mobile = window.innerWidth < 650 || document.documentElement.classList.contains('chat-open')
     this.carousel.axis = mobile ? 'y' : 'x'
     const cards = Array.from(el.querySelectorAll<HTMLElement>('[data-gl="card"]'))
     const first = cards[0]
@@ -1190,6 +1190,25 @@ export class GlEngine {
     }
   }
 
+  /**
+   * Cola os planos à posição atual do DOM. Usado quando a cena muda de eixo
+   * (o chat abre/fecha): sem isto os cartões deslizam durante ~1s.
+   */
+  snapPlanes(): void {
+    for (const plane of this.planes) {
+      const rect = plane.el.getBoundingClientRect()
+      if (rect.width < 1 || rect.height < 1) continue
+      const anchor = plane.kind === 'text'
+        ? { w: plane.text.canvasWidth, h: plane.text.canvasHeight }
+        : { w: rect.width, h: rect.height }
+      plane.mesh.position.x = rect.left + rect.width / 2 - this.viewport.w / 2
+      plane.mesh.position.y = -(rect.top + rect.height / 2 - this.viewport.h / 2) + plane.lift
+      plane.mesh.scale.set(anchor.w * plane.scaleBridge.x, anchor.h * plane.scaleBridge.y, 1)
+      plane.uniforms.uRes.value.set(anchor.w, anchor.h)
+      plane.lastRectHash = ''
+    }
+  }
+
   /** Re-mede e recentra (usado quando o track passa a ter cópias). */
   resetCarousel(): void {
     this.hasCenteredInitial = false
@@ -1284,7 +1303,9 @@ export class GlEngine {
 
     // Superfície: cards/títulos/pills do strip compartilham sheet + lean;
     // texto de página (chrome, painéis, modal) fica plano.
-    const onStrip = this.isInTrack(plane.el) && this.viewport.w >= 650
+    // Com o chat aberto os painéis ficam numa coluna: nada de warping de strip.
+    const chatOpen = document.documentElement.classList.contains('chat-open')
+    const onStrip = this.isInTrack(plane.el) && this.viewport.w >= 650 && !chatOpen
     const sheetTarget = onStrip && plane.kind !== 'bar' ? 1 : 0
     uniforms.uSheetP.value += (sheetTarget - uniforms.uSheetP.value) * 0.2
     uniforms.uSheetW.value = this.sheet.W

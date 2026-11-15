@@ -2030,6 +2030,48 @@ html[data-archive-flip] .cosmos {
   touch-action: none;
 }
 
+/* Chat da cena: os painéis recolhem para uma coluna à esquerda. */
+html.chat-open {
+  /* Duas metades iguais: os painéis à esquerda, o chat à direita. */
+  --chat-w: calc(50vw - clamp(12px, 2vw, 24px));
+}
+
+html.chat-open .gate.is-scene .gate__scene {
+  right: 50vw;
+}
+
+html.chat-open .gate-filters {
+  right: 50vw;
+}
+
+/* Com o chat aberto a barra de filtros é uma tool-bar sólida sobre os cartões. */
+html.chat-open .gate-filters .fr-filters--overlay {
+  padding-block: var(--fr-space-s);
+  background: rgb(5 6 10 / 0.92);
+  border-bottom: 1px solid color-mix(in srgb, var(--fr-paper) 10%, transparent);
+}
+
+html.chat-open .gate.is-scene [data-carousel] {
+  top: 0 !important;
+  flex-direction: column;
+  gap: 6vh 0;
+  transform: none;
+  padding-inline: clamp(12px, 2vw, 24px);
+}
+
+html.chat-open .gate.is-scene [data-carousel] [data-gl='card'] {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  margin-inline: auto;
+}
+
+@media (max-width: 1023px) {
+  html.chat-open .gate.is-scene .gate__scene {
+    right: 0;
+  }
+}
+
 .gate.is-scene .gate__veil {
   background: #000;
   opacity: 1;

@@ -73,6 +73,8 @@ const stars = Array.from({ length: 26 }, (_, i) => {
       <FeaturedCarousel v-if="act === 'scene'" />
     </div>
 
+    <RelicChat v-if="act === 'scene'" />
+
     <Teleport to="body">
       <div v-if="act === 'scene'" class="gate-filters fr">
         <RelicFilters overlay />

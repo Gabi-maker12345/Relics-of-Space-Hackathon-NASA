@@ -982,3 +982,24 @@ diário aberto pelo cartão.
   (havia dois `relic-search` quando a cena estava aberta).
 - **QA**: 390×844 — barra só com pesquisa+Filtrar; dropdown abre/fecha; Marte filtra para 5
   cartões; 1440×900 — chips em linha, toggle `none`, contador visível; typecheck/lint verdes.
+
+## Iteração 49 — Chat AI na cena (Prompt Bar + cosmos)
+
+- **Entrada**: botão "Chat AI" fixo no canto inferior direito da cena, com brilho (pulse) e
+  ícone de faísca; só aparece em `act === 'scene'`.
+- **Layout dividido**: ao abrir, o chat ocupa a metade direita (696 px a 1440) e os painéis
+  recolhem para uma coluna vertical na metade esquerda — o engine GL passa a eixo `y` com
+  `html.chat-open` e `snapPlanes()` cola os planos ao novo layout (sem deslize). A barra de
+  filtros fica na metade esquerda, sólida (`tool-bar`), e um véu cobre o topo atrás da chrome.
+  No telemóvel o chat é uma gaveta inferior (64svh) e os painéis continuam visíveis acima.
+- **Conversa**: a primeira mensagem é "Sobre qual relíquia você gostaria de falar hoje?";
+  clicar num painel **não abre o modal** — envia "Fala-me sobre {nome}." e a IA responde com
+  uma introdução; o contexto passa a "A falar sobre {nome}" e as perguntas seguintes mantêm a
+  relíquia. Campo estilo Prompt Bar (React Bits adaptado): cápsula com focus dourado, botão de
+  envio, dica "Enter envia · Esc fecha"; fundo translúcido com blur sobre o cosmos.
+- **API** `POST /api/chat`: público, 20 pedidos/min por IP, provider `QUIZ_AI_*` (Groq
+  gpt-oss-120b), contexto localizado (traduções + ficha + legendas) e respostas em ≤3 frases.
+  Sem `max_tokens`: com limite baixo o modelo de raciocínio devolvia conteúdo vazio.
+- **QA**: 1440×900 e 390×844 — abertura/fecho, coluna + chat 50/50, cartões 672 vs chat 696,
+  clique em Apollo → introdução ("O módulo lunar Apollo…") sem modal, follow-up responde,
+  filtros continuam a funcionar na metade esquerda; 152 testes, typecheck/lint verdes.

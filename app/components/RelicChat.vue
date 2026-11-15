@@ -1,0 +1,523 @@
+<script setup lang="ts">
+const {
+  open,
+  messages,
+  relicName,
+  sending,
+  error,
+  openChat,
+  closeChat,
+  reset,
+  send,
+} = useRelicChat()
+
+const { t } = useI18n()
+
+const text = ref('')
+const logEl = ref<HTMLElement | null>(null)
+const inputEl = ref<HTMLInputElement | null>(null)
+
+const canSend = computed(() => text.value.trim().length > 0 && !sending.value)
+
+function submit(): void {
+  if (!canSend.value) return
+  const value = text.value
+  text.value = ''
+  void send(value)
+}
+
+function onKeydown(event: KeyboardEvent): void {
+  if (!open.value || event.key !== 'Escape') return
+  event.preventDefault()
+  event.stopPropagation()
+  closeChat()
+}
+
+watch(open, async (value) => {
+  document.documentElement.classList.toggle('chat-open', value)
+  void nextTick(() => {
+    const engine = getGlEngine()
+    engine?.resetCarousel()
+    engine?.snapPlanes()
+  })
+  if (!value) return
+  await nextTick()
+  inputEl.value?.focus()
+})
+
+watch([() => messages.value.length, sending], async () => {
+  await nextTick()
+  const el = logEl.value
+  if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+})
+
+onMounted(() => window.addEventListener('keydown', onKeydown, true))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown, true)
+  document.documentElement.classList.remove('chat-open')
+  getGlEngine()?.resetCarousel()
+  getGlEngine()?.snapPlanes()
+  reset()
+})
+</script>
+
+<template>
+  <Teleport to="body">
+    <button
+      v-if="!open"
+      type="button"
+      class="chat-fab"
+      :aria-label="t('chat.open')"
+      @click="openChat"
+    >
+      <svg class="chat-fab__spark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3.5l1.7 5.1a4 4 0 0 0 2.6 2.6l5.2 1.7-5.2 1.7a4 4 0 0 0-2.6 2.6L12 22.3l-1.7-5.1a4 4 0 0 0-2.6-2.6L2.5 12.9l5.2-1.7a4 4 0 0 0 2.6-2.6L12 3.5Z" />
+      </svg>
+      <span>{{ t('chat.fab') }}</span>
+    </button>
+
+    <div v-if="open" class="chat-scrim" aria-hidden="true" />
+
+    <Transition name="chat-panel">
+      <aside v-if="open" class="chat" role="dialog" :aria-label="t('chat.title')">
+        <header class="chat__head">
+          <div class="chat__heading">
+            <p class="chat__kicker">{{ t('chat.kicker') }}</p>
+            <h2 class="chat__title">{{ t('chat.title') }}</h2>
+            <p v-if="relicName" class="chat__context">{{ t('chat.about', { name: relicName }) }}</p>
+            <p v-else class="chat__context">{{ t('chat.idle') }}</p>
+          </div>
+          <button type="button" class="chat__close" :aria-label="t('common.close')" @click="closeChat">
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" />
+            </svg>
+          </button>
+        </header>
+
+        <div ref="logEl" class="chat__log" aria-live="polite">
+          <div
+            v-for="message in messages"
+            :key="message.id"
+            class="chat__msg"
+            :class="`chat__msg--${message.role}`"
+          >
+            <p>{{ message.content }}</p>
+          </div>
+          <p v-if="sending" class="chat__typing">
+            <span /><span /><span />
+            <em>{{ t('chat.thinking') }}</em>
+          </p>
+          <p v-if="error" class="chat__error" role="alert">{{ error }}</p>
+        </div>
+
+        <form class="chat__composer" @submit.prevent="submit">
+          <div class="chat__field">
+            <input
+              ref="inputEl"
+              v-model="text"
+              class="chat__input"
+              type="text"
+              :placeholder="relicName ? t('chat.placeholderRelic', { name: relicName }) : t('chat.placeholder')"
+              autocomplete="off"
+              enterkeyhint="send"
+              :disabled="sending"
+            >
+            <button
+              type="submit"
+              class="chat__send"
+              :class="{ 'is-armed': canSend }"
+              :disabled="!canSend"
+              :aria-label="t('chat.send')"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 19V5M6 11l6-6 6 6" />
+              </svg>
+            </button>
+          </div>
+          <p class="chat__hint">{{ t('chat.hint') }}</p>
+        </form>
+      </aside>
+    </Transition>
+  </Teleport>
+</template>
+
+<style scoped>
+.chat-fab {
+  position: fixed;
+  right: clamp(16px, 2.6vw, 32px);
+  bottom: clamp(16px, 2.6vw, 32px);
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: #f2f1ed;
+  color: #0b0b0b;
+  font-family: "Inter Variable", Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.25),
+    0 12px 32px rgb(0 0 0 / 0.5),
+    0 0 22px rgb(197 160 100 / 0.45);
+  animation: chat-fab-glow 3s ease-in-out infinite;
+  transition: transform 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.chat-fab:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.chat-fab__spark {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+  animation: chat-spark 4s ease-in-out infinite;
+}
+
+@keyframes chat-fab-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.25),
+      0 12px 32px rgb(0 0 0 / 0.5),
+      0 0 18px rgb(197 160 100 / 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.4),
+      0 12px 32px rgb(0 0 0 / 0.55),
+      0 0 32px rgb(197 160 100 / 0.7);
+  }
+}
+
+@keyframes chat-spark {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(18deg) scale(1.08);
+  }
+}
+
+.chat-scrim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 63;
+  width: 50vw;
+  height: 190px;
+  background: linear-gradient(to bottom, #05060a 0%, #05060a 62%, rgb(5 6 10 / 0.86) 78%, transparent 100%);
+  pointer-events: none;
+}
+
+.chat {
+  position: fixed;
+  top: clamp(84px, 10vh, 112px);
+  right: clamp(12px, 2vw, 24px);
+  bottom: clamp(12px, 2vw, 24px);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  width: var(--chat-w, clamp(360px, 32vw, 480px));
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 18px;
+  color: #f2f1ed;
+  font-family: "Inter Variable", Arial, sans-serif;
+  background:
+    radial-gradient(120% 70% at 82% 0%, rgb(197 160 100 / 0.1), transparent 62%),
+    radial-gradient(110% 70% at 0% 100%, rgb(90 120 255 / 0.1), transparent 64%),
+    rgb(5 6 10 / 0.76);
+  backdrop-filter: blur(22px) saturate(118%);
+  -webkit-backdrop-filter: blur(22px) saturate(118%);
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.55);
+}
+
+.chat__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.chat__kicker {
+  margin: 0 0 6px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgb(242 241 237 / 0.45);
+}
+
+.chat__title {
+  margin: 0;
+  font-family: "Newsreader Variable", Georgia, serif;
+  font-size: 24px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.chat__context {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: rgb(197 160 100 / 0.9);
+}
+
+.chat__close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.25s, border-color 0.25s;
+}
+
+.chat__close:hover {
+  opacity: 1;
+  border-color: rgb(255 255 255 / 0.4);
+}
+
+.chat__close svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.chat__log {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.chat__msg {
+  max-width: 88%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.chat__msg p {
+  margin: 0;
+}
+
+.chat__msg--assistant {
+  align-self: flex-start;
+  border: 1px solid rgb(255 255 255 / 0.09);
+  border-bottom-left-radius: 4px;
+  background: rgb(255 255 255 / 0.05);
+  color: rgb(242 241 237 / 0.92);
+}
+
+.chat__msg--user {
+  align-self: flex-end;
+  border: 1px solid rgb(197 160 100 / 0.24);
+  border-bottom-right-radius: 4px;
+  background: rgb(197 160 100 / 0.12);
+  color: #f2f1ed;
+}
+
+.chat__typing {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.04);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(242 241 237 / 0.5);
+}
+
+.chat__typing span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: chat-dot 1.2s ease-in-out infinite;
+}
+
+.chat__typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.chat__typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.chat__typing em {
+  margin-left: 6px;
+  font-style: normal;
+}
+
+@keyframes chat-dot {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.chat__error {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #ff9a9a;
+}
+
+.chat__composer {
+  padding: 12px 14px 14px;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.chat__field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 14px;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.04);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.chat__field:focus-within {
+  border-color: rgb(197 160 100 / 0.55);
+  box-shadow: 0 0 0 3px rgb(197 160 100 / 0.12);
+}
+
+.chat__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.chat__input::placeholder {
+  color: rgb(242 241 237 / 0.4);
+}
+
+.chat__input:disabled {
+  opacity: 0.6;
+}
+
+.chat__send {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.1);
+  color: rgb(242 241 237 / 0.5);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, transform 0.16s;
+}
+
+.chat__send svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chat__send.is-armed {
+  background: #f2f1ed;
+  color: #0b0b0b;
+}
+
+.chat__send.is-armed:hover {
+  transform: translateY(-1px);
+}
+
+.chat__send:disabled {
+  cursor: default;
+}
+
+.chat__hint {
+  margin: 8px 2px 0;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(242 241 237 / 0.32);
+}
+
+.chat-panel-enter-active,
+.chat-panel-leave-active {
+  transition: opacity 0.35s cubic-bezier(0.23, 1, 0.32, 1), transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.chat-panel-enter-from,
+.chat-panel-leave-to {
+  opacity: 0;
+  transform: translateY(18px) scale(0.98);
+}
+
+@media (max-width: 1023px) {
+  /* No telemóvel o chat é uma gaveta em baixo: os painéis ficam visíveis em cima. */
+  .chat {
+    inset: auto 12px 12px;
+    top: auto;
+    width: auto;
+    height: min(64svh, 560px);
+  }
+
+  .chat-scrim {
+    display: none;
+  }
+
+  .chat-fab {
+    right: 14px;
+    bottom: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-fab,
+  .chat-fab__spark,
+  .chat__typing span {
+    animation: none;
+  }
+}
+</style>

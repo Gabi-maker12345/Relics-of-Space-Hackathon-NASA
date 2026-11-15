@@ -60,11 +60,17 @@ watch(() => relics.value.map(relic => relic.id).join('|'), async () => {
   }
 })
 
-function openRelic(id: string, fromPointer = true): void {
+function openRelic(id: string, fromPointer = true, name = ''): void {
   if (!import.meta.client) return
   // arrastar o carrossel não deve abrir a relíquia; o teclado não é um arrasto
   const engine = getGlEngine()
   if (fromPointer && engine && engine.dragDistance() > 6) return
+  // com o chat aberto, o clique vira uma pergunta sobre a relíquia
+  const chat = useRelicChat()
+  if (chat.open.value) {
+    void chat.askAbout({ id, name })
+    return
+  }
   open(id)
 }
 </script>
@@ -100,9 +106,9 @@ function openRelic(id: string, fromPointer = true): void {
       :tabindex="card.copy === 0 ? 0 : -1"
       role="button"
       :aria-label="`${card.name} — ${card.tagline}`"
-      @click="openRelic(card.id)"
-      @keydown.enter.prevent="openRelic(card.id, false)"
-      @keydown.space.prevent="openRelic(card.id, false)"
+      @click="openRelic(card.id, true, card.name)"
+      @keydown.enter.prevent="openRelic(card.id, false, card.name)"
+      @keydown.space.prevent="openRelic(card.id, false, card.name)"
     >
       <p class="pointer-events-none absolute bottom-10 inset-x-10 s:bottom-10 s:inset-x-20 flex items-end justify-between">
         <span class="relative block min-w-0 flex-1 mr-10">
