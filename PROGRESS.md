@@ -1003,3 +1003,15 @@ diário aberto pelo cartão.
 - **QA**: 1440×900 e 390×844 — abertura/fecho, coluna + chat 50/50, cartões 672 vs chat 696,
   clique em Apollo → introdução ("O módulo lunar Apollo…") sem modal, follow-up responde,
   filtros continuam a funcionar na metade esquerda; 152 testes, typecheck/lint verdes.
+
+## Iteração 50 — provider do chat: Muse Spark 1.3 (OpenCode Go)
+
+- **Provider**: o chat usa `CHAT_AI_API_KEY` / `CHAT_AI_BASE_URL` / `CHAT_AI_MODEL`
+  (`https://opencode.ai/inference/go/v1`, `muse-spark-1.3-contributor`), com fallback para
+  `QUIZ_AI_*`. As variáveis ficaram no `.env` local e na Vercel (production + preview).
+- **Causa do "resposta vazia"**: o modelo é de raciocínio e gastava todo o orçamento de
+  `max_tokens` em reasoning (`finish=length`, `reasoning_tokens=1198`, content vazio). Sem
+  limite de tokens e com `x-opencode-session` (obrigatório no OpenCode Go) a resposta chega
+  em ~11 s. Fica um retry compacto e o diagnóstico do provider em caso de conteúdo vazio.
+- **QA**: produção (`relics-of-space.vercel.app`) — painel Apollo → "Fala-me sobre…" →
+  introdução de 3 frases, sem modal e sem erro; local igual.
