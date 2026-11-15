@@ -2063,10 +2063,10 @@ html.chat-open .gate.is-scene .gate__veil {
 /* Com o chat aberto a barra de filtros flutua sobre o cosmos. */
 html.chat-open .gate-filters .fr-filters--overlay {
   padding-block: var(--fr-space-s);
-  background: rgb(4 5 9 / 0.38);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid color-mix(in srgb, var(--fr-paper) 10%, transparent);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: 1px solid transparent;
 }
 
 /* Na coluna estreita os filtros passam a dropdown, como no telemóvel. */

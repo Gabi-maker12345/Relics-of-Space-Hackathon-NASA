@@ -5,6 +5,7 @@ const { relics, pending, error, refresh } = usePublicRelics(filters)
 const { open } = useProjectModal()
 const track = ref<HTMLElement | null>(null)
 const copies = ref(1)
+const chat = useRelicChat()
 
 interface CardItem {
   id: string
@@ -29,7 +30,8 @@ const cards = computed<CardItem[]>(() =>
 )
 
 const updateCopies = (): void => {
-  copies.value = window.innerWidth >= 650 ? 3 : 1
+  // O chat usa a coluna vertical: sem cópias (12 cartões, não 36).
+  copies.value = window.innerWidth >= 650 && !chat.open.value ? 3 : 1
 }
 
 onMounted(() => {
@@ -38,6 +40,8 @@ onMounted(() => {
   onBeforeUnmount(() => window.removeEventListener('resize', updateCopies))
   void ensureGlEngine().then(engine => engine.resetCarousel()).catch(() => {})
 })
+
+watch(() => chat.open.value, updateCopies)
 
 watch(copies, () => {
   void ensureGlEngine().then(engine => engine.resetCarousel()).catch(() => {})

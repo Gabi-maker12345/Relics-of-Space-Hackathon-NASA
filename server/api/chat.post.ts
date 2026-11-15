@@ -6,6 +6,7 @@ import type { Database } from '~/types/database.types'
 import { normalizeLang } from '../utils/i18n'
 import { findRelic } from '../utils/relicInput'
 import { consume } from '../utils/rate-limit'
+import { buildBotPrompt, catalogSearchTerms, fetchCatalogContexts, loadBotSettings } from '../utils/bot'
 
 /**
  * Chat público do arquivo. A IA responde em pt/en sobre uma relíquia publicada.
@@ -91,25 +92,6 @@ async function loadContext(
   }
 }
 
-function buildSystemPrompt(lang: string, relic: ChatContext | null, compact = false): string {
-  const language = lang === 'en' ? 'inglês britânico' : 'português europeu'
-  const lines = [
-    'És o guia do arquivo "Space Relics", um arquivo de máquinas espaciais abandonadas na Lua, em Marte e no espaço profundo.',
-    `Responde sempre em ${language}.`,
-    'Sê claro, caloroso e específico. Responde em no máximo 3 frases curtas (cerca de 55 palavras). Sem listas, sem markdown, sem emojis.',
-    'Usa apenas os dados fornecidos. Se um dado não existir no arquivo, di-lo com naturalidade em vez de inventar.',
-  ]
-
-  if (relic) {
-    lines.push('', `Relíquia em foco: ${relic.name}`, `Resumo: ${relic.summary}`)
-    if (relic.story) lines.push(`História: ${relic.story.slice(0, compact ? 500 : 1400)}`)
-    if (relic.facts.length > 0) lines.push(`Ficha técnica: ${relic.facts.join('; ')}`)
-    if (relic.scenes.length > 0) lines.push(`Cenas do arquivo: ${relic.scenes.slice(0, compact ? 3 : 6).join(' | ')}`)
-  }
-
-  return lines.join('\n')
-}
-
 export default defineEventHandler(async (event) => {
   const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown'
   const quota = consume(`chat:${ip}`, { limit: 20, windowMs: 60_000 })
@@ -138,6 +120,11 @@ export default defineEventHandler(async (event) => {
   const lang = normalizeLang(body.lang)
   const supabase = serverSupabaseServiceRole<Database>(event)
   const relic = body.relicId ? await loadContext(supabase, body.relicId, lang) : null
+
+  const settings = await loadBotSettings(supabase)
+  const lastUser = [...body.messages].reverse().find(message => message.role === 'user')?.content ?? ''
+  const terms = catalogSearchTerms(relic?.name ?? null, lastUser)
+  const catalogs = await fetchCatalogContexts(settings.catalogs, terms).catch(() => [])
 
   const model = process.env.CHAT_AI_MODEL || process.env.QUIZ_AI_MODEL || 'gpt-4o-mini'
   const baseUrl = (process.env.CHAT_AI_BASE_URL || process.env.QUIZ_AI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '')
@@ -190,10 +177,10 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    let reply = await callProvider(buildSystemPrompt(lang, relic), 0.6)
+    let reply = await callProvider(buildBotPrompt({ lang, relic, catalogs, settings }), 0.6)
     // O modelo de raciocínio às vezes devolve conteúdo vazio: segunda tentativa
     // com contexto compacto e orçamento de tokens explícito.
-    if (!reply) reply = await callProvider(buildSystemPrompt(lang, relic, true), 0.3)
+    if (!reply) reply = await callProvider(buildBotPrompt({ lang, relic, catalogs, settings, compact: true }), 0.3)
     if (!reply) throw new Error(`resposta vazia ${diagnostics}`)
 
     return { reply, relic: relic?.name ?? null, lang }

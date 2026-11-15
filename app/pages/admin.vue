@@ -12,6 +12,7 @@
         <button type="button" class="admin__ghost" :disabled="translating" @click="translateAll">
           {{ translating ? t('admin.translateBusy', { done: translateDone, total: relics.length }) : t('admin.translateAll') }}
         </button>
+        <button type="button" class="admin__ghost" @click="botOpen = true">{{ t('bot.title') }}</button>
         <button type="button" class="admin__ghost" @click="nasaOpen = true">{{ t('admin.importNasa') }}</button>
         <button type="button" class="admin__ghost" @click="signOutAndLeave">{{ t('nav.exit') }}</button>
       </div>
@@ -85,6 +86,12 @@
       @close="nasaOpen = false"
       @imported="onNasaImported"
     />
+
+    <BotSettingsDialog
+      :open="botOpen"
+      @close="botOpen = false"
+      @saved="flash(t('bot.saved'))"
+    />
   </section>
 </template>
 
@@ -101,6 +108,7 @@ const formOpen = ref(false)
 const editing = ref<Relic | null>(null)
 const saveError = ref('')
 const nasaOpen = ref(false)
+const botOpen = ref(false)
 const translating = ref(false)
 const translateDone = ref(0)
 

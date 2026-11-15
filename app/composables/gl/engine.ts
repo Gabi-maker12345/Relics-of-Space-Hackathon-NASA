@@ -18,7 +18,7 @@ export type GlRole = 'title' | 'text' | 'label'
 
 const FOLLOW_LERP = 0.1 // damp do original (a.a = lerp(a.a, a.t, .1*ratio))
 const MAX_DPR = 2
-const DRAG_THRESHOLD_PX = 10 // clique vs. arrasto no carrossel (jitter do rato)
+const DRAG_THRESHOLD_PX = 16 // clique vs. arrasto no carrossel (jitter do rato/trackpad)
 const DIGIT_ROLL_DUR = 0.9
 const CAROUSEL_EASE_DUR = 0.85
 const HOLE_RADIUS_FACTOR = 0.225 // raio medido no portal do original (576 css de diâmetro @1280)
@@ -34,7 +34,7 @@ const SHEET_DEPTH = 0.2 // D = W*depth (desktop WF=.2; mobile .18)
 const SHEET_DEPTH_SMALL = 0.18
 const SHEET_SPAN = 1.15 // T (desktop $F; mobile 1)
 const SHEET_SPAN_SMALL = 1
-const SHEET_VELOCITY = 1.1 // qF: D cresce com a velocidade
+const SHEET_VELOCITY = 0.6 // qF: D cresce com a velocidade
 const LEAN_DOOR = -0.12 // door (desktop ZF; mobile 0)
 const DENT = 0.1 // u_dent
 const TITLE_SCRIM = 0.45 // gradiente escuro no rodapé do card sob o título
@@ -1077,7 +1077,7 @@ export class GlEngine {
     const chat = document.documentElement.classList.contains('chat-open')
     const screenDelta = this.carousel.axis === 'x' ? -dx : -dy
     const delta = chat && this.chatStage.scale > 0 ? screenDelta / this.chatStage.scale : screenDelta
-    const scaled = this.carousel.target + (delta / this.carousel.max) * 1.6
+    const scaled = this.carousel.target + (delta / this.carousel.max) * 1.0
     this.carousel.target = this.carousel.infinite
       ? scaled
       : THREE.MathUtils.clamp(scaled, 0, 1)

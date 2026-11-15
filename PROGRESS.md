@@ -1064,3 +1064,23 @@ diário aberto pelo cartão.
   que a coluna nunca sobra; filtros/chrome continuam dentro do palco.
 - QA: 1440×900 palco 370 em x24, chat x418 w998; 1024×768 palco 309, chat 647;
   390×844 gaveta 366 e sem `--chat-left`; typecheck verde.
+
+## Iteração 54 — Zénite Bot com catálogos editáveis, clique preciso e rotações calmas
+
+- **Catálogos**: o chat consulta (server-side, cache 20 min, timeout 8 s, https público)
+  os catálogos configurados, resume os 6 mais relevantes para a pergunta (700 chars cada)
+  e o prompt passa a permitir complementar o arquivo citando o catálogo. Testado com
+  "O que sabes sobre o telescópio Hubble?" → resposta citando o catálogo Hubble.
+- **Admin**: botão "Zénite Bot" ao lado de "Traduzir tudo"; modal `BotSettingsDialog`
+  edita prompt do sistema, instruções e lista de catálogos (nome/URL, adicionar/remover).
+  As settings vivem em `config/bot.json` (bucket privado, service role) — sem migração
+  de BD; `GET/PUT /api/admin/bot` com `requireAdmin`; persistência verificada no admin.
+- **Barra de pesquisa**: sem fundo/backdrop no modo chat (`transparent`) — só os
+  controlos flutuam sobre o cosmos.
+- **Clique/precisão**: limiar de arrasto 10→16 px, multiplicador do arrasto 1.6→1.0;
+  no chat a faixa tem 12 cartões (sem cópias de 3×) e o clique com tremura abre a
+  relíquia. Testado clique/clickAt/jitter → abre; arrasto → move sem abrir.
+- **Rotações**: sheet twist 1.8→0.45 rad, rear-up Z 0.2→0.06, velocidade da folha
+  1.1→0.6 — o strip deixa de rodar "louco" em cada gesto.
+- QA: modal admin (17 catálogos, guardar/reabrir), chat com cápsula e resposta a citar
+  catálogo, barra transparente, 12 cartões, 152 testes, typecheck/lint verdes.

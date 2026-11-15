@@ -20,9 +20,9 @@ const float SHEET_DIAG = 0.03;
 const float SHEET_WAVE = 0.0;
 const float SHEET_WAVE_F = 0.8;
 const float SHEET_WAVE_PH = 0.35;
-const float SHEET_REAR_Y = 0.1;
-const float SHEET_REAR_Z = 0.2;
-const float SHEET_VTWIST = 1.8;
+const float SHEET_REAR_Y = 0.05;
+const float SHEET_REAR_Z = 0.06;
+const float SHEET_VTWIST = 0.45;
 const float SHEET_SHIFT = -0.2;
 
 uniform float uSheetW;   // frustum half-width at z=0 (0 = sheet off)
