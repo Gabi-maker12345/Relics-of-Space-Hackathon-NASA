@@ -1249,3 +1249,17 @@ Auditoria em produção (zenitte.vercel.app): consola limpa, DCL 779 ms/load
 - Próximo: dormir o render quando nada se move (60 fps em repouso), reads de
   rect dos componentes da landing (globo/parallax), streaming do chat,
   preloader, ficha/mobile.
+
+## Iteração 65 — render GL só quando algo muda (repouso = 0 draw calls)
+
+- `needsRender`: o tick deixa de desenhar quando nada mudou. As fontes de
+  movimento marcam o frame — posições/escala/opacidade dos planos, lean do
+  sheet, fade das capas, tempo do hole (só visível), piso, cursor, carrossel,
+  tweens/marks, ato/chat, scan/resize, texturas/texto, snap e retorno da aba.
+- Medido no dev: cena em repouso **0 draw calls** em 2,5 s (antes desenhava
+  todos os frames); uma roda acorda o engine e produz 90 draws em 1,5 s. Cena,
+  arrasto e palco do chat mantêm o alinhamento; screenshots estáveis.
+- Unit 159/159, typecheck e lint limpos. O rAF continua a sincronizar o DOM
+  (~2 rects/frame); o próximo passo é dormir o tick inteiro.
+- Próximo: dormir também o tick em repouso (para o CPU), reads dos
+  componentes da landing, streaming do chat, preloader, ficha/mobile.

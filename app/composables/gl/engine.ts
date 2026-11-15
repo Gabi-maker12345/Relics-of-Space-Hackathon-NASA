@@ -264,6 +264,8 @@ export class GlEngine {
   private geometryK = { x: 1, y: 1 }
   private geometryDirty = true
   private geometryReady = false
+  /** Só desenha quando algo visual mudou: repouso = 0 draw calls. */
+  private needsRender = true
   private glMask = ''
   private bootPromise: Promise<void> | null = null
   private bootedResolve: (() => void) | null = null
@@ -430,8 +432,17 @@ export class GlEngine {
     // z da borda da frente (coordenadas do original: cards em z=0, câmera em +camZ)
     const nearZ = Math.min(camZ * (1 - Math.abs(nearY) / H) + H * FLOOR_LIP, camZ * 0.8)
     const depth = nearZ + run
+    const nextZ = (nearZ - run) / 2
+    if (
+      Math.abs(mesh.scale.x - width) > 0.01
+      || Math.abs(mesh.scale.z - depth) > 0.01
+      || Math.abs(mesh.position.y - nearY) > 0.01
+      || Math.abs(mesh.position.z - nextZ) > 0.01
+    ) {
+      this.needsRender = true
+    }
     mesh.scale.set(width, 1, depth)
-    mesh.position.set(0, nearY, (nearZ - run) / 2)
+    mesh.position.set(0, nearY, nextZ)
     const u = mesh.material.uniforms
     u.uRun!.value = run
     u.uLeanA!.value = this.sheet.A
@@ -505,6 +516,11 @@ export class GlEngine {
     document.documentElement.addEventListener('pointerleave', this.onBallLeave)
   }
 
+  private onVisibility = (): void => {
+    // O buffer do canvas pode ter sido descartado com a aba escondida.
+    if (!document.hidden) this.needsRender = true
+  }
+
   private onBallMove = (e: PointerEvent): void => {
     if (this.reduced) return
     this.ball.tx = e.clientX
@@ -537,12 +553,18 @@ export class GlEngine {
     const mesh = this.ballMesh
     if (!mesh) return
     const visible = !this.reduced && this.ball.seen && this.ball.alpha > 0.01
-    mesh.visible = visible
+    if (mesh.visible !== visible) {
+      mesh.visible = visible
+      this.needsRender = true
+    }
     if (!visible) return
     this.ball.x += (this.ball.tx - this.ball.x) * 0.35
     this.ball.y += (this.ball.ty - this.ball.y) * 0.35
-    mesh.position.x = this.ball.x - this.viewport.w / 2
-    mesh.position.y = -(this.ball.y - this.viewport.h / 2)
+    const nx = this.ball.x - this.viewport.w / 2
+    const ny = -(this.ball.y - this.viewport.h / 2)
+    if (Math.abs(mesh.position.x - nx) > 0.05 || Math.abs(mesh.position.y - ny) > 0.05) this.needsRender = true
+    mesh.position.x = nx
+    mesh.position.y = ny
     const u = mesh.material.uniforms
     u.uOpacity!.value = this.ball.alpha
     u.uRes!.value.set(BALL_SIZE, BALL_SIZE)
@@ -618,6 +640,7 @@ export class GlEngine {
     })
     window.addEventListener('resize', this.onResize)
     window.addEventListener('focusin', this.onFocusIn)
+    document.addEventListener('visibilitychange', this.onVisibility)
     this.startLoop()
     this.bootPromise = (async () => {
       try {
@@ -685,6 +708,7 @@ export class GlEngine {
       if (current !== plane.textRaw) plane.dirty = true
     }
     this.geometryDirty = true
+    this.needsRender = true
   }
 
   private createPlane(el: HTMLElement, kind: GlKind): Plane {
@@ -1065,6 +1089,7 @@ export class GlEngine {
       if (plane.kind === 'text') this.buildTextCanvas(plane)
     }
     this.geometryDirty = true
+    this.needsRender = true
   }
 
   private onWheel = (e: WheelEvent): void => {
@@ -1246,6 +1271,7 @@ export class GlEngine {
     this.updateSheetVelocity()
     this.runTweens(this.lastTickAt)
     this.runMarks(this.lastTickAt)
+    if (this.tweens.length > 0 || this.marks.length > 0) this.needsRender = true
     this.advanceCarousel()
     this.syncSceneState()
     this.probeLayout()
@@ -1255,6 +1281,7 @@ export class GlEngine {
         this.buildTextCanvas(plane)
         this.drawTextCanvas(plane)
         plane.dirty = false
+        this.needsRender = true
       }
       this.syncPlane(plane)
     }
@@ -1263,7 +1290,10 @@ export class GlEngine {
     this.syncHole()
     this.syncFloor()
     this.updateBall()
-    renderer.render(this.scene, this.camera)
+    if (this.needsRender) {
+      renderer.render(this.scene, this.camera)
+      this.needsRender = false
+    }
   }
 
   /**
@@ -1278,6 +1308,7 @@ export class GlEngine {
     this.chatOpenFlag = chatOpen
     this.stylesDirty = true
     this.geometryDirty = true
+    this.needsRender = true
   }
 
   /**
@@ -1391,6 +1422,7 @@ export class GlEngine {
       this.sheet.V = v
       const small = this.viewport.w < 650
       this.sheet.D = this.sheet.W * (small ? SHEET_DEPTH_SMALL : SHEET_DEPTH) * (1 + SHEET_VELOCITY * v)
+      this.needsRender = true
     }
   }
 
@@ -1399,8 +1431,14 @@ export class GlEngine {
     if (!mesh) return
     const u = mesh.material.uniforms
     u.uP!.value = this.hole.p
-    mesh.visible = this.hole.p > 0.002 || this.hole.scale > 0.25
+    const holeVisible = this.hole.p > 0.002 || this.hole.scale > 0.25
+    if (mesh.visible !== holeVisible) {
+      mesh.visible = holeVisible
+      this.needsRender = true
+    }
+    if (holeVisible) this.needsRender = true
     const d = this.holeRadius() * 2 * Math.max(0.001, this.hole.scale)
+    if (Math.abs(mesh.scale.x - d) > 0.01) this.needsRender = true
     mesh.scale.set(d, d, 1)
     u.uTime!.value = this.reduced ? 0 : this.sheetClock
     const floor = this.floorMesh?.material.uniforms
@@ -1419,6 +1457,7 @@ export class GlEngine {
       const p = 1 - Math.pow(1 - FOLLOW_LERP, dt * 60)
       this.carousel.p += delta * p
       this.applyTrack()
+      this.needsRender = true
     } else {
       this.lastAdvanceAt = this.lastTickAt
     }
@@ -1462,6 +1501,7 @@ export class GlEngine {
       plane.uniforms.uRes.value.set(anchor.w, anchor.h)
       plane.lastRectHash = ''
     }
+    this.needsRender = true
   }
 
   /** Define o palco de telemóvel usado com o chat aberto (escala e altura). */
@@ -1534,10 +1574,16 @@ export class GlEngine {
       rect = plane.el.getBoundingClientRect()
     }
     if (rect.width < 1 || rect.height < 1) {
-      plane.mesh.visible = false
+      if (plane.mesh.visible) {
+        plane.mesh.visible = false
+        this.needsRender = true
+      }
       return
     }
-    plane.mesh.visible = true
+    if (!plane.mesh.visible) {
+      plane.mesh.visible = true
+      this.needsRender = true
+    }
     // O palco do chat muda a largura do texto (e a fonte) sem mutação de DOM:
     // reconstrói o canvas quando o box de layout muda.
     if (plane.kind === 'text' && Math.abs(plane.widthPx - rect.width) > 1) {
@@ -1607,8 +1653,12 @@ export class GlEngine {
     if (hideTrack) {
       // O bot mobile cobre a cena: os painéis somem já (sem fade de ~0,5 s a
       // aparecer por trás do fundo translúcido do chat).
-      uniforms.uOpacity.value = 0
+      if (uniforms.uOpacity.value !== 0) {
+        uniforms.uOpacity.value = 0
+        this.needsRender = true
+      }
     } else {
+      if (Math.abs(targetOpacity - uniforms.uOpacity.value) > 0.0015) this.needsRender = true
       uniforms.uOpacity.value += (targetOpacity - uniforms.uOpacity.value) * FOLLOW_LERP
     }
     // A capa carregou: entra em fade em vez de "saltar" sobre o card.
@@ -1616,8 +1666,17 @@ export class GlEngine {
       plane.mapFade = Math.min(1, plane.mapFade + (1 - plane.mapFade) * 0.16)
       if (plane.mapFade >= 0.995) plane.mapFade = 1
       uniforms.uMapFade.value = plane.mapFade
+      this.needsRender = true
     }
-    plane.mesh.scale.set(anchor.w * plane.scaleBridge.x, anchor.h * plane.scaleBridge.y, 1)
+    const nextScaleX = anchor.w * plane.scaleBridge.x
+    const nextScaleY = anchor.h * plane.scaleBridge.y
+    if (
+      Math.abs(plane.mesh.scale.x - nextScaleX) > 0.01
+      || Math.abs(plane.mesh.scale.y - nextScaleY) > 0.01
+    ) {
+      this.needsRender = true
+    }
+    plane.mesh.scale.set(nextScaleX, nextScaleY, 1)
     const worldX = rect.left + rect.width / 2 - this.viewport.w / 2
     const worldY = -(rect.top + rect.height / 2 - this.viewport.h / 2) + plane.lift
     // No carrossel infinito o track salta uma cópia inteira de uma vez; o damp
@@ -1630,6 +1689,7 @@ export class GlEngine {
     }
     const dx = worldX - plane.mesh.position.x
     const dy = worldY - plane.mesh.position.y
+    if (Math.abs(dx) > 0.02 || Math.abs(dy) > 0.02) this.needsRender = true
     plane.mesh.position.x += dx * FOLLOW_LERP
     plane.mesh.position.y += dy * FOLLOW_LERP
     uniforms.uRes.value.set(anchor.w, anchor.h)
@@ -1643,6 +1703,7 @@ export class GlEngine {
     // Com o chat aberto os painéis ficam numa coluna: nada de warping de strip.
     const onStrip = this.isInTrack(plane.el) && this.viewport.w >= 650 && !chatOpen
     const sheetTarget = onStrip && plane.kind !== 'bar' ? 1 : 0
+    if (Math.abs(sheetTarget - uniforms.uSheetP.value) > 0.0005) this.needsRender = true
     uniforms.uSheetP.value += (sheetTarget - uniforms.uSheetP.value) * 0.2
     uniforms.uSheetW.value = this.sheet.W
     uniforms.uSheetD.value = this.sheet.D
@@ -1935,6 +1996,7 @@ export class GlEngine {
     this.trackObserver = null
     this.observer?.disconnect()
     window.removeEventListener('focusin', this.onFocusIn)
+    document.removeEventListener('visibilitychange', this.onVisibility)
     window.removeEventListener('pointermove', this.onBallMove)
     document.documentElement.removeEventListener('pointerleave', this.onBallLeave)
     if (this.listenersOn) {
