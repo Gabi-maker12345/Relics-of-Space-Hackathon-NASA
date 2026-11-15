@@ -58,5 +58,5 @@ jobs:
       - name: Summary
         run: |
           echo "### Produção" >> "$GITHUB_STEP_SUMMARY"
-          echo "- https://relics-of-space.vercel.app" >> "$GITHUB_STEP_SUMMARY"
+          echo "- https://zenitte.vercel.app" >> "$GITHUB_STEP_SUMMARY"
           echo "- deployment: ${{ steps.deploy.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"

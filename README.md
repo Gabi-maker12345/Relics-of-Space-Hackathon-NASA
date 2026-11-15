@@ -5,7 +5,7 @@
 A living archive of the machines humanity left on the Moon, on Mars and in deep space.
 Nuxt 4 + Three.js on the front, **Supabase** for data, auth and storage.
 
-**Produção:** https://relics-of-space.vercel.app · **Idioma por omissão:** inglês (PT/EN no header)
+**Produção:** https://zenitte.vercel.app · **Idioma por omissão:** inglês (PT/EN no header)
 
 ## Funcionalidades
 
@@ -377,10 +377,10 @@ o `path`/`publicUrl` na relíquia. Os limites (imagem 5 MB, áudio 15 MB, vídeo
    `ADMIN_*` apenas se correres o script na Vercel).
 3. Build command: `npm run build`. Output: detetado automaticamente pelo Nitro.
 4. Aplicar as migrações ao projeto Supabase antes do primeiro deploy.
-5. Domínio de produção: **https://relics-of-space.vercel.app** (canonical/OG no
-   `nuxt.config.ts`).
-   > O subdomínio `zenite.vercel.app` pertence a outro projeto Vercel (não a este
-   > arquivo); enquanto não houver domínio próprio, o site vive no URL da Vercel.
+5. Domínio de produção: **https://zenitte.vercel.app** (canonical/OG no
+   `nuxt.config.ts`; domínio ligado ao projeto na Vercel).
+   > `zenite.vercel.app` (um “t”) pertence a outro projeto Vercel — usamos
+   > `zenitte.vercel.app` (dois “t”).
 
 
 ---
@@ -393,4 +393,4 @@ validation and admin authorization; the browser uses the public anon key under
 RLS and the service role key stays server-side. The site is **English by
 default** with a PT/EN toggle; the Zénite Bot answers from the archive plus
 editable mission catalogues (prompt/catalogues in the admin). Production:
-https://relics-of-space.vercel.app. See `.env.example` and `supabase/migrations/`.
+https://zenitte.vercel.app. See `.env.example` and `supabase/migrations/`.

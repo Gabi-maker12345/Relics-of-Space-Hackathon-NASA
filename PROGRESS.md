@@ -1178,8 +1178,9 @@ diário aberto pelo cartão.
 
 ## Iteração 62 — domínio real, docs e inglês por omissão
 
-- Canonical/OG/deploy: **https://relics-of-space.vercel.app**; og:image absoluto.
-  (`zenite.vercel.app` está ocupado por outro projeto Vercel — não é deste site.)
+- Canonical/OG/deploy: **https://zenitte.vercel.app**; og:image absoluto.
+  (`zenite.vercel.app` está ocupado por outro projeto Vercel; o domínio
+  `zenitte.vercel.app` foi ligado a este projeto via API da Vercel.)
 - Idioma por omissão **inglês** (o PT/EN do header guarda a escolha); hero e
   secção do arquivo traduzidos; título/descrição/OG em inglês.
 - Docs atualizados (README funcionalidades/API/idiomas/deploy, DEPENDENCIES
