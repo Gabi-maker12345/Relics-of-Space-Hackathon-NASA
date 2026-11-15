@@ -47,7 +47,6 @@ const ry = ref(0)
 const pathOpacity = ref(0)
 let observer: IntersectionObserver | null = null
 const noteEl = ref<HTMLElement | null>(null)
-let noteRaf = 0
 let headerEl: HTMLElement | null = null
 let resize: ResizeObserver | null = null
 
@@ -167,7 +166,6 @@ function wake(): void {
 
 /** A legenda desvanece antes de cruzar o cabeçalho fixo (sem texto por baixo). */
 function updateNoteFade(): void {
-  noteRaf = 0
   const note = noteEl.value
   if (!note) return
   headerEl ??= document.querySelector<HTMLElement>('.fr-header')
@@ -176,8 +174,9 @@ function updateNoteFade(): void {
   note.style.opacity = fade.toFixed(3)
 }
 
+/** Síncrono: no instante em que a legenda entra na faixa do cabeçalho já está invisível. */
 function onScroll(): void {
-  if (!noteRaf) noteRaf = requestAnimationFrame(updateNoteFade)
+  updateNoteFade()
 }
 
 /** Arrastar gira a órbita; a velocidade extra morre na inércia. */
@@ -246,7 +245,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   cancelAnimationFrame(raf)
-  cancelAnimationFrame(noteRaf)
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('resize', onScroll)
   observer?.disconnect()
