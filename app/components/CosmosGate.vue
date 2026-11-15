@@ -1,6 +1,27 @@
 <script setup lang="ts">
-const { act, back } = useAct()
+const { act, back, enter } = useAct()
 const { t } = useI18n()
+
+/** No telemóvel não há roda: um toque ou um swipe para cima atravessa. */
+let tracking = false
+let startY = 0
+let startX = 0
+
+function onGateDown(event: PointerEvent): void {
+  if (act.value !== 'cosmos') return
+  tracking = true
+  startY = event.clientY
+  startX = event.clientX
+}
+
+function onGateUp(event: PointerEvent): void {
+  if (!tracking) return
+  tracking = false
+  if (act.value !== 'cosmos') return
+  const dy = startY - event.clientY
+  const dx = Math.abs(event.clientX - startX)
+  if (dy > 28 || (dy > -8 && dx < 10)) void enter()
+}
 
 const stars = Array.from({ length: 26 }, (_, i) => {
   const seed = (n: number) => {
@@ -22,7 +43,13 @@ const stars = Array.from({ length: 26 }, (_, i) => {
 </script>
 
 <template>
-  <div class="gate" :class="{ 'is-open': act !== 'page', 'is-scene': act === 'scene' }">
+  <div
+    class="gate"
+    :class="{ 'is-open': act !== 'page', 'is-scene': act === 'scene' }"
+    @pointerdown="onGateDown"
+    @pointerup="onGateUp"
+    @pointercancel="tracking = false"
+  >
     <div class="gate__veil" aria-hidden="true" />
 
     <div class="gate__stars" aria-hidden="true">
@@ -36,7 +63,10 @@ const stars = Array.from({ length: 26 }, (_, i) => {
         <span class="gate__word gate__word--l">{{ t('gate.cosmos') }}</span>
         <span class="gate__word gate__word--r">{{ t('gate.continues') }}</span>
       </h2>
-      <p class="gate__hint">{{ t('gate.hint') }}</p>
+      <p class="gate__hint">
+        <span class="gate__hintScroll">{{ t('gate.hint') }}</span>
+        <span class="gate__hintTap">{{ t('gate.tap') }}</span>
+      </p>
     </div>
 
     <div class="gate__scene">

@@ -956,3 +956,16 @@ diário aberto pelo cartão.
 - **Bug apanhado:** `media:upload` importava `storageAssetPath` (nome antigo) e rebentava; corrigido para `storageObjectPath`.
 - **Lighthouse local (built preview, SwiftShader, sem gzip):** performance **30 → 62**, LCP **12,8 → 7,3 s**, TBT **122,7 s → 150 ms**, peso **6,2 → 1,15 MB**, a11y **96 → 100**.
 - **Pendente:** medição em GPU real e em produção para fechar #69 (LCP < 4 s, TBT < 500 ms).
+
+## Iteração 47 — bug crítico: portão do cosmos inacessível no telemóvel
+
+- **Causa**: entrar na cena 3D dependia só de `wheel` (deltaY > 24) ou teclado; no telemóvel
+  não há roda e a página está travada (`is-gated` + lenis.stop). O utilizador ficava preso em
+  “O cosmos continua” e o carrossel nunca aparecia.
+- **Correção**: o `.gate` passou a aceitar **toque** e **swipe para cima** (pointerdown/up com
+  guarda `act === 'cosmos'`): toque (deslocamento < 10 px) ou dy > 28 px chama `enter()`. A
+  dica troca para “Toque para atravessar” em `(hover: none)`/`(pointer: coarse)`; o palco da
+  cena ganhou `touch-action: none` para o arrasto do carrossel não disputar gestos do browser.
+- **QA (390×844)**: CTA “Ver o arquivo” → gate com dica de toque; toque → `act=scene`,
+  `[data-carousel]` com 12 cartões; swipe para cima também entra; arrasto no carrossel move
+  `carousel.p` (0 → 0.121); “Voltar” repõe `act=page`, sem overlay e com scroll livre.

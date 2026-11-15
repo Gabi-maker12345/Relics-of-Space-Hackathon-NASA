@@ -1928,6 +1928,7 @@ html[data-archive-flip] .cosmos {
 /* A cena 3D é um espaço próprio: nada da landing pode aparecer por trás. */
 .gate.is-scene {
   background: #000;
+  touch-action: none;
 }
 
 .gate.is-scene .gate__veil {
@@ -2076,6 +2077,20 @@ html[data-archive-flip] .cosmos {
     opacity: 1;
     transform: none;
     filter: none;
+  }
+}
+
+.gate__hintTap {
+  display: none;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .gate__hintScroll {
+    display: none;
+  }
+
+  .gate__hintTap {
+    display: inline;
   }
 }
 

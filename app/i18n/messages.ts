@@ -70,6 +70,7 @@ export const messages = {
     'gate.cosmos': 'O cosmos',
     'gate.continues': 'continua.',
     'gate.hint': 'Desça para atravessar',
+    'gate.tap': 'Toque para atravessar',
     'gate.end': 'Fim da transmissão',
     'gate.relics': 'Relíquias',
 
@@ -313,6 +314,7 @@ export const messages = {
     'gate.cosmos': 'The cosmos',
     'gate.continues': 'goes on.',
     'gate.hint': 'Scroll down to cross over',
+    'gate.tap': 'Tap to cross over',
     'gate.end': 'End of transmission',
     'gate.relics': 'Relics',
 
