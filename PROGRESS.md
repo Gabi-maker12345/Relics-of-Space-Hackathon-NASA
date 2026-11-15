@@ -1220,3 +1220,12 @@ Auditoria em produção (zenitte.vercel.app): consola limpa, DCL 779 ms/load
 - Próximo: os ~1281 `getBoundingClientRect`/s dos planos do track (derivar do
   transform do carrossel), dormir o render quando nada se move, streaming do
   chat, preloader e ficha/mobile.
+
+## Iteração 45 — uma lista por sessão e auth/me fora do público (#85)
+
+- **Uma fonte para a cena:** `usePublicRelics` passa a derivar de `useRelics`; os filtros de local/estado/pesquisa são aplicados no cliente sobre os 12 registos. Entrar na cena ou mudar um filtro já não faz um segundo pedido à lista.
+- **Menu público sem polling de sessão:** `app.vue` deixou de chamar `restore()`/`load(true)` no arranque; `/api/auth/me` só corre em `/admin`. O header usa o cookie de dica `sr-auth` (8 h, não é autorização) para alternar **Painel/Entrar**.
+- **Admin:** uma chamada a `/api/auth/me` e uma à lista admin por page load; o `watch(user)` duplicado foi removido.
+- **Rede:** preload da primeira capa; prefetch do detalhe no hover/focus do cartão. TTFB medido no ambiente de teste: lista **0,15–0,52 s**, detalhe **0,83–1,56 s** no primeiro hit; Vercel em `iad1`, edge `cpt1`. Medição de Angola fica registada na #85.
+- **Qualidade:** 159 unitários, 38 integração, typecheck, lint e build verdes; QA manual confirma 1 lista no arranque, 0 auth/me no público, 0 lista extra na cena/filtros.
+- **Produção (build ea007257):** 1 lista/0 auth no arranque, 0 listas extra na cena/filtros, 36 cartões (15 em Marte), 0 erros de consola.
