@@ -237,6 +237,8 @@ export class GlEngine {
   private viewport = { w: 1, h: 1, dpr: 1 }
   private chatStage = { scale: 1, height: 0 }
   private stageRect = { top: 0, bottom: 0 }
+  private filterBarBottom = 0
+  private glMask = ''
   private bootPromise: Promise<void> | null = null
   private bootedResolve: (() => void) | null = null
 
@@ -1039,7 +1041,8 @@ export class GlEngine {
     // qualquer pressão (incl. fechar o painel) marca o foco como "de rato"
     this.lastPointerAt = performance.now()
     const target = e.target as HTMLElement | null
-    if (target === null || !target.closest('[data-gl="card"]')) return
+    if (target === null) return
+    if (target.closest('[data-gl="card"]') === null && target.closest('[data-carousel]') === null) return
     this.pointer.down = true
     this.pointer.id = e.pointerId
     this.pointer.x = e.clientX
@@ -1099,6 +1102,9 @@ export class GlEngine {
       : THREE.MathUtils.clamp(scaled, 0, 1)
     this.carousel.p = this.carousel.target
     this.lastAdvanceAt = 0
+    // O arrasto move a faixa já neste frame: sem isto o p mudava mas o DOM
+    // (translate do track) ficava parado e os painéis "não scrollavam".
+    this.applyTrack()
   }
 
   private onPointerUp = (e: PointerEvent): void => {
@@ -1135,6 +1141,25 @@ export class GlEngine {
     }, 100)
   }
 
+  /**
+   * A barra de pesquisa é o limite do palco: o canvas GL é mascarado a partir
+   * do fundo da barra (transparente em cima, fade curto, visível em baixo).
+   * Assim os painéis "desaparecem" na barra em vez de a atravessarem.
+   */
+  private applyBarMask(bar: HTMLElement | null): void {
+    const canvas = this.renderer?.domElement ?? null
+    if (canvas === null) return
+    const scene = document.querySelector('.gate.is-scene') !== null
+    const visible = bar !== null && scene && getComputedStyle(bar).visibility !== 'hidden' && bar.getBoundingClientRect().width > 0
+    const mask = visible
+      ? `linear-gradient(to bottom, transparent 0px, transparent ${Math.round(this.filterBarBottom - 8)}px, #000 ${Math.round(this.filterBarBottom + 28)}px, #000 100%)`
+      : 'none'
+    if (mask === this.glMask) return
+    this.glMask = mask
+    canvas.style.webkitMaskImage = mask
+    canvas.style.maskImage = mask
+  }
+
   private tick(): void {
     const renderer = this.renderer
     if (!renderer) return
@@ -1150,6 +1175,9 @@ export class GlEngine {
       this.stageRect.top = r.top
       this.stageRect.bottom = r.bottom
     }
+    const bar = document.querySelector<HTMLElement>('.gate-filters .fr-filters')
+    this.filterBarBottom = bar !== null ? bar.getBoundingClientRect().bottom : 0
+    this.applyBarMask(bar)
     for (const plane of this.planes) {
       if (plane.kind === 'text' && plane.dirty) {
         this.buildTextCanvas(plane)
@@ -1339,18 +1367,19 @@ export class GlEngine {
     const elOpacity = parseFloat(styles.opacity) || 1
     // Com o chat aberto os cartões entram por uma borda superior suave.
     const chatOpen = document.documentElement.classList.contains('chat-open')
+    // A barra é o limite: o canvas GL é mascarado no fundo da barra (fade
+    // screen-space), por isso não é preciso esmaecer plano a plano no topo.
     let topFade = 1
-    if (chatOpen && this.isInTrack(plane.el)) {
-      const upStart = this.stageRect.top + 60
-      const upEnd = this.stageRect.top + 170
+    // No palco do chat (desktop) o fundo do palco também corta os cartões.
+    if (chatOpen && this.viewport.w >= 1024 && this.isInTrack(plane.el)) {
       const downStart = this.stageRect.bottom - 40
       const downEnd = this.stageRect.bottom - 150
-      const up = Math.max(0, Math.min(1, (rect.top - upStart) / (upEnd - upStart)))
       const down = rect.bottom > downStart
         ? Math.max(0, Math.min(1, (downEnd - rect.bottom) / (downEnd - downStart)))
         : 1
-      topFade = Math.min(up, down)
+      topFade = Math.min(topFade, down)
     }
+    const hideTrack = chatOpen && this.viewport.w < 1024 && this.isInTrack(plane.el)
     const glOwned = plane.el.hasAttribute('data-gl') || plane.el.hasAttribute('data-title')
     const invisClass = plane.el.classList.contains('invisible')
     const domHidden = styles.display === 'none' || (styles.visibility === 'hidden' && !glOwned) || (invisClass && plane.kind === 'text')
@@ -1358,7 +1387,7 @@ export class GlEngine {
     // o portal escurece os cards e o piso; títulos/pills seguem visíveis
     const inStrip = plane.group === null && this.isInTrack(plane.el)
     const portalDim = inStrip && plane.kind === 'card' ? 1 - 0.72 * this.hole.p : 1
-    const targetOpacity = elOpacity * visibility * (plane.entered ? 1 : 0) * plane.enterAlpha * portalDim * topFade
+    const targetOpacity = elOpacity * visibility * (plane.entered ? 1 : 0) * plane.enterAlpha * portalDim * topFade * (hideTrack ? 0 : 1)
     const uniforms = plane.uniforms
     uniforms.uOpacity.value += (targetOpacity - uniforms.uOpacity.value) * FOLLOW_LERP
     plane.mesh.scale.set(anchor.w * plane.scaleBridge.x, anchor.h * plane.scaleBridge.y, 1)

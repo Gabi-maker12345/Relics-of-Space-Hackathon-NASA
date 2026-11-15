@@ -79,6 +79,10 @@ function onKeydown(event: KeyboardEvent): void {
 function applyChatStage(): void {
   const root = document.documentElement
   const engine = getGlEngine()
+  const header = document.querySelector<HTMLElement>('.fr-header')
+  if (header !== null) {
+    root.style.setProperty('--chat-top', `${Math.round(header.getBoundingClientRect().bottom)}px`)
+  }
   if (!root.classList.contains('chat-open') || window.innerWidth < 1024) {
     root.style.removeProperty('--chat-stage-scale')
     root.style.removeProperty('--chat-left')
@@ -583,15 +587,17 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1023px) {
-  /* No telemóvel o chat é uma gaveta em baixo: os painéis ficam visíveis em cima. */
+  /* No telemóvel o Zénite Bot ocupa tudo abaixo da navbar; a cena por baixo é
+     escondida e o fundo é o cosmos (sem cartões nem barra a atravessar). */
   .chat {
-    inset: auto 12px 12px;
-    top: auto;
+    inset: var(--chat-top, 76px) 0 0;
     width: auto;
-    height: min(64svh, 560px);
-    background: rgb(4 5 9 / 0.86);
-    backdrop-filter: blur(18px) saturate(108%);
-    -webkit-backdrop-filter: blur(18px) saturate(108%);
+    height: auto;
+    border: 0;
+    border-radius: 0;
+    background: rgb(4 5 9 / 0.5);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .chat-fab {

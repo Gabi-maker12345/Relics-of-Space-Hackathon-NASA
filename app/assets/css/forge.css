@@ -108,7 +108,7 @@
 .fr-header {
   position: fixed;
   inset: 0 0 auto;
-  z-index: 70;
+  z-index: 300;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -973,7 +973,8 @@ html.is-menu-open body {
   .fr-filters--overlay {
     display: block;
     padding: var(--fr-space-sm) var(--fr-gutter);
-    background: linear-gradient(to bottom, rgb(0 0 0 / 0.94), rgb(0 0 0 / 0.8) 72%, rgb(0 0 0 / 0));
+    background: transparent;
+    background-image: none;
   }
 
   .fr-filters--overlay .fr-filters__search {
@@ -2064,6 +2065,7 @@ html.chat-open .gate.is-scene .gate__veil {
 html.chat-open .gate-filters .fr-filters--overlay {
   padding-block: var(--fr-space-s);
   background: transparent;
+  background-image: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   border-bottom: 1px solid transparent;
@@ -2173,6 +2175,24 @@ html.chat-open .gate.is-scene [data-carousel] {
   gap: 6vh 0;
   transform: none;
   padding-inline: 0;
+}
+
+/* No palco móvel o arrasto vertical pertence ao carrossel (touch-action:auto
+   deixava o browser cancelar o gesture e os painéis não scrollavam). */
+.gate.is-scene [data-carousel],
+.gate.is-scene [data-carousel] [data-gl='card'] {
+  touch-action: none;
+}
+
+/* Com o chat aberto no telemóvel o bot ocupa o ecrã: a cena por baixo some
+   (só fica o cosmos) e a barra/chrome não ficam a espreitar pela translucidez. */
+@media (max-width: 1023px) {
+  html.chat-open .gate-filters,
+  html.chat-open .gate-chrome {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
 }
 
 /* O cartão é um botão: sem seleção nem drag nativo da imagem (roubava o

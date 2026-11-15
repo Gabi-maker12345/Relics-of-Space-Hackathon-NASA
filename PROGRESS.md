@@ -1104,3 +1104,26 @@ diário aberto pelo cartão.
 - QA: cliques em cartões laterais (esq./dir.) abrem a ficha certa sem mover a
   faixa; fechar com clique real não recentra; arrasto move 1:1 e não abre;
   no chat o clique com jitter inicia a pergunta e a faixa vertical não salta.
+
+## Iteração 56 — mobile: scroll dos painéis, barra transparente e bot em ecrã inteiro
+
+- **Scroll dos painéis**: o arrasto mudava `p` mas nunca aplicava o `translate`
+  do track (`applyTrack` em falta) — os painéis ficavam parados; além disso
+  `touch-action:auto` deixava o browser cancelar o gesture. Agora
+  `.gate.is-scene [data-carousel] (e cards) { touch-action:none }`, o arrasto
+  aplica o track no mesmo frame e também pode começar nos espaços do track.
+- **Barra de pesquisa**: removido o gradiente preto do overlay no mobile
+  (`linear-gradient(0.94…)`) e o `background-image` no modo chat — totalmente
+  transparente; o cosmos vê-se atrás.
+- **Limite da barra**: o canvas GL é mascarado no fundo da barra
+  (`mask-image: linear-gradient(...)`, fade 8→28 px), por isso os painéis
+  desaparecem na barra em vez de a atravessarem (mobile, desktop e palco do chat).
+- **Zénite Bot no mobile**: ocupa tudo abaixo da navbar (`top: var(--chat-top)` =
+  fundo real do header), fundo cosmos (cartões/barra/chrome escondidos, GL com
+  `hideTrack`), nada por baixo clicável; sem blur.
+- **Menu da navbar**: header z 300 (contexto acima do chat 90) mantém o menu
+  (z 1 dentro do header) acima do bot e o botão/X do menu acessível; testado em
+  mobile e desktop.
+- QA: 390×844 — arrasto move os painéis, barra transparente e cartões cortados
+  na barra; bot full-screen com cosmos; menu abre sobre o bot e fecha no X;
+  click point devolve `.chat` (nada abaixo); 1440×900 — máscara e menu sobre o chat.
