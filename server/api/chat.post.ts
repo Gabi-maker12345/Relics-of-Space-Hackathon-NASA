@@ -9,8 +9,9 @@ import { consume } from '../utils/rate-limit'
 
 /**
  * Chat público do arquivo. A IA responde em pt/en sobre uma relíquia publicada.
- * Provider OpenAI-compatível (o mesmo do quiz/tradução):
- *   QUIZ_AI_API_KEY / QUIZ_AI_MODEL / QUIZ_AI_BASE_URL
+ * Provider OpenAI-compatível; por omissão usa o Muse Spark do OpenCode Go:
+ *   CHAT_AI_API_KEY / CHAT_AI_MODEL / CHAT_AI_BASE_URL
+ * (fallback para QUIZ_AI_* / OPENAI_API_KEY)
  */
 
 const MAX_MESSAGES = 16
@@ -125,11 +126,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: parsed.error.issues[0]?.message || 'Pedido inválido.' })
   }
 
-  const apiKey = process.env.QUIZ_AI_API_KEY || process.env.OPENAI_API_KEY
+  const apiKey = process.env.CHAT_AI_API_KEY || process.env.QUIZ_AI_API_KEY || process.env.OPENAI_API_KEY
   if (!apiKey) {
     throw createError({
       statusCode: 503,
-      message: 'Chat indisponível: configura QUIZ_AI_API_KEY no ambiente.',
+      message: 'Chat indisponível: configura CHAT_AI_API_KEY no ambiente.',
     })
   }
 
@@ -138,8 +139,10 @@ export default defineEventHandler(async (event) => {
   const supabase = serverSupabaseServiceRole<Database>(event)
   const relic = body.relicId ? await loadContext(supabase, body.relicId, lang) : null
 
-  const model = process.env.QUIZ_AI_MODEL || 'gpt-4o-mini'
-  const baseUrl = (process.env.QUIZ_AI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '')
+  const model = process.env.CHAT_AI_MODEL || process.env.QUIZ_AI_MODEL || 'gpt-4o-mini'
+  const baseUrl = (process.env.CHAT_AI_BASE_URL || process.env.QUIZ_AI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '')
+  // O OpenCode Go exige um id de sessão para encaminhar o pedido.
+  const sessionId = crypto.randomUUID()
   let diagnostics = ''
 
   /** Uma chamada ao provider; devolve o texto (ou '' se vier sem conteúdo). */
@@ -152,11 +155,11 @@ export default defineEventHandler(async (event) => {
         headers: {
           'content-type': 'application/json',
           authorization: `Bearer ${apiKey}`,
+          'x-opencode-session': sessionId,
         },
         body: JSON.stringify({
           model,
           temperature,
-          max_tokens: 1200,
           messages: [
             { role: 'system', content: system },
             ...body.messages,
