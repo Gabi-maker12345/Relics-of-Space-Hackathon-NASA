@@ -1,6 +1,6 @@
 import tailwindcss from '@tailwindcss/vite'
 
-// Zénite — base visual na especificação de forgeautomotive.co.uk (CLONE.md, Parte 1) e no portfólio existente
+// Zénite — arquivo vivo de máquinas espaciais: Nuxt 4 + Three.js + Supabase
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-01',
   // O CSS entra no HTML para não bloquear o primeiro paint num 4G.
@@ -27,7 +27,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'Zénite — abandonados, mas não esquecidos',
+      title: 'Zénite — abandoned, but not forgotten',
       script: [
         {
           // estado inicial do preloader antes do primeiro paint (sem flash)
@@ -43,26 +43,28 @@ export default defineNuxtConfig({
         {
           name: 'description',
           content:
-            'Um arquivo vivo das máquinas que a humanidade deixou na Lua, em Marte e no espaço profundo — e o portfólio que continua o arquivo.',
+            'A living archive of the machines humanity left on the Moon, on Mars and in deep space — and the portfolio that continues the archive.',
         },
         { property: 'og:type', content: 'website' },
         { property: 'og:title', content: 'Zénite' },
-        { property: 'og:description', content: 'Um arquivo vivo das máquinas que a humanidade deixou na Lua, em Marte e no espaço profundo — e o portfólio que continua o arquivo.' },
-        { property: 'og:url', content: 'https://spacerelics.space/' },
+        { property: 'og:description', content: 'A living archive of the machines humanity left on the Moon, on Mars and in deep space — and the portfolio that continues the archive.' },
+        { property: 'og:locale', content: 'en_GB' },
+        { property: 'og:locale:alternate', content: 'pt_PT' },
+        { property: 'og:url', content: 'https://zenite.vercel.app/' },
         { property: 'og:site_name', content: 'Zénite' },
-        { property: 'og:image', content: '/images/relics/opportunity-1.jpg' },
+        { property: 'og:image', content: 'https://zenite.vercel.app/images/relics/opportunity-1.jpg' },
         { property: 'og:image:width', content: '1600' },
         { property: 'og:image:height', content: '900' },
         { property: 'og:image:alt', content: 'Zénite' },
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:title', content: 'Zénite' },
-        { name: 'twitter:description', content: 'Um arquivo vivo das máquinas que a humanidade deixou na Lua, em Marte e no espaço profundo — e o portfólio que continua o arquivo.' },
-        { name: 'twitter:image', content: '/images/relics/opportunity-1.jpg' },
+        { name: 'twitter:description', content: 'A living archive of the machines humanity left on the Moon, on Mars and in deep space — and the portfolio that continues the archive.' },
+        { name: 'twitter:image', content: 'https://zenite.vercel.app/images/relics/opportunity-1.jpg' },
       ],
       link: [
         { rel: 'icon', type: 'image/png', href: '/images/zenite-icon-64.png', sizes: '64x64' },
         { rel: 'apple-touch-icon', href: '/images/zenite-icon-180.png' },
-        { rel: 'canonical', href: 'https://spacerelics.space/' },
+        { rel: 'canonical', href: 'https://zenite.vercel.app/' },
       ],
     },
   },

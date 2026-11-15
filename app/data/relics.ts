@@ -117,6 +117,7 @@ export const relics: Relic[] = seed.map((entry) => {
   })
 })
 
+/** Nomes das missões do marquee do hero (e QA: cobre todas as relíquias). */
 export const missionMarquee = [
   'Apollo 11',
   'Apollo 12',
@@ -126,10 +127,3 @@ export const missionMarquee = [
   'Apollo 17',
   ...relics.map(relic => relic.name),
 ]
-
-export const heroCopy = {
-  title: 'Zénite',
-  deck: 'Um arquivo vivo das máquinas que a humanidade deixou na Lua, em Marte e no espaço profundo.',
-  phaseTwo: 'Abandonados, mas não esquecidos.',
-  phaseTwoDeck: 'Cada relíquia guarda um diário de missão. Desça para ouvir o que elas têm para contar.',
-}

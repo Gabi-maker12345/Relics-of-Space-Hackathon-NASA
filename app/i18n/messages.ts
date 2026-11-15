@@ -84,6 +84,9 @@ export const messages = {
     'filters.noResults': 'Nenhuma relíquia corresponde a estes filtros.',
 
     'archive.eyebrow': 'Arquivo de missões',
+    'archive.titleTop': 'O que ficou',
+    'archive.titleBottom': 'para trás',
+    'archive.deck': 'Três relíquias, três histórias. A mesma pergunta: o que acontece com aquilo que deixamos de usar?',
     'archive.cta': 'Ver o arquivo',
 
     'gate.cosmos': 'O cosmos',
@@ -373,6 +376,9 @@ export const messages = {
     'filters.noResults': 'No relic matches these filters.',
 
     'archive.eyebrow': 'Mission archive',
+    'archive.titleTop': 'What was left',
+    'archive.titleBottom': 'behind',
+    'archive.deck': 'Three relics, three stories. The same question: what happens to what we stop using?',
     'archive.cta': 'View the archive',
 
     'gate.cosmos': 'The cosmos',

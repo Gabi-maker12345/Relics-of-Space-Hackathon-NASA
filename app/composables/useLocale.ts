@@ -1,13 +1,13 @@
-const STORAGE_KEY = 'space-relics:lang:v1'
+const STORAGE_KEY = 'zenite:lang:v1'
 
 export type Lang = 'pt' | 'en'
 
 /**
- * Seletor PT/EN — só UI nesta fase (a copy ainda é PT). Guarda a escolha e
- * mantém `<html lang>` coerente para leitores de ecrã.
+ * Seletor PT/EN. O idioma por omissão é inglês; a escolha guarda-se e o
+ * `<html lang>` acompanha para leitores de ecrã.
  */
 export function useLocale() {
-  const lang = useState<Lang>('locale', () => 'pt')
+  const lang = useState<Lang>('locale', () => 'en')
 
   const apply = (): void => {
     if (typeof document !== 'undefined') document.documentElement.lang = lang.value === 'pt' ? 'pt-PT' : 'en'

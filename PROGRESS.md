@@ -1,6 +1,8 @@
-# PROGRESS.md — execução do clone
+# PROGRESS.md — registo de iteração
 
-Base: `CLONE.md` — Parte 1 (extração, valores exatos) + Parte 2 (ordem).
+Changelog do Zénite (Nuxt 4 + Supabase). Cada secção resume o que mudou e como
+foi verificado. O projeto começou como clone visual de referência; essa
+documentação foi removida com o rebrand.
 
 ## Assunções sobre itens [NÃO DETERMINADO] da SPEC
 
@@ -56,7 +58,7 @@ Base: `CLONE.md` — Parte 1 (extração, valores exatos) + Parte 2 (ordem).
 ## Evidências visuais
 
 - Original (harness, 921×948, dpr 1.25): `/tmp/omp-sshots-15b9bc95f9f54741.png`
-- Clone final: `/tmp/clone-final2.png`
+- QA final: `/tmp/clone-final2.png`
 - Side-by-side: `/tmp/compare.png`
 
 ## Fase de refinamento (motion + auditoria)
@@ -129,7 +131,7 @@ Base: `CLONE.md` — Parte 1 (extração, valores exatos) + Parte 2 (ordem).
 
 # Space Relics — integração com a base visual do forgeautomotive.co.uk (2026-10-31)
 
-Fonte: `CLONE.md` Parte 1 (extração ao vivo) + Parte 2 (plano).
+Base visual: extração ao vivo do site de referência + o portfólio existente.
 Restrição do pedido: a integração acontece **no projeto Nuxt existente** (não num app Next novo), porque o portfólio 3D tem de sobreviver como 6.ª secção.
 
 ## Desvios assumidos (e porquê)
@@ -424,7 +426,7 @@ diário aberto pelo cartão.
 ## Iteração 20 — o login volta a ter a magia do portal
 
 - Texto do painel passou a ser **GL** (`data-gl="text"`), com a revelação linha a linha (slot-machine)
-  rearmada a cada abertura via `replayShield`, tal como o clone descreve (CLONE.md §painéis).
+  rearmada a cada abertura via `replayShield`.
 - Véu escuro a z 15 por baixo do canvas (`--gl-z: 20`): a página escurece, o buraco e o anel
   mantêm-se nítidos; o formulário assenta a z 110 (acima do header 70 e do modal 90).
 - Com o painel aberto a chrome recua (header e barra de progresso a opacity 0).
@@ -1148,3 +1150,37 @@ diário aberto pelo cartão.
 - Verificado: ficha aberta → FAB (z 96) acessível (elementFromPoint = FAB) → um
   clique fecha a ficha e abre o chat; 300 ms depois o fundo é só cosmos/estrelas,
   sem cartões nem ficha; header escondido; chat top 0.
+
+
+## Iteração 59 — Zénite: rebrand, logo animada e preloader
+
+- "Space Relics" → **Zénite** na app, metadata/OG, README, package e prompt do bot.
+- Logo Zénite (PNG branco + SVG animado) no header, favicons e avatar do login;
+  preloader animado (arcos/estrela/voo para o header) e som sintetizado.
+
+## Iteração 60 — Login liquid glass
+
+- Cartão translúcido (blur 34 px) sobre o cosmos, sem anel/"hole" GL; botão
+  ENTRAR em vidro; logo sem círculo e com proporção correta (190×137 no desktop,
+  150 px no mobile); PNG branco para renderizar em todos os browsers.
+- Com o login aberto escondem-se página, gate/chrome, canvas 3D, preloader, chat
+  e modais — fica só o cosmos, em qualquer página.
+
+## Iteração 61 — mobile, bot e painéis
+
+- Mobile: barra de pesquisa transparente; cartões cortados no fundo da barra
+  (`mask-image` no canvas GL); bot em ecrã inteiro abaixo da navbar; menu acima
+  de tudo; scroll dos painéis (touch-action + applyTrack no arrasto).
+- Clique: foco não recentra a faixa; imagens sem drag nativo; limiar de 16 px.
+- Desktop: "Voltar" escondido com o bot aberto; mobile: FAB escondido com a ficha.
+- Cópias do carrossel (chat abrir/fechar) re-entram no GL (`enterAll`) — os
+  painéis já não ficam invisíveis; contador de exploradas mostra "A carregar…".
+
+## Iteração 62 — domínio zenite.vercel.app, docs e inglês por omissão
+
+- Canonical/OG e deploy: **https://zenite.vercel.app**; og:image absoluto.
+- Idioma por omissão **inglês** (o PT/EN do header guarda a escolha); hero e
+  secção do arquivo traduzidos; título/descrição/OG em inglês.
+- Docs atualizados (README funcionalidades/API/idiomas/deploy, DEPENDENCIES
+  atual); beta `space-relics/`, `SPACE_RELICS.md`, `CLONE.md` e
+  artefactos Next removidos.

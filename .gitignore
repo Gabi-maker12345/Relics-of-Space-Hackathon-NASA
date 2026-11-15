@@ -35,16 +35,8 @@ Thumbs.db
 *.tsbuildinfo
 coverage/
 
-# projeto abandonado (Space Relics standalone) — fora do repo
-space-relics/
-SPACE_RELICS.md
-
 # locks do LibreOffice
 .~lock.*
-
-# artefactos do build Next (branch main usa outro app)
-.next/
-next-env.d.ts
 
 # venv do gerador de narração (scripts/generate-narration.mjs)
 .venv-tts/

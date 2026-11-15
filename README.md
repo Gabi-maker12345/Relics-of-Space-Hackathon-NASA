@@ -1,16 +1,29 @@
 # Zénite
 
-> *Abandonados, mas não esquecidos.*
+> *Abandoned, but not forgotten.*
 
-Arquivo vivo das máquinas que a humanidade deixou na Lua, em Marte e no espaço profundo.
-Nuxt 4 + Three.js no front, **Supabase** como base de dados, autenticação e armazenamento.
+A living archive of the machines humanity left on the Moon, on Mars and in deep space.
+Nuxt 4 + Three.js on the front, **Supabase** for data, auth and storage.
+
+**Produção:** https://zenite.vercel.app · **Idioma por omissão:** inglês (PT/EN no header)
+
+## Funcionalidades
+
+- Arquivo 3D com filtros, fichas narradas, quiz e progresso de exploração.
+- **Zénite Bot** — chat PT/EN com o contexto da relíquia e catálogos de missões
+  editáveis no admin (prompt, instruções e links em `config/bot.json`, bucket
+  privado do Supabase Storage).
+- **Login de administração** em "liquid glass" sobre o cosmos, e painel para CRUD
+  de relíquias, traduções, importação NASA e configuração do bot.
+- **Preloader** com a logo animada Zénite e transição para o header.
+- Mobile: bot em ecrã inteiro, filtros responsivos e fichas acima de tudo.
 
 ---
 
 ## Stack
 
-> **Stack final:** Nuxt 4 + Supabase (ver [`docs/adr-001-nuxt-final.md`](docs/adr-001-nuxt-final.md)).
-> A linha Next.js em `master` está **congelada** — não fazer push nem merge lá.
+> **Stack final:** Nuxt 4 + Vue 3 + Nitro + Supabase. A beta Next.js
+> (`space-relics/`) e os artefactos `Next` antigos foram removidos.
 
 
 | Camada | Tecnologia |
@@ -104,9 +117,8 @@ npm run narration:check    # falha se faltar algum MP3 (corre na CI)
 
 A narração é sintética, gerada com Edge TTS (`pt-PT-RaquelNeural`) a partir dos
 nossos textos PT, e fica em `public/media/narration/`. Não é áudio NASA; o
-`speechSynthesis` do browser continua como fallback. Ver
-[`docs/data-sources.md`](docs/data-sources.md) e
-[`docs/deploy-checklist.md`](docs/deploy-checklist.md).
+`speechSynthesis` do browser continua como fallback. Créditos e fontes vivem na
+própria base de dados (`credit`, `source_url`).
 
 O seed é idempotente: apaga as relíquias de demonstração por `slug` e volta a
 inseri-las com factos e mídias (o `on delete cascade` limpa os filhos). Correr
@@ -142,7 +154,11 @@ O script [`scripts/smoke.mjs`](scripts/smoke.mjs) usa `BASE_URL` (por omissão
 | `NUXT_PUBLIC_SUPABASE_URL` | público | URL do projeto Supabase |
 | `NUXT_PUBLIC_SUPABASE_KEY` | público | anon/publishable key (protegida por RLS) |
 | `NUXT_SUPABASE_SECRET_KEY` | **servidor** | service role/secret key; nunca vai para o browser |
+| `SUPABASE_STORAGE_BASE` | público | base das URLs de media no Storage |
+| `SUPABASE_ACCESS_TOKEN` / `SUPABASE_PROJECT_REF` / `SUPABASE_DB_PASSWORD` | CLI | ligar e aplicar migrações |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | script | bootstrap do primeiro administrador |
+| `QUIZ_AI_API_KEY` / `QUIZ_AI_BASE_URL` / `QUIZ_AI_MODEL` | servidor | geração do quiz (OpenAI-compatível) |
+| `CHAT_AI_API_KEY` / `CHAT_AI_BASE_URL` / `CHAT_AI_MODEL` | servidor | Zénite Bot (`/api/chat`); fallback `QUIZ_AI_*` |
 
 > ⚠️ A secret key ignora RLS. Só pode ser usada em `server/**` e nunca em
 > `app/**` ou em variáveis `NUXT_PUBLIC_*`.
@@ -162,7 +178,8 @@ npx supabase db push
 # executar os ficheiros por ordem: 0001_..., 0002_...
 ```
 
-O esquema está documentado em [`docs/database.md`](docs/database.md).
+O esquema está nas migrações (`supabase/migrations/`) e no seed
+(`supabase/seed.sql`).
 
 ### Criar o administrador
 
@@ -206,23 +223,20 @@ Supabase Auth e garante a linha correspondente em `admin_users`.
 ## Estrutura
 
 ```
-app/                  front (páginas, componentes, GL)
-server/               endpoints Nitro e repositórios (a partir da BE-03)
-tests/                testes unitários
+app/                  front Nuxt 4 (páginas, componentes, GL, i18n)
+server/               endpoints Nitro, repositórios e utilitários (bot, auth, NASA)
+shared/types/         contratos partilhados
 data/
-  relics.json         fonte única das relíquias do seed
-supabase/
-  config.toml         configuração do CLI / stack local
-  migrations/         esquema + RLS + storage policies
-  seed.sql            seed de demonstração gerado (idempotente)
-docs/                 arquitetura e esquema
-  database.md         esquema, RLS e seed
-  testing.md          testes unitários/integração
-  data-sources.md     fontes oficiais, créditos e conformidade
-  deploy-checklist.md deploy e QA de aceitação
+  relics.json         fonte do seed e da narração
+supabase/             migrações, RLS, storage policies e seed
+tests/                testes unitários
 public/
   images/relics/      imagens oficiais do seed
-  media/narration/    narração sintética (36 MP3)
+  media/narration/    narração sintética
+scripts/              seed, imagens, narração, smoke e setup
+README.md             este documento
+PROGRESS.md           changelog por iteração
+DEPENDENCIES.md       inventário de dependências
 ```
 
 ### API
@@ -235,11 +249,16 @@ Público (cliente anon + RLS; rascunhos nunca aparecem; cache `public, max-age=6
 
 - `GET /api/public/relics` (e `/public/relics`) — lista leve com apenas os campos do painel (`slug`, `name`, `summary`, `status`, `location`, capa e seu tipo). Suporta filtros `location`, `status`, pesquisa `q` por nome, ordenação `sort` (`name` | `created_at`) e `order` (`asc` | `desc`) e `lang` (`pt` por omissão, ou `en`).
 - `GET /api/public/relics/:slug` (e `/public/relics/:slug`) — detalhe completo (ficha técnica, `steps`, mídias, quiz; UUID ainda aceite para links antigos). `?lang=en` devolve textos e áudios traduzidos quando existirem.
+- `POST /api/chat` — Zénite Bot: `{ lang, relicId?, messages }`; responde em PT/EN
+  com o contexto do arquivo e até 6 catálogos externos resumidos (cache 20 min).
+  Limite de 20 pedidos/min por IP; provider OpenAI-compatível (`CHAT_AI_*`).
 - `POST /api/public/relics/:slug/quiz/check` — `{ "question_id": "…", "option_index": 0 }`; devolve `correct`, `correct_index` e `explanation` sem expor a resposta no detalhe.
 
 Admin (requer sessão Supabase com `is_admin`):
 
 - `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me`
+- `GET|PUT /api/admin/bot` — prompt, instruções e catálogos do Zénite Bot
+  (`config/bot.json`, bucket privado; modal **Zénite Bot** no admin)
 - `GET|POST /api/admin/relics`
 - `GET|PUT|DELETE /api/admin/relics/:id` — `:id` é o slug ou o UUID
 - `POST /api/admin/upload` — upload direto, limitado a 4 MB (limite de body das
@@ -313,6 +332,9 @@ recusados com 400; falhas da NASA devolvem 502 com uma mensagem clara.
 
 ### Idiomas (BE-12)
 
+A UI tem PT e EN; o idioma por omissão é **inglês** (o seletor do header guarda
+a escolha em `zenite:lang:v1`). O cliente envia `lang` para a API e para o bot.
+
 As colunas base da tabela são português; uma tradução vive nas tabelas
 `relic_translations`, `media_translations` e `quiz_question_translations`. Os
 endpoints públicos aceitam `?lang=` (código de duas letras, opcionalmente com
@@ -351,18 +373,21 @@ o `path`/`publicUrl` na relíquia. Os limites (imagem 5 MB, áudio 15 MB, vídeo
 ## Deploy (Vercel)
 
 1. Importar o repositório na Vercel.
-2. Definir as variáveis de ambiente (as três do Supabase + `ADMIN_*` apenas se
-   correres o script na Vercel).
+2. Definir as variáveis de ambiente (Supabase + `CHAT_AI_*` para o bot +
+   `ADMIN_*` apenas se correres o script na Vercel).
 3. Build command: `npm run build`. Output: detetado automaticamente pelo Nitro.
 4. Aplicar as migrações ao projeto Supabase antes do primeiro deploy.
+5. Domínio de produção: **https://zenite.vercel.app** (canonical/OG no
+   `nuxt.config.ts`).
 
 ---
 
 ## English summary
 
-Zénite is a Nuxt 4 + Three.js museum of abandoned space hardware. The
-backend is Supabase (Postgres, Auth, Storage); Nitro API routes in `server/`
-enforce validation and admin authorization. The browser uses the public anon key
-under RLS, while the service role key stays server-side. One branch and one PR
-per issue, with CI (lint, typecheck, tests) before merging into the backend
-milestone branch. See `.env.example` and `docs/database.md`.
+Zénite is a living archive (Nuxt 4 + Three.js) of abandoned space hardware,
+backend by Supabase (Postgres, Auth, Storage). Nitro routes in `server/` enforce
+validation and admin authorization; the browser uses the public anon key under
+RLS and the service role key stays server-side. The site is **English by
+default** with a PT/EN toggle; the Zénite Bot answers from the archive plus
+editable mission catalogues (prompt/catalogues in the admin). Production:
+https://zenite.vercel.app. See `.env.example` and `supabase/migrations/`.
