@@ -29,6 +29,14 @@ const supabaseUrl = String(config.public.supabase?.url ?? '')
 const headLink: Link[] = [
   // a serifa do hero é o LCP: evitar o swap tardio
   { rel: 'preload', as: 'font', type: 'font/woff2', href: newsreaderFont, crossorigin: '' },
+  // primeira capa da órbita/foco (é a imagem visível no arranque)
+  {
+    rel: 'preload',
+    as: 'image',
+    href: '/images/relics/apollo-lunar-module-1-960.webp',
+    imagesrcset: '/images/relics/apollo-lunar-module-1-480.webp 480w, /images/relics/apollo-lunar-module-1-960.webp 960w',
+    imagesizes: '(max-width: 900px) 92vw, 560px',
+  },
   ...(supabaseUrl
     ? [
         { rel: 'preconnect' as const, href: supabaseUrl },
@@ -63,8 +71,6 @@ onMounted(async () => {
   useSound().load()
   useLocale().load()
   usePassport().load()
-  await useAuth().restore()
-  await useRelics().load(true)
   initSmoothScroll()
   if (route.path !== '/') window.scrollTo({ top: 0 })
 })

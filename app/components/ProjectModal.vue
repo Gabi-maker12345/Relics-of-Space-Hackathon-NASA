@@ -43,7 +43,7 @@ async function loadDetail(slug: string): Promise<void> {
   detailRequest = (async () => {
     try {
       const full = await fetchReliable<Relic>(
-        $fetch,
+        $fetch as unknown as <T>(url: string, options?: Record<string, unknown>) => Promise<T>,
         `/api/public/relics/${encodeURIComponent(slug)}`,
         { query: { lang: lang.value } },
         { timeoutMs: 8000, retries: 1 },

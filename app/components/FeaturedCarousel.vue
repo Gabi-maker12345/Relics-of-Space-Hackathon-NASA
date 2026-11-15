@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { t } = useI18n()
+const { lang } = useLocale()
 const { filters, hasFilters, clear } = useRelicFilters()
 const { relics, pending, error, refresh, offline } = usePublicRelics(filters)
 
@@ -83,6 +84,16 @@ watch(() => relics.value.map(relic => relic.id).join('|'), async () => {
   }
 })
 
+const prefetched = new Set<string>()
+
+/** Aquece o detalhe no hover/focus: o diário abre sem esperar pelo primeiro pedido. */
+function prefetchRelic(id: string): void {
+  if (!import.meta.client || prefetched.has(id)) return
+  prefetched.add(id)
+  const fetcher = $fetch as unknown as <T>(url: string, options?: Record<string, unknown>) => Promise<T>
+  void fetcher(`/api/public/relics/${encodeURIComponent(id)}`, { query: { lang: lang.value } }).catch(() => {})
+}
+
 function openRelic(id: string, fromPointer = true, name = ''): void {
   if (!import.meta.client) return
   // arrastar o carrossel não deve abrir a relíquia; o teclado não é um arrasto
@@ -135,6 +146,8 @@ function openRelic(id: string, fromPointer = true, name = ''): void {
       :tabindex="card.copy === 0 ? 0 : -1"
       role="button"
       :aria-label="`${card.name} — ${card.tagline}`"
+      @pointerenter="prefetchRelic(card.id)"
+      @focus="prefetchRelic(card.id)"
       @click="openRelic(card.id, true, card.name)"
       @keydown.enter.prevent="openRelic(card.id, false, card.name)"
       @keydown.space.prevent="openRelic(card.id, false, card.name)"

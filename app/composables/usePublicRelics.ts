@@ -1,51 +1,61 @@
-import type { RelicPanelItem } from '#shared/types/relic'
+import type { Relic, RelicPanelItem } from '#shared/types/relic'
 import type { RelicFilters } from '~/utils/relicFilters'
-import { fetchReliable } from '~/utils/resilient'
-import { panelFromSeed } from '~/utils/seedFallback'
+
+type PanelExtras = {
+  cover_type?: RelicPanelItem['cover_type']
+  cover?: RelicPanelItem['cover']
+}
+
+function panelFromRelic(relic: Relic): RelicPanelItem {
+  const extra = relic as Relic & PanelExtras
+  return {
+    id: relic.id,
+    slug: relic.id,
+    name: relic.name,
+    summary: relic.tagline ?? '',
+    tagline: relic.tagline ?? '',
+    status: relic.status ?? 'active',
+    location: relic.location ?? 'moon',
+    mission: relic.mission ?? '',
+    ratio: relic.ratio,
+    image: relic.image,
+    body: relic.body ?? '',
+    cover_type: extra.cover_type ?? null,
+    cover: extra.cover ?? null,
+    facts: relic.facts ?? [],
+    reference_url: relic.reference_url ?? null,
+    is_extra: relic.is_extra ?? false,
+  }
+}
 
 /**
- * Public ring data, filtered server-side by BE-09. The async key is stable and
- * the query is watched, so Nuxt refetches on every filter change and the SSR
- * payload already carries the filtered list.
+ * Public ring data.
  *
- * FE-18: the chosen language is part of the query, so switching PT/EN refetches
- * the same list with translated content and localized audio.
- *
- * #82: a API falhar não deixa a cena preta — a lista cai para o seed local e a
- * UI mostra um aviso com "Tentar de novo".
+ * #85: a lista vive num único `useRelics` (um pedido por sessão/idioma); os
+ * filtros de local/estado/pesquisa são aplicados aqui, no cliente, sobre os 12
+ * registos. A cena deixou de fazer um segundo pedido a `/api/public/relics`
+ * sempre que entrava ou mudava um filtro.
  */
 export function usePublicRelics(filters: Ref<RelicFilters>) {
-  const { lang } = useLocale()
-  useLocale().load()
+  const { relics: source, loadedFor, error: listError, load } = useRelics()
+  void load()
 
-  const query = computed(() => ({ ...toRelicQuery(filters.value), lang: lang.value }))
-  const offline = useState<boolean>('public-relics-offline', () => false)
+  const items = computed(() => source.value
+    .filter(relic => relic.published !== false)
+    .map(panelFromRelic))
 
-  const { data, pending, error, refresh } = useAsyncData<RelicPanelItem[]>(
-    'public-relics',
-    async () => {
-      try {
-        const items = await fetchReliable<RelicPanelItem[]>(
-          $fetch,
-          '/api/public/relics',
-          { query: query.value },
-          { timeoutMs: 8000, retries: 1 },
-        )
-        offline.value = false
-        return items
-      }
-      catch {
-        offline.value = true
-        return panelFromSeed(filters.value)
-      }
-    },
-    {
-      default: () => [] as RelicPanelItem[],
-      watch: [query],
-    },
-  )
+  const relics = computed(() => {
+    const q = filters.value.q.trim().toLowerCase()
+    return items.value
+      .filter(item => !filters.value.location || item.location === filters.value.location)
+      .filter(item => !filters.value.status || item.status === filters.value.status)
+      .filter(item => !q || item.name.toLowerCase().includes(q))
+  })
 
-  const relics = computed(() => data.value ?? [])
+  const pending = computed(() => loadedFor.value === null && !listError.value)
+  const error = computed(() => (listError.value ? new Error(listError.value) : null))
+  const offline = computed(() => Boolean(listError.value))
+  const refresh = (): Promise<void> => load(true)
 
   return { relics, pending, error, refresh, offline }
 }

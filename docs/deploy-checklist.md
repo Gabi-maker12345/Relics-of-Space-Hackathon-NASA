@@ -228,7 +228,22 @@ devolvem **7 low, 0 moderate, 0 high, 0 critical**.
   e rebenta `nuxt dev`; o `nuxt.config.ts` fixa `127.0.0.1` (podes expor com
   `nuxt dev --host 0.0.0.0`).
 
-## 8. Performance (SEC #69)
+## 8. Rede e latência (SEC #85)
+
+- **Lista pública:** 1 pedido por sessão/página; TTFB medido a partir do
+  ambiente de teste: **0,15–0,52 s** (`x-vercel-cache: HIT/STALE`), com
+  `max-age=60`. Filtros e entrada na cena já não repetem o pedido.
+- **Detalhe:** primeiro hit **0,83–1,56 s**, depois `HIT`; o cartão faz
+  prefetch no hover/focus para esconder esse primeiro custo.
+- **Auth:** `/api/auth/me` só corre em `/admin`; o header público usa o cookie
+  de dica `sr-auth` (não é autorização).
+- **Regiões:** o edge está em `cpt1` (Cape Town) e as funções em **`iad1`**
+  (US East). Se a demo for feita de Angola e o Supabase estiver na Europa,
+  avaliar `cdg1`/`gru1` e a região do projeto (requer dashboard).
+- **Pendente:** medir o TTFB da lista e do detalhe a partir de Angola, em 4G e
+  Wi-Fi, e registar aqui.
+
+## 9. Performance (SEC #69)
 
 O arranque da landing deixou de depender do WebGL e das imagens completas:
 
