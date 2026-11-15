@@ -4,6 +4,18 @@ export function useAuth() {
   const user = useState<string | null>('auth-user', () => null)
   const loaded = useState<boolean>('auth-loaded', () => false)
   const error = ref<AuthErrorCode>('')
+  /**
+   * Dica de sessão (não é a autenticação): permite ao header mostrar
+   * "Painel" sem chamar `/api/auth/me` numa visita anónima. A autorização real
+   * continua no servidor; o cookie só evita um pedido no caminho público.
+   */
+  const hint = useCookie<string | null>('sr-auth', {
+    path: '/',
+    sameSite: 'lax',
+    secure: import.meta.env.PROD,
+    maxAge: 60 * 60 * 8,
+  })
+  const hasSession = computed(() => user.value !== null || hint.value === '1')
 
   const restore = async (): Promise<void> => {
     if (!import.meta.client) {
@@ -14,13 +26,16 @@ export function useAuth() {
       const res = await $fetch<{ authenticated: boolean, user: { id: string, email: string } | null }>('/api/auth/me')
       if (res?.authenticated && res.user) {
         user.value = res.user.email
+        hint.value = '1'
       }
       else {
         user.value = null
+        hint.value = null
       }
     }
     catch {
       user.value = null
+      hint.value = null
     }
     finally {
       loaded.value = true
@@ -46,6 +61,7 @@ export function useAuth() {
       })
       if (res?.ok && res.user) {
         user.value = res.user.email
+        hint.value = '1'
         return true
       }
       error.value = 'generic'
@@ -60,6 +76,7 @@ export function useAuth() {
 
   const signOut = async (): Promise<void> => {
     user.value = null
+    hint.value = null
     error.value = ''
     try {
       await $fetch('/api/auth/logout', { method: 'POST' })
@@ -69,5 +86,5 @@ export function useAuth() {
     }
   }
 
-  return { user, loaded, error, restore, signIn, signOut }
+  return { user, hasSession, loaded, error, restore, signIn, signOut }
 }

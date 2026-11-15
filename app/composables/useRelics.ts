@@ -34,7 +34,6 @@ export function useRelics() {
   const loadedLang = useState<string>('relics-loaded-lang', () => 'pt')
   const { lang } = useLocale()
   const error = useState<string>('relics-error', () => '')
-  const { user } = useAuth()
   const route = useRoute()
 
   // O modo segue a rota, não a sessão: um admin no site público vê a lista
@@ -53,8 +52,9 @@ export function useRelics() {
       error.value = ''
       try {
         const endpoint = current === 'admin' ? '/api/admin/relics' : '/api/public/relics'
+        const fetcher = $fetch as unknown as <T>(url: string, options?: Record<string, unknown>) => Promise<T>
         const data = await fetchReliable<Relic[]>(
-          $fetch,
+          fetcher,
           endpoint,
           { query: current === 'public' ? { lang: currentLang } : undefined },
           { timeoutMs: 8000, retries: 1 },
@@ -84,14 +84,8 @@ export function useRelics() {
     if (mode() === 'public') void load(true)
   })
 
-  // Login/logout mudam o que é visível: descarta a lista anterior e recarrega.
-  watch(
-    () => user.value,
-    () => {
-      loadedFor.value = null
-      void load(true)
-    },
-  )
+  // O painel carrega a lista explicitamente depois do `restore()`; o site
+  // público não deve refazer o pedido só porque há sessão.
 
   const create = async (input: RelicInput): Promise<Relic> => {
     const data = await $fetch<Relic>('/api/admin/relics', { method: 'POST', body: input })

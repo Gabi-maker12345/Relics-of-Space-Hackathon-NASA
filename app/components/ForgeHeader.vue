@@ -3,7 +3,7 @@ import { scrollToElement, setSmoothScrollEnabled } from '~/composables/useSmooth
 
 const { toggle: togglePanel } = usePanels()
 const { act, reset } = useAct()
-const { user } = useAuth()
+const { hasSession } = useAuth()
 const { lang, toggle: toggleLang } = useLocale()
 const { muted, toggle: toggleSound } = useSound()
 const { t } = useI18n()
@@ -260,13 +260,13 @@ onBeforeUnmount(() => {
 
       <div class="fr-menu__utils">
         <NuxtLink
-          v-if="user && route.path !== '/admin'"
+          v-if="hasSession && route.path !== '/admin'"
           to="/admin"
           class="fr-menu__util"
           @click="closeMenu"
         >{{ t('nav.panel') }}</NuxtLink>
         <NuxtLink
-          v-else-if="user"
+          v-else-if="hasSession"
           to="/"
           class="fr-menu__util"
           @click="closeMenu"
