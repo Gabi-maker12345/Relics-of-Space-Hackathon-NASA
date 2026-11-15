@@ -26,6 +26,7 @@
     "test": "vitest run --config vitest.unit.config.ts",
     "test:watch": "vitest",
     "setup:admin": "node scripts/setup-admin.mjs",
+    "setup:demo": "node scripts/setup-demo.mjs",
     "smoke": "node scripts/smoke.mjs",
     "seed:generate": "node scripts/generate-seed.mjs",
     "seed:check": "node scripts/generate-seed.mjs --check",

@@ -24,18 +24,21 @@ vi.mock('#supabase/server', () => ({
 
 function createMockEvent(options: {
   path?: string
+  method?: string
   headers?: Record<string, string>
   body?: unknown
 } = {}): H3Event {
   const headers = new Headers(options.headers ?? {})
   const req: Record<string | symbol, unknown> = {
     headers: Object.fromEntries(headers.entries()),
+    method: (options.method ?? 'GET').toUpperCase(),
   }
   if (options.body !== undefined) {
     req[Symbol.for('h3ParsedBody')] = options.body
   }
   return {
     path: options.path ?? '/api/test',
+    method: options.method ?? 'GET',
     node: { req },
     context: {},
   } as unknown as H3Event
@@ -167,6 +170,45 @@ describe('requireAdmin', () => {
     expect(admin).toEqual({
       id: 'admin-uuid-1',
       email: 'admin@spacerelics.space',
+      isDemo: false,
+    })
+  })
+
+  it('allows the public demo email without an admin_users row, flagged isDemo', async () => {
+    mockServerSupabaseUser.mockResolvedValueOnce({ sub: 'demo-id', email: 'juiz@gmail.com' })
+    mockServerSupabaseServiceRole.mockReturnValueOnce({
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: vi.fn().mockResolvedValueOnce({ data: null, error: null }),
+          }),
+        }),
+      }),
+    })
+
+    const event = createMockEvent()
+    const admin = await requireAdmin(event)
+    expect(admin).toEqual({
+      id: 'demo-id',
+      email: 'juiz@gmail.com',
+      isDemo: true,
+    })
+  })
+
+  it('rejects an authenticated user that is neither admin nor demo', async () => {
+    mockServerSupabaseUser.mockResolvedValueOnce({ sub: 'random-id', email: 'random@example.com' })
+    mockServerSupabaseServiceRole.mockReturnValueOnce({
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: vi.fn().mockResolvedValueOnce({ data: null, error: null }),
+          }),
+        }),
+      }),
+    })
+
+    await expect(requireAdmin(createMockEvent())).rejects.toMatchObject({
+      statusCode: 403,
     })
   })
 })
@@ -198,6 +240,43 @@ describe('admin middleware', () => {
   it('passes through for public or non-admin paths', async () => {
     const event = createMockEvent({ path: '/api/public/relics' })
     await expect(adminMiddleware(event)).resolves.toBeUndefined()
+  })
+
+  it('lets the demo read/GET admin endpoints', async () => {
+    mockServerSupabaseUser.mockResolvedValueOnce({ sub: 'demo-id', email: 'juiz@gmail.com' })
+    mockServerSupabaseServiceRole.mockReturnValueOnce({
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: vi.fn().mockResolvedValueOnce({ data: null, error: null }),
+          }),
+        }),
+      }),
+    })
+
+    const event = createMockEvent({ path: '/api/admin/relics', method: 'GET' })
+    await expect(adminMiddleware(event)).resolves.toBeUndefined()
+  })
+
+  it('blocks demo writes (POST/PUT/PATCH/DELETE) with 403', async () => {
+    for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
+      mockServerSupabaseUser.mockResolvedValueOnce({ sub: 'demo-id', email: 'juiz@gmail.com' })
+      mockServerSupabaseServiceRole.mockReturnValueOnce({
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              maybeSingle: vi.fn().mockResolvedValueOnce({ data: null, error: null }),
+            }),
+          }),
+        }),
+      })
+
+      const event = createMockEvent({ path: '/api/admin/relics', method })
+      await expect(adminMiddleware(event)).rejects.toMatchObject({
+        statusCode: 403,
+        message: 'Conta demo: só leitura. Nenhuma alteração é guardada.',
+      })
+    }
   })
 })
 
@@ -288,6 +367,39 @@ describe('auth endpoints', () => {
       user: {
         id: 'admin-id',
         email: 'admin@spacerelics.space',
+        isDemo: false,
+      },
+    })
+  })
+
+  it('POST /api/auth/login succeeds for the demo account without an admin row', async () => {
+    const mockSignIn = vi.fn().mockResolvedValueOnce({
+      data: { user: { id: 'demo-id', email: 'juiz@gmail.com' } },
+      error: null,
+    })
+    mockServerSupabaseClient.mockResolvedValueOnce({
+      auth: { signInWithPassword: mockSignIn },
+    })
+    mockServerSupabaseServiceRole.mockReturnValueOnce({
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: vi.fn().mockResolvedValueOnce({ data: null, error: null }),
+          }),
+        }),
+      }),
+    })
+
+    const event = createMockEvent({
+      body: { email: 'juiz@gmail.com', password: '12345678' },
+    })
+    const res = await loginHandler(event)
+    expect(res).toEqual({
+      ok: true,
+      user: {
+        id: 'demo-id',
+        email: 'juiz@gmail.com',
+        isDemo: true,
       },
     })
   })
@@ -336,6 +448,30 @@ describe('auth endpoints', () => {
       user: {
         id: 'admin-id',
         email: 'admin@spacerelics.space',
+        isDemo: false,
+      },
+    })
+  })
+
+  it('GET /api/auth/me returns the demo account flagged isDemo', async () => {
+    mockServerSupabaseUser.mockResolvedValueOnce({ sub: 'demo-id', email: 'juiz@gmail.com' })
+    mockServerSupabaseServiceRole.mockReturnValueOnce({
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: vi.fn().mockResolvedValueOnce({ data: null, error: null }),
+          }),
+        }),
+      }),
+    })
+
+    const res = await meHandler(createMockEvent())
+    expect(res).toEqual({
+      authenticated: true,
+      user: {
+        id: 'demo-id',
+        email: 'juiz@gmail.com',
+        isDemo: true,
       },
     })
   })
@@ -361,6 +497,7 @@ describe('auth endpoints', () => {
     expect(res.admin).toEqual({
       id: 'admin-id',
       email: 'admin@spacerelics.space',
+      isDemo: false,
     })
     expect(res.timestamp).toBeDefined()
   })

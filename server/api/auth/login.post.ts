@@ -1,6 +1,7 @@
 import { createError, defineEventHandler, readBody, setResponseHeader } from 'h3'
 import { serverSupabaseClient, serverSupabaseServiceRole } from '#supabase/server'
 import type { Database } from '~/types/database.types'
+import { DEMO_EMAIL } from '#shared/demo'
 import { loginSchema } from '../../utils/auth'
 import { checkLoginRateLimit, resetLoginRateLimit } from '../../utils/rateLimit'
 
@@ -52,7 +53,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Ensure the user is registered in admin_users
+  // Ensure the user is registered in admin_users (a conta demo é a exceção:
+  // entra no painel apenas para leitura e nunca tem autorizações na BD).
   const serviceRole = serverSupabaseServiceRole<Database>(event)
   const { data: adminRecord, error: adminError } = await serviceRole
     .from('admin_users')
@@ -60,7 +62,9 @@ export default defineEventHandler(async (event) => {
     .eq('user_id', data.user.id)
     .maybeSingle()
 
-  if (adminError || !adminRecord) {
+  const isDemo = (data.user.email ?? '').trim().toLowerCase() === DEMO_EMAIL
+
+  if (adminError || (!adminRecord && !isDemo)) {
     // Authenticated user is not an admin: clear session and reject
     await supabase.auth.signOut().catch(() => {})
     throw createError({
@@ -76,6 +80,7 @@ export default defineEventHandler(async (event) => {
     user: {
       id: data.user.id,
       email: data.user.email ?? email,
+      isDemo,
     },
   }
 })

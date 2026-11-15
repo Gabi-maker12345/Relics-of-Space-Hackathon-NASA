@@ -2,6 +2,7 @@ export type AuthErrorCode = 'invalid_email' | 'short_password' | 'bad_credential
 
 export function useAuth() {
   const user = useState<string | null>('auth-user', () => null)
+  const isDemo = useState<boolean>('auth-demo', () => false)
   const loaded = useState<boolean>('auth-loaded', () => false)
   const error = ref<AuthErrorCode>('')
   /**
@@ -23,18 +24,21 @@ export function useAuth() {
       return
     }
     try {
-      const res = await $fetch<{ authenticated: boolean, user: { id: string, email: string } | null }>('/api/auth/me')
+      const res = await $fetch<{ authenticated: boolean, user: { id: string, email: string, isDemo: boolean } | null }>('/api/auth/me')
       if (res?.authenticated && res.user) {
         user.value = res.user.email
+        isDemo.value = res.user.isDemo === true
         hint.value = '1'
       }
       else {
         user.value = null
+        isDemo.value = false
         hint.value = null
       }
     }
     catch {
       user.value = null
+      isDemo.value = false
       hint.value = null
     }
     finally {
@@ -55,12 +59,13 @@ export function useAuth() {
     }
 
     try {
-      const res = await $fetch<{ ok: boolean, user: { id: string, email: string } }>('/api/auth/login', {
+      const res = await $fetch<{ ok: boolean, user: { id: string, email: string, isDemo: boolean } }>('/api/auth/login', {
         method: 'POST',
         body: { email: mail, password },
       })
       if (res?.ok && res.user) {
         user.value = res.user.email
+        isDemo.value = res.user.isDemo === true
         hint.value = '1'
         return true
       }
@@ -76,6 +81,7 @@ export function useAuth() {
 
   const signOut = async (): Promise<void> => {
     user.value = null
+    isDemo.value = false
     hint.value = null
     error.value = ''
     try {
@@ -86,5 +92,5 @@ export function useAuth() {
     }
   }
 
-  return { user, hasSession, loaded, error, restore, signIn, signOut }
+  return { user, isDemo, hasSession, loaded, error, restore, signIn, signOut }
 }

@@ -1279,3 +1279,25 @@ Auditoria em produção (zenitte.vercel.app): consola limpa, DCL 779 ms/load
   lint limpos.
 - Próximo: os ~51 rects/s dos componentes da landing (globo/parallax),
   ficha/mobile, streaming do chat e preloader.
+
+## Iteração 67 — conta demo pública só-leitura (juízes)
+
+- Conta **juiz@gmail.com / 12345678** em `auth.users`, deliberadamente **sem**
+  linha em `admin_users`: o RLS (`is_admin()`) não lhe concede qualquer
+  escrita, mesmo que alguém use as credenciais públicas diretamente contra o
+  Supabase. `insert` direto em `admin_users` com a sessão demo → **42501 /
+  row-level security**; a leitura de `admin_users` vem vazia.
+- Servidor: `requireAdmin` marca `isDemo` e o middleware `/api/admin` corta
+  POST/PUT/PATCH/DELETE com 403 «Conta demo: só leitura»; os GET passam (lista,
+  ficha, quiz, traduções). Login e `/api/auth/me` devolvem `isDemo`.
+- Ecrã de login: bloco visível com as credenciais e botão «Preencher».
+  Painel: banner demo, traduzir/publicar/remover/criar desativados, e
+  formulário/Nasa/Bot em modo readOnly (fieldset desativado, guardar
+  desativado, guardas no cliente + 403 no servidor).
+- `npm run setup:demo` idempotente (cria/atualiza o auth user e apaga qualquer
+  linha residual de admin_users). Verificado em dev: login demo 200, GET admin
+  200 (12 relíquias), PUT 403; UI com banner, 36 ações de cartão (publicar/
+  remover desativadas, editar aberto) e formulário com fieldset/save
+  desativados.
+- Próximo: os ~51 rects/s dos componentes da landing (globo/parallax),
+  ficha/mobile, streaming do chat e preloader.

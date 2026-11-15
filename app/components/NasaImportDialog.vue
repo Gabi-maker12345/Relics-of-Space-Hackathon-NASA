@@ -90,7 +90,7 @@
                   <button
                     type="button"
                     class="nasa-card__import"
-                    :disabled="!canImport || importing === item.nasa_id || imported.has(item.nasa_id)"
+                    :disabled="readOnly || !canImport || importing === item.nasa_id || imported.has(item.nasa_id)"
                     @click="importItem(item)"
                   >
                     {{
@@ -149,6 +149,8 @@ const props = defineProps<{
   open: boolean
   relicId: string | null
   relics?: Array<{ id: string, name: string }>
+  /** Conta demo: pesquisa permitida, importação bloqueada. */
+  readOnly?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -275,6 +277,7 @@ function selectMedia(value: MediaFilter): void {
 }
 
 async function importItem(item: NasaItem): Promise<void> {
+  if (props.readOnly) return
   const target = props.relicId ?? targetId.value
   if (!target || importing.value) return
 

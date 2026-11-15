@@ -9,7 +9,7 @@
         </p>
       </div>
       <div class="admin__actions">
-        <button type="button" class="admin__ghost" :disabled="translating" @click="translateAll">
+        <button type="button" class="admin__ghost" :disabled="translating || isDemo" @click="translateAll">
           {{ translating ? t('admin.translateBusy', { done: translateDone, total: relics.length }) : t('admin.translateAll') }}
         </button>
         <button type="button" class="admin__ghost" @click="botOpen = true">{{ t('bot.title') }}</button>
@@ -17,6 +17,8 @@
         <button type="button" class="admin__ghost" @click="signOutAndLeave">{{ t('nav.exit') }}</button>
       </div>
     </header>
+
+    <p v-if="isDemo" class="admin__demo" role="status">{{ t('admin.demoNotice') }}</p>
 
     <p v-if="saveErrorText" class="admin__error" role="alert">{{ saveErrorText }}</p>
 
@@ -45,16 +47,16 @@
             <p class="card__meta">{{ t('preview.facts', { count: relic.facts.length }) }} · {{ t('preview.scenes', { count: relic.scenes.length }) }}</p>
           </div>
           <div class="card__tools">
-            <button type="button" class="card__tool" @click="togglePublished(relic)">
+            <button type="button" class="card__tool" :disabled="isDemo" @click="togglePublished(relic)">
               {{ relic.published === false ? t('admin.publish') : t('admin.unpublish') }}
             </button>
             <button type="button" class="card__tool" @click="openForm(relic)">{{ t('admin.edit') }}</button>
-            <button type="button" class="card__tool card__tool--danger" @click="confirmRemove(relic)">{{ t('admin.remove') }}</button>
+            <button type="button" class="card__tool card__tool--danger" :disabled="isDemo" @click="confirmRemove(relic)">{{ t('admin.remove') }}</button>
           </div>
         </article>
       </li>
 
-      <li v-if="user" class="admin__item">
+      <li v-if="user && !isDemo" class="admin__item">
         <button type="button" class="card card--new" @click="openForm(null)">
           <span class="card__center" aria-hidden="true">
             <span class="card__plus">
@@ -74,6 +76,7 @@
       :open="formOpen"
       :relic="editing"
       :taken-ids="takenIds"
+      :read-only="isDemo"
       @close="formOpen = false"
       @save="store"
       @translated="onTranslated"
@@ -81,6 +84,7 @@
 
     <NasaImportDialog
       :open="nasaOpen"
+      :read-only="isDemo"
       :relic-id="null"
       :relics="nasaRelics"
       @close="nasaOpen = false"
@@ -89,6 +93,7 @@
 
     <BotSettingsDialog
       :open="botOpen"
+      :read-only="isDemo"
       @close="botOpen = false"
       @saved="flash(t('bot.saved'))"
     />
@@ -100,7 +105,7 @@ import type { Relic, RelicInput } from '#shared/types/relic'
 import { relicStatus } from '~/utils/relics'
 
 const { relics, loadedFor, load, create, update, patch, remove, error: loadError } = useRelics()
-const { user, restore, signOut } = useAuth()
+const { user, isDemo, restore, signOut } = useAuth()
 const { t } = useI18n()
 const { open: openPanel } = usePanels()
 
@@ -139,6 +144,10 @@ onMounted(async () => {
 
 onBeforeUnmount(() => window.clearTimeout(toastTimer))
 
+function demoBlocked(): void {
+  flash(t('admin.demoBlocked'))
+}
+
 function openForm(relic: Relic | null): void {
   saveError.value = ''
   editing.value = relic
@@ -159,6 +168,7 @@ function onNasaImported(): void {
  * progresso no botão. Se uma falhar, continua com as restantes.
  */
 async function translateAll(): Promise<void> {
+  if (isDemo.value) return demoBlocked()
   if (translating.value || relics.value.length === 0) return
   if (!window.confirm(t('admin.translateConfirm'))) return
 
@@ -189,6 +199,7 @@ async function translateAll(): Promise<void> {
 }
 
 async function store(input: RelicInput): Promise<void> {
+  if (isDemo.value) return demoBlocked()
   saveError.value = ''
   try {
     if (editing.value) {
@@ -209,6 +220,7 @@ async function store(input: RelicInput): Promise<void> {
 }
 
 async function togglePublished(relic: Relic): Promise<void> {
+  if (isDemo.value) return demoBlocked()
   const next = relic.published === false
   saveError.value = ''
   try {
@@ -222,6 +234,7 @@ async function togglePublished(relic: Relic): Promise<void> {
 }
 
 async function confirmRemove(relic: Relic): Promise<void> {
+  if (isDemo.value) return demoBlocked()
   if (!window.confirm(t('admin.confirmRemove', { name: relic.name }))) return
   saveError.value = ''
   try {
@@ -286,6 +299,17 @@ function requestLogin(): void {
   font-size: 12px;
   letter-spacing: 0.04em;
   opacity: 0.6;
+}
+
+.admin__demo {
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border: 1px dashed rgb(255 255 255 / 0.22);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.04);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgb(255 255 255 / 0.72);
 }
 
 .admin__error {

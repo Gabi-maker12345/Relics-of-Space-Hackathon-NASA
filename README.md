@@ -192,6 +192,21 @@ npm run setup:admin
 O script lê `ADMIN_EMAIL` e `ADMIN_PASSWORD`, cria/atualiza o utilizador no
 Supabase Auth e garante a linha correspondente em `admin_users`.
 
+### Conta demo (juízes)
+
+O ecrã de login mostra publicamente **juiz@gmail.com / 12345678** e um botão
+para preencher as credenciais. Para (re)criar a conta:
+
+```bash
+npm run setup:demo
+```
+
+O script cria/atualiza o utilizador no Supabase Auth e **remove** qualquer
+linha em `admin_users`. Sem essa linha o RLS nega todas as escritas (mesmo
+contra o Supabase diretamente); o servidor só concede leituras em
+`/api/admin` e responde 403 a POST/PUT/PATCH/DELETE. O painel abre em modo
+só-leitura: banner demo, formulários desativados e guardar bloqueado.
+
 ---
 
 ## Scripts
@@ -206,6 +221,7 @@ Supabase Auth e garante a linha correspondente em `admin_users`.
 | `npm run test` | testes unitários (Vitest) |
 | `npm run test:watch` | testes em watch |
 | `npm run setup:admin` | cria o administrador inicial |
+| `npm run setup:demo` | cria/repõe a conta demo pública (só leitura) |
 | `npm run smoke` | valida login, sessão, guarda admin e RLS |
 | `npm run seed:generate` | regenera `supabase/seed.sql` a partir de `data/relics.json` |
 | `npm run seed:check` | verifica que o seed gerado está atualizado e sem caminhos locais |

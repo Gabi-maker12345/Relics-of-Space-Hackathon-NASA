@@ -28,6 +28,7 @@
             <p v-else-if="loadError" class="botset__error" role="alert">{{ t('bot.loadError') }}</p>
 
             <template v-else>
+              <fieldset class="botset__fieldset" :disabled="readOnly">
               <label class="botset__field">
                 <span class="botset__label">{{ t('bot.prompt') }}</span>
                 <textarea v-model="prompt" class="botset__area" rows="9" spellcheck="false" />
@@ -79,6 +80,7 @@
               </section>
 
               <p v-if="error" class="botset__error" role="alert">{{ error }}</p>
+              </fieldset>
             </template>
           </div>
 
@@ -87,7 +89,7 @@
             <button
               type="button"
               class="botset__primary"
-              :disabled="loading || saving || loadError"
+              :disabled="readOnly || loading || saving || loadError"
               @click="save"
             >
               {{ saving ? t('bot.saving') : t('bot.save') }}
@@ -100,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ open: boolean }>()
+const props = defineProps<{ open: boolean, readOnly?: boolean }>()
 const emit = defineEmits<{ close: [], saved: [] }>()
 const { t } = useI18n()
 
@@ -149,6 +151,7 @@ function removeCatalog(index: number): void {
 }
 
 async function save(): Promise<void> {
+  if (props.readOnly) return
   error.value = ''
   const catalogsClean: BotCatalog[] = []
   for (const catalog of catalogs.value) {
@@ -281,6 +284,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true))
   fill: none;
   stroke: currentColor;
   stroke-width: 1.2;
+}
+
+.botset__fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .botset__body {

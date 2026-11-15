@@ -2,6 +2,7 @@ import { type H3Event, createError, getHeader } from 'h3'
 import { z } from 'zod'
 import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/database.types'
+import { DEMO_EMAIL } from '#shared/demo'
 
 export const loginSchema = z.object({
   email: z.string().trim().email('Escreve um email válido.'),
@@ -13,6 +14,8 @@ export type LoginInput = z.infer<typeof loginSchema>
 export interface AuthenticatedAdmin {
   id: string
   email: string
+  /** Conta demo pública: leituras permitidas, escritas bloqueadas. */
+  isDemo: boolean
 }
 
 /**
@@ -79,7 +82,11 @@ export async function requireAdmin(event: H3Event): Promise<AuthenticatedAdmin> 
     })
   }
 
-  if (!data) {
+  // A conta demo não está em admin_users (RLS sem autorizações); o servidor
+  // só lhe abre as leituras do painel e o middleware corta as escritas.
+  const isDemo = (user.email ?? '').trim().toLowerCase() === DEMO_EMAIL
+
+  if (!data && !isDemo) {
     throw createError({
       statusCode: 403,
       statusMessage: 'Forbidden',
@@ -88,7 +95,8 @@ export async function requireAdmin(event: H3Event): Promise<AuthenticatedAdmin> 
   }
 
   return {
-    id: data.user_id,
-    email: data.email || user.email || '',
+    id: data?.user_id ?? user.id,
+    email: data?.email || user.email || '',
+    isDemo,
   }
 }

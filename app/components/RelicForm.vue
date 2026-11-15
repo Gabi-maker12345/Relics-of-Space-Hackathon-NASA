@@ -46,6 +46,7 @@
           </header>
 
           <div class="rform__body" data-lenis-prevent>
+            <fieldset class="rform__fieldset" :disabled="readOnly">
             <template v-if="!quizOpen">
             <section class="rform__group">
               <div class="rform__groupHead">
@@ -463,22 +464,23 @@
               :relic-name="draft.name"
               @close="quizOpen = false"
             />
+            </fieldset>
           </div>
 
           <footer v-if="!quizOpen" class="rform__foot">
             <p class="rform__footNote">{{ t('form.footNote') }}</p>
             <label class="rform__publish">
-              <input v-model="draft.published" type="checkbox">
+              <input v-model="draft.published" type="checkbox" :disabled="readOnly">
               <span>{{ t('form.published') }}</span>
             </label>
             <label class="rform__publish">
-              <input v-model="draft.is_extra" type="checkbox">
+              <input v-model="draft.is_extra" type="checkbox" :disabled="readOnly">
               <span>{{ t('form.extra') }}</span>
             </label>
             <span v-if="errors.general" class="rform__err">{{ errors.general }}</span>
             <div class="rform__actions">
               <button type="button" class="rform__cancel" @click="requestClose">{{ t('common.cancel') }}</button>
-              <button type="submit" class="rform__save">{{ isEdit ? t('form.saveEdit') : t('form.saveNew') }}</button>
+              <button type="submit" class="rform__save" :disabled="readOnly">{{ isEdit ? t('form.saveEdit') : t('form.saveNew') }}</button>
             </div>
           </footer>
         </form>
@@ -508,6 +510,8 @@ const props = defineProps<{
   open: boolean
   relic: Relic | null
   takenIds: string[]
+  /** Conta demo: vê tudo, mas os campos e o guardar ficam bloqueados. */
+  readOnly?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -992,6 +996,7 @@ function validate(): boolean {
 }
 
 function save(): void {
+  if (props.readOnly) return
   if (!validate()) return
   const { facts, scenes } = collect()
   emit('save', {
@@ -1013,6 +1018,7 @@ function save(): void {
     scenes,
   })
 }
+
 
 function requestClose(): void {
   emit('close')
@@ -1220,6 +1226,13 @@ onBeforeUnmount(() => {
 
 .rform__x svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.2; }
 .rform__x:hover { background: rgb(255 255 255 / 8%); transform: rotate(90deg); }
+
+.rform__fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
 
 .rform__body {
   display: flex;
