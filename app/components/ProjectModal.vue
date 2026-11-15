@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { Relic, RelicScene } from '~/data/relics'
+import { relics as seedRelics } from '~/data/relics'
+import { fetchWithRetry } from '~/utils/fetchRetry'
 
 type Gsap = typeof import('gsap').default
 let gsapPromise: Promise<Gsap> | null = null
@@ -20,6 +22,8 @@ const sheet = ref<{ goTo: (index: number) => void } | null>(null)
 let lastFocus: HTMLElement | null = null
 
 const detail = ref<Relic | null>(null)
+const detailState = ref<'idle' | 'loading' | 'ready' | 'error'>('idle')
+const detailError = computed(() => detailState.value === 'error')
 const relic = computed(() => {
   if (detail.value && detail.value.id === activeSlug.value) return detail.value
   return relics.value.find(r => r.id === activeSlug.value) ?? null
@@ -28,34 +32,62 @@ const relic = computed(() => {
 let detailRequest: Promise<void> | null = null
 let detailRequestSlug = ''
 
-/** A lista pública é leve (e o seed pode estar desatualizado): o detalhe manda. */
+function applyDetail(full: Relic): void {
+  detail.value = full
+  relics.value = relics.value.map(r => (r.id === full.id ? { ...r, ...full } : r))
+  typedNarration.setSteps(full.steps ?? [])
+  if (armed.value) {
+    typedNarration.goTo(full.steps?.[0]?.audio_url ? 0 : Math.min(1, Math.max(0, (full.steps?.length ?? 1) - 1)))
+    void typedNarration.play()
+  }
+}
+
+/**
+ * A lista pública é leve e o seed é a rede de segurança: se a API falhar,
+ * abre-se o diário com os dados locais em vez de uma ficha em branco.
+ */
 async function loadDetail(slug: string): Promise<void> {
   if (!slug) return
   if (detailRequest && detailRequestSlug === slug) return detailRequest
 
+  const wasError = detailState.value === 'error'
   detailRequestSlug = slug
+  detailState.value = 'loading'
   detailRequest = (async () => {
     try {
-      const full = await $fetch<Relic>(`/api/public/relics/${encodeURIComponent(slug)}`, {
+      const full = await fetchWithRetry<Relic>(`/api/public/relics/${encodeURIComponent(slug)}`, {
         query: { lang: lang.value },
       })
       if (!full || activeSlug.value !== slug) return
-      detail.value = full
-      relics.value = relics.value.map(r => (r.id === slug ? { ...r, ...full } : r))
-      typedNarration.setSteps(full.steps ?? [])
-      if (armed.value) {
-        typedNarration.goTo(full.steps?.[0]?.audio_url ? 0 : Math.min(1, Math.max(0, (full.steps?.length ?? 1) - 1)))
-        void typedNarration.play()
-      }
+      applyDetail(full)
+      detailState.value = 'ready'
+      if (wasError) armed.value = true
     }
     catch {
-      // preserve current: a lista continua a renderizar
+      if (activeSlug.value !== slug) return
+      const fallback = seedRelics.find(item => item.id === slug)
+      if (fallback) {
+        applyDetail(fallback)
+        detailState.value = 'ready'
+        if (wasError) armed.value = true
+      }
+      else {
+        detailState.value = 'error'
+        clearGlitch()
+        armed.value = false
+        typedNarration.stop()
+      }
     }
   })().finally(() => {
     detailRequest = null
+    detailRequestSlug = ''
   })
 
   return detailRequest
+}
+
+function retryDetail(): void {
+  if (activeSlug.value) void loadDetail(activeSlug.value)
 }
 
 watch(
@@ -72,6 +104,7 @@ watch(
   (slug) => {
     if (!slug) {
       detail.value = null
+      detailState.value = 'idle'
       return
     }
     void loadDetail(slug)
@@ -83,6 +116,7 @@ watch(
 watch(lang, () => {
   if (!activeSlug.value) return
   detail.value = null
+  detailState.value = 'idle'
   detailRequestSlug = ''
   void loadDetail(activeSlug.value)
 })
@@ -402,28 +436,39 @@ onBeforeUnmount(() => {
           :stamp="isExplored(relic.id) ? t('passport.stamp') : undefined"
           @close="close"
         >
-          <RelicQuiz
-            v-if="quizOpen"
-            :relic="relic"
-            @close="quizOpen = false"
-            @progress="quizProgress = $event"
-          />
-          <RelicSheet
-            v-else
-            ref="sheet"
-            :relic="relic"
-            :index="index"
-            :armed="armed"
-            @update:index="index = $event"
-            @open-media="lightbox = $event"
-            @typing="typing = $event"
-          />
+          <template v-if="detailState === 'ready'">
+            <RelicQuiz
+              v-if="quizOpen"
+              :relic="relic"
+              @close="quizOpen = false"
+              @progress="quizProgress = $event"
+            />
+            <RelicSheet
+              v-else
+              ref="sheet"
+              :relic="relic"
+              :index="index"
+              :armed="armed"
+              @update:index="index = $event"
+              @open-media="lightbox = $event"
+              @typing="typing = $event"
+            />
+          </template>
+          <div v-else-if="detailError" class="sheet-state" role="alert">
+            <p class="fr-label">{{ t('sheet.loadError') }}</p>
+            <button type="button" class="sheet-state__retry" @click="retryDetail">{{ t('sheet.retry') }}</button>
+          </div>
+          <div v-else class="sheet-state" role="status">
+            <p class="fr-label">{{ relic?.name }}</p>
+            <p class="sheet-state__title">{{ t('sheet.loading') }}</p>
+            <span class="sheet-state__bar" aria-hidden="true" />
+          </div>
         </SheetFrame>
-        <RelicQuizButton v-if="relic && armed && hasQuiz && atLastScene && !quizOpen" @click="openQuiz" />
+        <RelicQuizButton v-if="detailState === 'ready' && relic && armed && hasQuiz && atLastScene && !quizOpen" @click="openQuiz" />
         <Transition name="bot">
-          <BotNarrator v-if="relic && armed && !quizOpen" :talking="typing || typedNarration.playing.value" />
+          <BotNarrator v-if="detailState === 'ready' && relic && armed && !quizOpen" :talking="typing || typedNarration.playing.value" />
         </Transition>
-        <NarrationControls v-if="relic && armed && !quizOpen" />
+        <NarrationControls v-if="detailState === 'ready' && relic && armed && !quizOpen" />
         <Transition name="lb">
           <MediaLightbox v-if="lightbox" :media="lightbox" @close="lightbox = null" />
         </Transition>
@@ -433,6 +478,54 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.sheet-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-height: 60vh;
+  padding: 80px 24px;
+  color: var(--fr-fg, #e8e6e1);
+  text-align: center;
+}
+
+.sheet-state__title {
+  margin: 0;
+  font-family: var(--fr-serif, inherit);
+  font-size: clamp(22px, 3vw, 34px);
+  font-weight: 400;
+}
+
+.sheet-state__bar {
+  display: block;
+  width: min(240px, 60vw);
+  height: 2px;
+  background: currentColor;
+  opacity: 0.25;
+  animation: sheet-loading 1.2s ease-in-out infinite;
+}
+
+.sheet-state__retry {
+  padding: 10px 16px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #06070c;
+  background: var(--fr-fg, #e8e6e1);
+  border: 0;
+  cursor: pointer;
+}
+
+@keyframes sheet-loading {
+  0%, 100% { transform: scaleX(0.35); opacity: 0.2; }
+  50% { transform: scaleX(1); opacity: 0.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-state__bar { animation: none; opacity: 0.35; }
+}
+
 .bot-enter-active {
   transition:
     opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),

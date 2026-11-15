@@ -1185,3 +1185,13 @@ diário aberto pelo cartão.
 - Docs atualizados (README funcionalidades/API/idiomas/deploy, DEPENDENCIES
   atual); beta `space-relics/`, `SPACE_RELICS.md`, `CLONE.md` e
   artefactos Next removidos.
+
+
+## Iteração 44 — resiliência da cena e da ficha (#82)
+
+- **Fallback local:** `usePublicRelics` usa o seed (`data/relics`) quando a lista pública falha, com os mesmos filtros de local/estado/pesquisa. A cena deixa de ficar vazia.
+- **Timeout + retry:** helper `retryFetch`/`fetchWithRetry` (4 s por tentativa, 1 retry; 4xx não repete) aplicado à lista e ao detalhe.
+- **Detalhe offline:** se o detalhe falhar, `ProjectModal` abre o diário com o relic completo do seed; para relíquias que não estão no seed, mostra erro + **Tentar de novo**.
+- **Skeleton:** a ficha mostra “A abrir o diário…” enquanto o detalhe chega, com animação respeitando `prefers-reduced-motion`; nunca fica em branco.
+- **Estados vazios:** a cena tem textos PT/EN para loading/erro/sem filtros.
+- **Testes:** 163 unitários (novos `fetch-retry` e `relic-fallback`), 38 integração, typecheck, lint e build verdes. QA manual: lista e detalhe em 500 → 15 cartões (5 de Marte × 3 cópias) e diário do seed; detalhe lento → skeleton imediato.

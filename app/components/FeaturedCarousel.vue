@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { filters, hasFilters, clear } = useRelicFilters()
+const { t } = useI18n()
 const { relics, pending, error, refresh } = usePublicRelics(filters)
 
 const { open } = useProjectModal()
@@ -99,14 +100,17 @@ function openRelic(id: string, fromPointer = true, name = ''): void {
 
 <template>
   <div v-if="error && relics.length === 0" class="gate__empty fr" role="alert">
-    <p class="fr-label">Não foi possível carregar o arquivo</p>
-    <p class="fr-body">{{ error.message || 'Tenta novamente.' }}</p>
-    <button type="button" class="fr-chip is-on" @click="refresh()">Tentar novamente</button>
+    <p class="fr-label">{{ t('ring.error') }}</p>
+    <p class="fr-body">{{ error.message || t('ring.retry') }}</p>
+    <button type="button" class="fr-chip is-on" @click="refresh()">{{ t('ring.retry') }}</button>
+  </div>
+  <div v-else-if="pending && relics.length === 0" class="gate__empty fr" role="status">
+    <p class="fr-label">{{ t('ring.loading') }}</p>
   </div>
   <div v-else-if="!pending && relics.length === 0" class="gate__empty fr" role="status">
-    <p class="fr-label">Sem relíquias com estes filtros</p>
-    <p class="fr-body">Ajusta o local, o estado ou a pesquisa.</p>
-    <button v-if="hasFilters" type="button" class="fr-chip is-on" @click="clear">Limpar filtros</button>
+    <p class="fr-label">{{ t('ring.empty') }}</p>
+    <p class="fr-body">{{ t('ring.emptyHint') }}</p>
+    <button v-if="hasFilters" type="button" class="fr-chip is-on" @click="clear">{{ t('filters.clear') }}</button>
   </div>
   <div
     v-else

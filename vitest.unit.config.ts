@@ -18,6 +18,8 @@ export default defineConfig({
       'tests/narration-timing.test.ts',
       'tests/relics-ui.test.ts',
       'tests/media-paths.test.ts',
+      'tests/fetch-retry.test.ts',
+      'tests/relic-fallback.test.ts',
     ],
     exclude: ['**/node_modules/**', '**/.nuxt/**', '**/.output/**'],
   },

@@ -118,6 +118,17 @@ media. Images should come from the `-480/-960/-1440.webp` variants. Compare
 LCP/TBT/weight with `docs/deploy-checklist.md` §8. Real-GPU numbers are still
 required for #69.
 
+## Resilience (manual)
+
+- Block `/api/public/relics**` with a 500 (DevTools or Playwright route): the
+  scene must show the 12 seed relics and the local filters must still work.
+- Open a relic with the detail blocked: the diary must fall back to the seed
+  text after the retry budget (8 s worst case for a hung API), not stay blank.
+- Delay the detail by 5 s: a skeleton must appear immediately, never a blank
+  sheet.
+- Unit coverage: `tests/fetch-retry.test.ts` (timeout, one retry, 404 is final)
+  and `tests/relic-fallback.test.ts` (map/filter/search of the seed).
+
 ## CI
 
 The main CI workflow runs `npm ci`, the runtime audit (`--audit-level=high`),

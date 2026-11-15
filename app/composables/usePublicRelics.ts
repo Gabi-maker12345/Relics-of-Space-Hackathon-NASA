@@ -1,4 +1,7 @@
 import type { RelicPanelItem } from '#shared/types/relic'
+import { relics as seedRelics } from '~/data/relics'
+import { fetchWithRetry } from '~/utils/fetchRetry'
+import { fallbackRelics } from '~/utils/relicFallback'
 
 /**
  * Public ring data, filtered server-side by BE-09. The async key is stable and
@@ -16,14 +19,17 @@ export function usePublicRelics(filters: Ref<RelicFilters>) {
 
   const { data, pending, error, refresh } = useAsyncData<RelicPanelItem[]>(
     'public-relics',
-    () => $fetch<RelicPanelItem[]>('/api/public/relics', { query: query.value }),
+    () => fetchWithRetry<RelicPanelItem[]>('/api/public/relics', { query: query.value }),
     {
       default: () => [] as RelicPanelItem[],
       watch: [query],
     },
   )
 
-  const relics = computed(() => data.value ?? [])
+  // A API é a fonte principal; se falhar, a cena continua com o seed local.
+  const fallback = computed(() => fallbackRelics(seedRelics, filters.value))
+  const usingFallback = computed(() => Boolean(error.value) && fallback.value.length > 0)
+  const relics = computed(() => (usingFallback.value ? fallback.value : data.value ?? []))
 
-  return { relics, pending, error, refresh }
+  return { relics, pending, error, refresh, usingFallback }
 }
