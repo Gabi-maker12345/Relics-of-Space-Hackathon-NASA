@@ -45,11 +45,17 @@ html {
   width: 100%;
   overflow-x: clip;
 }
-/* o painel assume o ecrã: a chrome recua */
+/* o painel assume o ecrã: a chrome e a página recuam por completo. */
 html[data-panel="profile"] .fr-header,
 html[data-panel="profile"] .fr-progress {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
+}
+
+/* Atrás do login fica só o cosmos (o main contém o hero e a sua marca). */
+html[data-panel="profile"] .site__main {
+  visibility: hidden;
 }
 
 html[data-panel="profile"] .fr-progress {

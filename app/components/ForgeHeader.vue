@@ -184,7 +184,7 @@ onBeforeUnmount(() => {
 <template>
   <header class="fr-header fr">
     <NuxtLink id="logo-slot" to="/" class="fr-logo" :aria-label="`Zénite — ${t('nav.home')}`" @click="onLogoClick">
-      <img src="/images/zenite-logo-animavel.svg" alt="Zénite" width="498" height="366" decoding="async" />
+      <img src="/images/zenite-logo-web.png" alt="Zénite" width="958" height="693" decoding="async" />
     </NuxtLink>
 
     <div class="fr-nav">

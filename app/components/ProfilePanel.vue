@@ -12,7 +12,7 @@
     >
       <section class="portal__card" role="dialog" aria-modal="true" aria-labelledby="portal-title">
         <div class="portal__logo" aria-hidden="true">
-          <img src="/images/zenite-logo-animavel.svg" alt="" width="498" height="366" decoding="async">
+          <img src="/images/zenite-logo-web.png" alt="" width="958" height="693" decoding="async">
         </div>
 
         <h2 id="portal-title" class="sr-only">{{ t('login.title') }}</h2>
