@@ -49,6 +49,7 @@ export const messages = {
 
     'passport.stamp': 'Explorado',
     'passport.progress': '{count} de {total} exploradas',
+    'passport.loading': 'A carregar…',
 
     'panels.empty': 'Arquivo vazio',
     'panels.emptyTitle': 'Ainda não há relíquias publicadas.',
@@ -336,6 +337,7 @@ export const messages = {
 
     'passport.stamp': 'Explored',
     'passport.progress': '{count} of {total} explored',
+    'passport.loading': 'Loading…',
 
     'panels.empty': 'Empty archive',
     'panels.emptyTitle': 'No published relics yet.',

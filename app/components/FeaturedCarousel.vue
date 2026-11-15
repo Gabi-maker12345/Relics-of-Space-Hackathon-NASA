@@ -38,13 +38,31 @@ onMounted(() => {
   updateCopies()
   window.addEventListener('resize', updateCopies)
   onBeforeUnmount(() => window.removeEventListener('resize', updateCopies))
-  void ensureGlEngine().then(engine => engine.resetCarousel()).catch(() => {})
+  void ensureGlEngine().then((engine) => {
+    engine.resetCarousel()
+    engine.enterAll()
+  }).catch(() => {})
 })
 
 watch(() => chat.open.value, updateCopies)
 
-watch(copies, () => {
-  void ensureGlEngine().then(engine => engine.resetCarousel()).catch(() => {})
+// Cópias mudam com o chat abrir/fechar (3 <-> 1): os cartões são recriados no
+// DOM, logo os novos planos GL têm de voltar a "entrar" (senão ficam invisíveis
+// depois de fechar o bot).
+watch(copies, async () => {
+  await nextTick()
+  const el = track.value
+  if (!el) return
+  try {
+    const engine = await ensureGlEngine()
+    engine.scan()
+    engine.attachTrack(el)
+    engine.resetCarousel()
+    engine.enterAll()
+  }
+  catch {
+    // sem WebGL: os cartões continuam no DOM
+  }
 })
 
 // Filtrar troca os cartões no DOM: o engine tem de medir a faixa outra vez.

@@ -53,9 +53,20 @@ html[data-panel="profile"] .fr-progress {
   pointer-events: none;
 }
 
-/* Atrás do login fica só o cosmos (o main contém o hero e a sua marca). */
-html[data-panel="profile"] .site__main {
+/* Atrás do login fica só o cosmos, em qualquer página: página, cena/gate,
+   chrome teleportado, canvas 3D, preloader, chat e modais. */
+html[data-panel="profile"] .site__main,
+html[data-panel="profile"] .gate,
+html[data-panel="profile"] .gate-filters,
+html[data-panel="profile"] .gate-chrome,
+html[data-panel="profile"] .gl,
+html[data-panel="profile"] .preloader,
+html[data-panel="profile"] [data-modal],
+html[data-panel="profile"] .chat,
+html[data-panel="profile"] .chat-fab,
+html[data-panel="profile"] .fr-menu {
   visibility: hidden;
+  pointer-events: none;
 }
 
 html[data-panel="profile"] .fr-progress {

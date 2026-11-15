@@ -2187,6 +2187,20 @@ html.chat-open .gate.is-scene [data-carousel] {
   touch-action: none;
 }
 
+/* No computador o bot esconde o "Voltar" (a cena fica sem chrome de saída). */
+@media (min-width: 1024px) {
+  html.chat-open .gate__back {
+    display: none;
+  }
+}
+
+/* No telemóvel o FAB do bot desaparece enquanto uma ficha/modal está aberta. */
+@media (max-width: 1023px) {
+  html.is-sheet-open .chat-fab {
+    display: none;
+  }
+}
+
 /* Com o chat aberto no telemóvel o bot ocupa o ecrã: a cena por baixo some
    (só fica o cosmos) e a barra/chrome não ficam a espreitar pela translucidez. */
 @media (max-width: 1023px) {

@@ -115,7 +115,7 @@ onBeforeUnmount(() => {
     </div>
 
     <p class="fr-filters__count" :class="{ 'is-pending': pending }" aria-live="polite">
-      {{ t('passport.progress', { count: exploredCount, total: count }) }}
+      {{ pending ? t('passport.loading') : t('passport.progress', { count: exploredCount, total: count }) }}
     </p>
   </form>
 </template>

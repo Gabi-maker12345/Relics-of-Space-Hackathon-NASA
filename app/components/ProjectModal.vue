@@ -61,6 +61,15 @@ async function loadDetail(slug: string): Promise<void> {
 watch(
   () => activeSlug.value,
   (slug) => {
+    if (!import.meta.client) return
+    document.documentElement.classList.toggle('is-sheet-open', slug !== null)
+  },
+  { immediate: true },
+)
+
+watch(
+  () => activeSlug.value,
+  (slug) => {
     if (!slug) {
       detail.value = null
       return
@@ -371,6 +380,7 @@ onMounted(() => {
   void nextTick(scheduleHashOpen)
 })
 onBeforeUnmount(() => {
+  document.documentElement.classList.remove('is-sheet-open')
   window.clearTimeout(hashTimer)
   window.removeEventListener('keydown', onKey)
   window.removeEventListener('hashchange', openFromHash)
