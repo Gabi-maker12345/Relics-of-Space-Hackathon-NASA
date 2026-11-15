@@ -11,7 +11,7 @@
       :class="active === 'profile' ? '' : 'pointer-events-none'"
     >
       <section class="portal__card" role="dialog" aria-modal="true" aria-labelledby="portal-title">
-        <div class="portal__avatar" aria-hidden="true">
+        <div class="portal__logo" aria-hidden="true">
           <img src="/images/zenite-logo-animavel.svg" alt="" width="498" height="366" decoding="async">
         </div>
 
@@ -168,14 +168,11 @@ async function submit(): Promise<void> {
   position: fixed;
   inset: 0;
   z-index: 15;
-  background: color-mix(in srgb, #03040a 80%, transparent);
-  backdrop-filter: blur(8px) saturate(0.6);
-  animation: veil-in 0.6s ease both;
-}
-
-@keyframes veil-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  /* Fundo transparente: o cosmos/página fica visível; o véu só apanha o
+     clique fora (o vidro do cartão é que faz o blur). */
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .portal__inner {
@@ -185,51 +182,82 @@ async function submit(): Promise<void> {
 
 .portal__card {
   position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   width: 100%;
   padding: 34px 34px 28px;
-  border-radius: 42px;
+  overflow: hidden;
   color: #fff;
   text-align: left;
+  border-radius: 42px;
   background:
-    radial-gradient(130% 90% at 8% -12%, #2a1132 0%, rgb(42 17 50 / 0) 58%),
-    radial-gradient(120% 110% at 108% 104%, #3d55e4 0%, rgb(61 85 228 / 0) 62%),
-    radial-gradient(80% 60% at 52% 48%, rgb(166 88 112 / 0.75) 0%, rgb(166 88 112 / 0) 70%),
-    linear-gradient(158deg, #221026 0%, #5c2740 34%, #8f4a63 54%, #4a5bd2 100%);
-  border: 1px solid rgb(255 255 255 / 0.14);
+    radial-gradient(120% 90% at 12% -10%, rgb(168 88 255 / 0.20) 0%, transparent 58%),
+    radial-gradient(130% 110% at 106% 108%, rgb(70 110 255 / 0.22) 0%, transparent 62%),
+    linear-gradient(152deg, rgb(255 255 255 / 0.12) 0%, rgb(255 255 255 / 0.03) 38%, rgb(255 255 255 / 0.08) 100%),
+    rgb(10 8 20 / 0.16);
+  border: 1px solid rgb(255 255 255 / 0.22);
   box-shadow:
-    0 42px 120px rgb(0 0 0 / 0.6),
-    inset 0 1px 0 rgb(255 255 255 / 0.14),
-    inset 0 -40px 80px rgb(20 10 40 / 0.28);
+    0 44px 120px rgb(0 0 0 / 0.45),
+    0 26px 90px rgb(64 32 128 / 0.22),
+    inset 0 1px 0 rgb(255 255 255 / 0.40),
+    inset 0 -1px 0 rgb(255 255 255 / 0.07),
+    inset 0 0 60px rgb(255 255 255 / 0.035);
+  backdrop-filter: blur(34px) saturate(165%);
+  -webkit-backdrop-filter: blur(34px) saturate(165%);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
   transform: translateY(14px) scale(0.985);
   transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Reflexos do vidro: uma lâmina de luz no topo e uma linha de borda. */
+.portal__card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(65% 42% at 16% -8%, rgb(255 255 255 / 0.26) 0%, transparent 72%),
+    radial-gradient(46% 32% at 92% 2%, rgb(255 255 255 / 0.10) 0%, transparent 76%),
+    linear-gradient(122deg, transparent 30%, rgb(255 255 255 / 0.10) 46%, transparent 60%);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+}
+
+.portal__card::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    inset 0 -1px 0 rgb(255 255 255 / 0.06);
+}
+
+.portal__card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .portal.is-open .portal__card {
   transform: none;
 }
 
-.portal__avatar {
-  display: grid;
-  place-items: center;
-  width: 114px;
-  height: 114px;
-  margin: 0 auto 18px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 36% 28%, rgb(255 255 255 / 0.26), rgb(255 255 255 / 0.05) 62%),
-    rgb(20 10 30 / 0.10);
-  border: 1px solid rgb(255 255 255 / 0.22);
-  box-shadow: inset 0 2px 18px rgb(255 255 255 / 0.08);
-  overflow: hidden;
+.portal__logo {
+  display: flex;
+  justify-content: center;
+  margin: 2px auto 16px;
 }
 
-.portal__avatar img {
+.portal__logo img {
   display: block;
-  width: 82%;
+  width: min(190px, 58%);
   height: auto;
-  filter: drop-shadow(0 2px 10px rgb(0 0 0 / 0.35));
+  filter: drop-shadow(0 10px 28px rgb(0 0 0 / 0.35));
 }
 
 .portal__kicker {
@@ -301,7 +329,7 @@ async function submit(): Promise<void> {
 .portal__input:-webkit-autofill:hover,
 .portal__input:-webkit-autofill:focus {
   -webkit-text-fill-color: #fff;
-  -webkit-box-shadow: 0 0 0 1000px rgb(40 20 50 / 0.9) inset;
+  -webkit-box-shadow: 0 0 0 1000px rgb(255 255 255 / 0.08) inset;
   caret-color: #fff;
   transition: background-color 9999s ease-out;
 }
@@ -433,16 +461,21 @@ async function submit(): Promise<void> {
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: #fff;
-  background: linear-gradient(96deg, #4a1026 0%, #3b217a 52%, #4a6cff 100%);
-  border: 1px solid rgb(255 255 255 / 0.12);
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(255 255 255 / 0.30);
   border-radius: 14px;
-  box-shadow: 0 14px 34px rgb(24 8 40 / 0.4);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.30),
+    0 10px 26px rgb(0 0 0 / 0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   cursor: pointer;
-  transition: filter 0.25s ease, transform 0.25s ease;
+  transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
 }
 
 .portal__submit:hover:not(:disabled) {
-  filter: brightness(1.12);
+  background: rgb(255 255 255 / 0.12);
+  border-color: rgb(255 255 255 / 0.52);
   transform: translateY(-1px);
 }
 
@@ -478,10 +511,12 @@ async function submit(): Promise<void> {
     border-radius: 34px;
   }
 
-  .portal__avatar {
-    width: 96px;
-    height: 96px;
-    margin-bottom: 14px;
+  .portal__logo {
+    margin-bottom: 12px;
+  }
+
+  .portal__logo img {
+    width: min(160px, 52%);
   }
 
   .portal__row {

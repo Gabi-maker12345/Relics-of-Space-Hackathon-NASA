@@ -45,10 +45,6 @@ html {
   width: 100%;
   overflow-x: clip;
 }
-html[data-panel="profile"] {
-  --gl-z: 20;
-}
-
 /* o painel assume o ecrã: a chrome recua */
 html[data-panel="profile"] .fr-header,
 html[data-panel="profile"] .fr-progress {

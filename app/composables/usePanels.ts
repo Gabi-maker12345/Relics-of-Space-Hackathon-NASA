@@ -1,15 +1,10 @@
 let wiredClient = false
 
 /**
- * Estado do painel de acesso. O painel vive sobre o "hole" do engine (como no
- * original): abrir/fechar anima o portal, Escape e clique fora fecham.
- * A fiação (listeners) é registada uma única vez no client.
+ * Estado do painel de acesso. O login é DOM puro (sem o antigo "hole"/anel GL
+ * do portal); Escape e clique fora fecham. A fiação regista-se uma vez no client.
  */
 export type PanelName = 'profile' | null
-
-function shieldEl(name: Exclude<PanelName, null>): HTMLElement | null {
-  return document.querySelector<HTMLElement>(`[data-gl-shield][data-shield="${name}"]`)
-}
 
 export function usePanels() {
   const active = useState<PanelName>('panel', () => null)
@@ -17,22 +12,6 @@ export function usePanels() {
   const applyEngine = (next: PanelName): void => {
     if (typeof window === 'undefined') return
     document.documentElement.dataset.panel = next ?? ''
-    // Fechar um painel que nunca abriu o GL não deve descarregar o Three.
-    if (next === null && !glEngineLoaded()) return
-    void ensureGlEngine().then((engine) => {
-      for (const name of ['profile'] as const) {
-        const el = shieldEl(name)
-        if (el) engine.setShieldOpen(el, next === name)
-      }
-      engine.openHole(next !== null)
-      if (next !== null) {
-        // revelação linha a linha (slot-machine) como no original
-        engine.defer(200, () => {
-          const el = shieldEl(next)
-          if (el) engine.replayShield(el)
-        })
-      }
-    }).catch(() => {})
   }
 
   const open = (name: Exclude<PanelName, null>): void => {
