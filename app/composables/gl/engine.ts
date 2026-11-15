@@ -78,6 +78,9 @@ type PlaneTextState = {
   canvasHeight: number
 }
 
+/** Rect do plano relativo ao track, medido uma vez por mudança de layout. */
+type PlaneGeometry = { dx: number; dy: number; w: number; h: number }
+
 type Plane = {
   el: HTMLElement
   kind: GlKind
@@ -106,6 +109,8 @@ type Plane = {
   mapFade: number
   /** Estilos computados em cache (só planos do carrossel). */
   stylesCache: { opacity: number; display: string; visibility: string } | null
+  /** Rect relativo ao track (só planos do carrossel); dispensa ler o DOM. */
+  geometry: PlaneGeometry | null
 }
 
 function planeUniforms(texture: THREE.Texture): EngineUniforms {
@@ -253,6 +258,12 @@ export class GlEngine {
   private actName = ''
   private chatOpenFlag = false
   private stylesDirty = true
+  /** Rect do track por frame + rects relativos por plano (evita 1 rect/plano/frame). */
+  private trackRect = { left: 0, top: 0, width: 0, height: 0 }
+  private trackBase = { left: 0, top: 0, w: 0, h: 0 }
+  private geometryK = { x: 1, y: 1 }
+  private geometryDirty = true
+  private geometryReady = false
   private glMask = ''
   private bootPromise: Promise<void> | null = null
   private bootedResolve: (() => void) | null = null
@@ -381,21 +392,31 @@ export class GlEngine {
     const mesh = this.floorMesh
     if (!mesh) return
     // Com o chat aberto o piso sai: as duas metades mostram o cosmos.
-    const chatOpen = document.documentElement.classList.contains('chat-open')
-    const on = this.viewport.w >= 650 && !chatOpen
+    const on = this.viewport.w >= 650 && !this.chatOpenFlag
     mesh.visible = on
     if (!on) return
     const { H, W } = this.sheet
-    const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-carousel] [data-gl="card"]'))
+    // Todos os cards do strip partilham a altura (h-43.5svh): a frente do
+    // piso é a borda inferior de um deles. Usa a geometria derivada do track
+    // em vez de ler os 36 cards a cada frame.
     let bottom = 0
     let found = false
-    for (const card of cards) {
-      const rect = card.getBoundingClientRect()
-      if (rect.width < 1) continue
-      // borda inferior do card em world y (negativo): a frente do piso é o ponto mais baixo
-      const edge = -(rect.top + rect.height - this.viewport.h / 2)
-      if (!found || edge < bottom) bottom = edge
+    for (const plane of this.planes) {
+      if (plane.kind !== 'card') continue
+      const g = plane.geometry
+      if (this.geometryReady && g !== null) {
+        if (g.w * this.geometryK.x < 1) continue
+        const top = this.trackRect.top + g.dy * this.geometryK.y
+        const height = g.h * this.geometryK.y
+        bottom = -(top + height - this.viewport.h / 2)
+      }
+      else {
+        const rect = plane.el.getBoundingClientRect()
+        if (rect.width < 1) continue
+        bottom = -(rect.top + rect.height - this.viewport.h / 2)
+      }
       found = true
+      break
     }
     if (!found) {
       // sem cartões em cena não há piso (a cena 3D vive no gate)
@@ -566,10 +587,25 @@ export class GlEngine {
     this.observer = new MutationObserver((records) => {
       let needsScan = false
       for (const record of records) {
-        // Classes/estilos mudam os estilos computados dos planos do carrossel:
-        // invalida só a cache, sem reconstruir as malhas.
-        if (record.type === 'attributes') this.stylesDirty = true
-        else needsScan = true
+        if (record.type === 'attributes') {
+          // O próprio engine escreve `translate` no track a cada frame do
+          // carrossel: não é mudança de layout, nem pode invalidar as caches.
+          if (record.target === this.trackEl && record.attributeName === 'style') continue
+          // O resto da página anima estilos a cada frame (globo, parallax):
+          // só mutações que tocam no track ou nos planos mudam estas caches.
+          const target = record.target
+          const track = this.trackEl
+          const relevant = target instanceof Element
+            && (target === track
+              || (track !== null && (track.contains(target) || target.contains(track)))
+              || target.matches('[data-gl],[data-title]'))
+          if (!relevant) continue
+          this.stylesDirty = true
+          this.geometryDirty = true
+        }
+        else {
+          needsScan = true
+        }
       }
       if (needsScan) this.queueScan()
     })
@@ -648,6 +684,7 @@ export class GlEngine {
       const current = (plane.el.textContent ?? '').replace(/\s+/g, ' ').trim()
       if (current !== plane.textRaw) plane.dirty = true
     }
+    this.geometryDirty = true
   }
 
   private createPlane(el: HTMLElement, kind: GlKind): Plane {
@@ -715,6 +752,7 @@ export class GlEngine {
       hover: 0,
       mapFade,
       stylesCache: null,
+      geometry: null,
     }
     if (kind === 'bar') {
       plane.uniforms.uOpacity.value = 1
@@ -918,6 +956,7 @@ export class GlEngine {
   }
 
   private measureTrack(): void {
+    this.geometryDirty = true
     const el = this.trackEl
     if (!el) return
     const chatOpen = document.documentElement.classList.contains('chat-open')
@@ -1025,6 +1064,7 @@ export class GlEngine {
       plane.dirty = true
       if (plane.kind === 'text') this.buildTextCanvas(plane)
     }
+    this.geometryDirty = true
   }
 
   private onWheel = (e: WheelEvent): void => {
@@ -1209,6 +1249,7 @@ export class GlEngine {
     this.advanceCarousel()
     this.syncSceneState()
     this.probeLayout()
+    this.syncTrackGeometry()
     for (const plane of this.planes) {
       if (plane.kind === 'text' && plane.dirty) {
         this.buildTextCanvas(plane)
@@ -1236,6 +1277,7 @@ export class GlEngine {
     this.actName = act
     this.chatOpenFlag = chatOpen
     this.stylesDirty = true
+    this.geometryDirty = true
   }
 
   /**
@@ -1271,6 +1313,62 @@ export class GlEngine {
       this.barVisible = false
     }
     this.applyBarMask()
+  }
+
+  /**
+   * O track lê o DOM 1x por frame; cada plano é derivado do offset relativo
+   * medido na última mudança de layout (inclui a escala do palco do chat).
+   * Uma amostra por frame valida a derivação contra o rect real.
+   */
+  private syncTrackGeometry(): void {
+    const track = this.trackEl
+    if (track === null) {
+      this.geometryReady = false
+      return
+    }
+    const r = track.getBoundingClientRect()
+    this.trackRect = { left: r.left, top: r.top, width: r.width, height: r.height }
+    if (this.geometryDirty || !this.geometryReady) {
+      this.refreshTrackGeometry()
+      return
+    }
+    this.geometryK = {
+      x: this.trackBase.w > 0 ? r.width / this.trackBase.w : 1,
+      y: this.trackBase.h > 0 ? r.height / this.trackBase.h : 1,
+    }
+    // amostra: se o layout mudou sem mutação observada, mede tudo de novo
+    for (const plane of this.planes) {
+      const g = plane.geometry
+      if (g === null || !this.isInTrack(plane.el)) continue
+      const rr = plane.el.getBoundingClientRect()
+      if (
+        Math.abs(rr.left - (r.left + g.dx * this.geometryK.x)) > 1.5
+        || Math.abs(rr.top - (r.top + g.dy * this.geometryK.y)) > 1.5
+        || Math.abs(rr.width - g.w * this.geometryK.x) > 1.5
+      ) {
+        this.refreshTrackGeometry()
+      }
+      return
+    }
+  }
+
+  /** Mede o track e todos os planos (só em mudanças de layout, não por frame). */
+  private refreshTrackGeometry(): void {
+    this.geometryDirty = false
+    const track = this.trackEl
+    if (track === null) {
+      this.geometryReady = false
+      return
+    }
+    const tr = track.getBoundingClientRect()
+    this.trackRect = { left: tr.left, top: tr.top, width: tr.width, height: tr.height }
+    this.trackBase = { left: tr.left, top: tr.top, w: tr.width, h: tr.height }
+    this.geometryK = { x: 1, y: 1 }
+    for (const plane of this.planes) {
+      const r = plane.el.getBoundingClientRect()
+      plane.geometry = { dx: r.left - tr.left, dy: r.top - tr.top, w: r.width, h: r.height }
+    }
+    this.geometryReady = tr.width > 0 && tr.height > 0
   }
 
   /**
@@ -1419,7 +1517,22 @@ export class GlEngine {
   }
 
   private syncPlane(plane: Plane): void {
-    const rect = plane.el.getBoundingClientRect()
+    let rect: { left: number; top: number; width: number; height: number; bottom: number }
+    if (this.geometryReady && this.isInTrack(plane.el) && plane.geometry !== null) {
+      const g = plane.geometry
+      const rectTop = this.trackRect.top + g.dy * this.geometryK.y
+      const rectHeight = g.h * this.geometryK.y
+      rect = {
+        left: this.trackRect.left + g.dx * this.geometryK.x,
+        top: rectTop,
+        width: g.w * this.geometryK.x,
+        height: rectHeight,
+        bottom: rectTop + rectHeight,
+      }
+    }
+    else {
+      rect = plane.el.getBoundingClientRect()
+    }
     if (rect.width < 1 || rect.height < 1) {
       plane.mesh.visible = false
       return

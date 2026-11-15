@@ -1229,3 +1229,23 @@ Auditoria em produção (zenitte.vercel.app): consola limpa, DCL 779 ms/load
 - **Rede:** preload da primeira capa; prefetch do detalhe no hover/focus do cartão. TTFB medido no ambiente de teste: lista **0,15–0,52 s**, detalhe **0,83–1,56 s** no primeiro hit; Vercel em `iad1`, edge `cpt1`. Medição de Angola fica registada na #85.
 - **Qualidade:** 159 unitários, 38 integração, typecheck, lint e build verdes; QA manual confirma 1 lista no arranque, 0 auth/me no público, 0 lista extra na cena/filtros.
 - **Produção (build ea007257):** 1 lista/0 auth no arranque, 0 listas extra na cena/filtros, 36 cartões (15 em Marte), 0 erros de consola.
+
+## Iteração 64 — geometria derivada do carrossel (fim dos rects por frame)
+
+- O track lê o DOM **1× por frame**; cada plano do carrossel deriva o rect do
+  offset relativo medido na última mudança de layout (`dx/dy/w/h` + escala do
+  palco do chat). Uma amostra por frame valida a derivada contra o DOM real;
+  se divergir, mede tudo de novo.
+- Invalidação dirigida: mutações de `class/style` só contam quando tocam no
+  track, nos seus ancestrais ou nos planos (`[data-gl]`, `[data-title]`); o
+  globo/parallax da landing animam estilos a cada frame sem invalidar caches.
+  O próprio `translate` do track continua ignorado.
+- Piso: em vez de ler os 36 cards, usa a borda inferior derivada de um card
+  (todos partilham a altura no strip); no mobile o piso já não existe.
+- Medido no dev: reads de rect dos cards **36/frame → 1/frame** (amostra), do
+  track **2/frame → 1/frame**, do piso **36/frame → 0**; cena, arrasto, chat
+  (escala do palco) e filtros alinhados; floor/lip sob os cards estável.
+  Unit 159/159, typecheck e lint limpos.
+- Próximo: dormir o render quando nada se move (60 fps em repouso), reads de
+  rect dos componentes da landing (globo/parallax), streaming do chat,
+  preloader, ficha/mobile.
