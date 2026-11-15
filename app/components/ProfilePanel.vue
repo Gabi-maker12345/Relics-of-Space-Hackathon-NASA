@@ -83,12 +83,24 @@
         </form>
 
         <p class="portal__hint">{{ t('login.hint') }}</p>
+
+        <div class="portal__demo">
+          <p class="portal__demoTitle">{{ t('login.demoTitle') }}</p>
+          <dl class="portal__demoCreds">
+            <div><dt>{{ t('login.email') }}</dt><dd>{{ demoEmail }}</dd></div>
+            <div><dt>{{ t('login.password') }}</dt><dd>{{ demoPassword }}</dd></div>
+          </dl>
+          <p class="portal__demoHint">{{ t('login.demoHint') }}</p>
+          <button type="button" class="portal__demoUse" @click="fillDemo">{{ t('login.demoUse') }}</button>
+        </div>
       </section>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { DEMO_EMAIL, DEMO_PASSWORD } from '#shared/demo'
+
 const { active, close } = usePanels()
 const { signIn, error } = useAuth()
 const { t } = useI18n()
@@ -102,6 +114,9 @@ const errorText = computed(() => {
     default: return ''
   }
 })
+
+const demoEmail = DEMO_EMAIL
+const demoPassword = DEMO_PASSWORD
 
 const email = ref('')
 const password = ref('')
@@ -120,6 +135,12 @@ watch(() => active.value, async (name) => {
   const target = email.value.trim().length > 0 ? passwordEl.value : emailEl.value
   target?.focus({ preventScroll: true })
 })
+
+function fillDemo(): void {
+  email.value = DEMO_EMAIL
+  password.value = DEMO_PASSWORD
+  void nextTick(() => passwordEl.value?.focus({ preventScroll: true }))
+}
 
 /** Tab fica preso ao diálogo (o painel é modal). */
 function onCardKeydown(event: KeyboardEvent): void {
@@ -521,6 +542,77 @@ async function submit(): Promise<void> {
 .portal__submit:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+.portal__demo {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px dashed rgb(255 255 255 / 0.24);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 0.045);
+}
+
+.portal__demoTitle {
+  margin: 0;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(242 241 237 / 0.62);
+}
+
+.portal__demoCreds {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: rgb(242 241 237 / 0.92);
+}
+
+.portal__demoCreds div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.portal__demoCreds dt {
+  opacity: 0.45;
+}
+
+.portal__demoCreds dd {
+  margin: 0;
+  user-select: all;
+}
+
+.portal__demoHint {
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: rgb(242 241 237 / 0.55);
+}
+
+.portal__demoUse {
+  justify-self: start;
+  padding: 7px 12px;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 999px;
+  background: transparent;
+  color: rgb(242 241 237 / 0.85);
+  font-family: "Inter Variable", Arial, sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.portal__demoUse:hover {
+  background: rgb(255 255 255 / 0.08);
+  border-color: rgb(255 255 255 / 0.34);
 }
 
 .portal__hint {
