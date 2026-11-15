@@ -61,6 +61,7 @@ export const messages = {
     'filters.search': 'Pesquisar por nome',
     'filters.searchPlaceholder': 'Nome da relíquia',
     'filters.clear': 'Limpar',
+    'filters.filter': 'Filtrar',
     'filters.results': '{count} relíquias',
     'filters.noResults': 'Nenhuma relíquia corresponde a estes filtros.',
 
@@ -305,6 +306,7 @@ export const messages = {
     'filters.search': 'Search by name',
     'filters.searchPlaceholder': 'Relic name',
     'filters.clear': 'Clear',
+    'filters.filter': 'Filter',
     'filters.results': '{count} relics',
     'filters.noResults': 'No relic matches these filters.',
 

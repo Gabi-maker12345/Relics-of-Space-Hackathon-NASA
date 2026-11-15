@@ -969,3 +969,16 @@ diário aberto pelo cartão.
 - **QA (390×844)**: CTA “Ver o arquivo” → gate com dica de toque; toque → `act=scene`,
   `[data-carousel]` com 12 cartões; swipe para cima também entra; arrasto no carrossel move
   `carousel.p` (0 → 0.121); “Voltar” repõe `act=page`, sem overlay e com scroll livre.
+
+## Iteração 48 — filtros da cena em dropdown no telemóvel
+
+- **Bug**: a barra de filtros do overlay (cena 3D) mostrava os chips de local/estado e o
+  contador de exploradas por cima dos cartões do carrossel; no telemóvel atravessavam os painéis.
+- **Correção**: com `overlay` e `max-width: 649px` fica só a pesquisa + botão **Filtrar**
+  (pill, dourado quando há filtros ativos); os grupos abrem num dropdown sólido por baixo da
+  barra (labels Local/Estado visíveis), fecham com Escape, clique fora ou no próprio botão.
+  O contador de exploradas esconde-se nesse ecrã; a barra ganhou um véu preto em gradiente.
+  Desktop mantém os chips em linha e o botão escondido. Ids do input/painel passaram a `useId`
+  (havia dois `relic-search` quando a cena estava aberta).
+- **QA**: 390×844 — barra só com pesquisa+Filtrar; dropdown abre/fecha; Marte filtra para 5
+  cartões; 1440×900 — chips em linha, toggle `none`, contador visível; typecheck/lint verdes.
