@@ -266,6 +266,9 @@ export class GlEngine {
   private geometryReady = false
   /** Só desenha quando algo visual mudou: repouso = 0 draw calls. */
   private needsRender = true
+  /** Tick inteiro dorme em repouso; qualquer evento/estado chama `wake()`. */
+  private asleep = false
+  private lastWakeAt = 0
   private glMask = ''
   private bootPromise: Promise<void> | null = null
   private bootedResolve: (() => void) | null = null
@@ -518,11 +521,16 @@ export class GlEngine {
 
   private onVisibility = (): void => {
     // O buffer do canvas pode ter sido descartado com a aba escondida.
-    if (!document.hidden) this.needsRender = true
+    if (!document.hidden) this.wake()
+  }
+
+  private onScroll = (): void => {
+    this.wake()
   }
 
   private onBallMove = (e: PointerEvent): void => {
     if (this.reduced) return
+    this.wake()
     this.ball.tx = e.clientX
     this.ball.ty = e.clientY
     if (!this.ball.seen) {
@@ -544,6 +552,7 @@ export class GlEngine {
 
   private onBallLeave = (e: PointerEvent): void => {
     if (e.relatedTarget) return
+    this.wake()
     this.ball.seen = false
     this.ball.targetAlpha = 0
     this.addTween(this.ball, 'alpha', this.ball.alpha, 0, performance.now(), CHOREO.cursorOut.dur * 1000, CHOREO.cursorOut.ease)
@@ -572,6 +581,7 @@ export class GlEngine {
 
   /** Abre/fecha o portal (hole). Durações/easing do original. */
   openHole(open: boolean): void {
+    this.wake()
     this.holeWanted = open
     const mesh = this.holeMesh
     if (!mesh) return
@@ -595,6 +605,7 @@ export class GlEngine {
   /** Gate de visibilidade dos painéis (substitui o `inert` do DOM). */
   setShieldOpen(shield: HTMLElement, open: boolean): void {
     this.shieldOpen.set(shield, open)
+    this.wake()
   }
 
   private isShieldOpen(shield: HTMLElement): boolean {
@@ -624,6 +635,7 @@ export class GlEngine {
           if (!relevant) continue
           this.stylesDirty = true
           this.geometryDirty = true
+          this.wake()
         }
         else {
           needsScan = true
@@ -641,6 +653,8 @@ export class GlEngine {
     window.addEventListener('resize', this.onResize)
     window.addEventListener('focusin', this.onFocusIn)
     document.addEventListener('visibilitychange', this.onVisibility)
+    // captura scroll de qualquer contentor (sheet/modal), não só da janela
+    document.addEventListener('scroll', this.onScroll, { capture: true, passive: true })
     this.startLoop()
     this.bootPromise = (async () => {
       try {
@@ -662,6 +676,7 @@ export class GlEngine {
   private queueScan(): void {
     if (this.scanQueued || this.disposed) return
     this.scanQueued = true
+    this.wake()
     requestAnimationFrame(() => {
       this.scanQueued = false
       this.scan()
@@ -708,7 +723,7 @@ export class GlEngine {
       if (current !== plane.textRaw) plane.dirty = true
     }
     this.geometryDirty = true
-    this.needsRender = true
+    this.wake()
   }
 
   private createPlane(el: HTMLElement, kind: GlKind): Plane {
@@ -933,6 +948,7 @@ export class GlEngine {
 
   /** Liga o track do carrossel (index) — idempotente e com re-medidas seguras. */
   attachTrack(el: HTMLElement): void {
+    this.wake()
     if (this.trackEl !== el) {
       this.trackObserver?.disconnect()
       this.trackObserver = null
@@ -1055,6 +1071,7 @@ export class GlEngine {
     if (this.pointer.down || performance.now() - this.lastPointerAt < 1500) return
     const target = e.target as HTMLElement | null
     if (!target) return
+    this.wake()
     let card: HTMLElement | null = target.closest('[data-gl="card"]')
     if (card === null) {
       const href = target.getAttribute('href') ?? ''
@@ -1089,7 +1106,7 @@ export class GlEngine {
       if (plane.kind === 'text') this.buildTextCanvas(plane)
     }
     this.geometryDirty = true
-    this.needsRender = true
+    this.wake()
   }
 
   private onWheel = (e: WheelEvent): void => {
@@ -1103,6 +1120,7 @@ export class GlEngine {
     const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
     const delta = e.deltaMode === 1 ? raw * 16 : raw
     e.preventDefault()
+    this.wake()
     const chat = document.documentElement.classList.contains('chat-open')
     this.nudge(chat && this.chatStage.scale > 0 ? delta / this.chatStage.scale : delta)
   }
@@ -1120,6 +1138,7 @@ export class GlEngine {
       ? limited
       : THREE.MathUtils.clamp(limited, 0, 1)
     this.stopCarouselTween()
+    this.wake()
   }
 
   /** Move o carrossel com tween próprio (não depende do RAF/GSAP). */
@@ -1147,6 +1166,7 @@ export class GlEngine {
     const target = e.target as HTMLElement | null
     if (target === null) return
     if (target.closest('[data-gl="card"]') === null && target.closest('[data-carousel]') === null) return
+    this.wake()
     this.pointer.down = true
     this.pointer.id = e.pointerId
     this.pointer.x = e.clientX
@@ -1206,6 +1226,7 @@ export class GlEngine {
       : THREE.MathUtils.clamp(scaled, 0, 1)
     this.carousel.p = this.carousel.target
     this.lastAdvanceAt = 0
+    this.wake()
     // O arrasto move a faixa já neste frame: sem isto o p mudava mas o DOM
     // (translate do track) ficava parado e os painéis "não scrollavam".
     this.applyTrack()
@@ -1215,10 +1236,12 @@ export class GlEngine {
     if (e.pointerId !== this.pointer.id) return
     this.pointer.down = false
     this.pointer.id = -1
+    this.wake()
   }
 
   private onPointerCancel = (): void => {
     this.resetPointer()
+    this.wake()
   }
 
   private resetPointer(): void {
@@ -1266,6 +1289,10 @@ export class GlEngine {
   private tick(): void {
     const renderer = this.renderer
     if (!renderer || document.hidden) return
+    if (this.asleep) {
+      if (!this.needsRender) return
+      this.asleep = false
+    }
     this.lastTickAt = performance.now()
     this.sheetClock = this.lastTickAt / 1000
     this.updateSheetVelocity()
@@ -1293,6 +1320,18 @@ export class GlEngine {
     if (this.needsRender) {
       renderer.render(this.scene, this.camera)
       this.needsRender = false
+    }
+    // Sem mudanças visuais, sem tweens/marks, carrossel parado e ponteiro em
+    // cima: dorme o tick inteiro (o rAF continua, mas não lê DOM nem calcula).
+    if (
+      !this.needsRender
+      && this.tweens.length === 0
+      && this.marks.length === 0
+      && Math.abs(this.carousel.target - this.carousel.p) <= 0.00015
+      && !this.pointer.down
+      && this.lastTickAt - this.lastWakeAt > 260
+    ) {
+      this.asleep = true
     }
   }
 
@@ -1501,7 +1540,7 @@ export class GlEngine {
       plane.uniforms.uRes.value.set(anchor.w, anchor.h)
       plane.lastRectHash = ''
     }
-    this.needsRender = true
+    this.wake()
   }
 
   /** Define o palco de telemóvel usado com o chat aberto (escala e altura). */
@@ -1514,6 +1553,7 @@ export class GlEngine {
     }
     this.chatStage.scale = next
     this.chatStage.height = Number.isFinite(height) && height > 0 ? height : 0
+    this.wake()
   }
 
   /** Re-mede e recentra (usado quando o track passa a ter cópias). */
@@ -1524,6 +1564,7 @@ export class GlEngine {
     this.measureTrack()
     this.centerInitial()
     this.applyTrack()
+    this.wake()
   }
 
   /** p normalizado em [0,1); no modo infinito nunca satura nas pontas. */
@@ -1838,6 +1879,7 @@ export class GlEngine {
 
   /** Entrada em cascata — réplica da coreografia Kp do original. */
   enterAll(): void {
+    this.wake()
     // o piso entra junto com a faixa (u_alpha é tweened por show/hide no original)
     if (this.reduced) {
       this.floorBase = FLOOR_ALPHA
@@ -1957,10 +1999,18 @@ export class GlEngine {
     onDone: (() => void) | null = null,
   ): void {
     this.tweens.push({ obj, key, from, to, startAt, duration, ease, onUpdate, onDone })
+    this.wake()
   }
 
   defer(delayMs: number, fn: () => void): void {
     this.marks.push({ at: performance.now() + delayMs, fn })
+    this.wake()
+  }
+
+  /** Acorda o tick: um evento ou mutação pode exigir sync/render novo. */
+  private wake(): void {
+    this.needsRender = true
+    this.lastWakeAt = performance.now()
   }
 
   private runTweens(now: number): void {
@@ -1997,6 +2047,7 @@ export class GlEngine {
     this.observer?.disconnect()
     window.removeEventListener('focusin', this.onFocusIn)
     document.removeEventListener('visibilitychange', this.onVisibility)
+    document.removeEventListener('scroll', this.onScroll, { capture: true })
     window.removeEventListener('pointermove', this.onBallMove)
     document.documentElement.removeEventListener('pointerleave', this.onBallLeave)
     if (this.listenersOn) {

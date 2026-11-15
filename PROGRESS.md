@@ -1263,3 +1263,19 @@ Auditoria em produção (zenitte.vercel.app): consola limpa, DCL 779 ms/load
   (~2 rects/frame); o próximo passo é dormir o tick inteiro.
 - Próximo: dormir também o tick em repouso (para o CPU), reads dos
   componentes da landing, streaming do chat, preloader, ficha/mobile.
+
+## Iteração 66 — tick inteiro dorme em repouso
+
+- `asleep`/`lastWakeAt`: com render limpo, sem tweens/marks, carrossel parado,
+  ponteiro em cima e 260 ms desde o último evento, o tick não lê DOM nem
+  calcula. Acordam-no: roda/arrasto/pointer, scroll (captura em qualquer
+  contentor: sheet/modal), foco/resize/aba visível, tweens/marks, ato/chat,
+  snap/reset/attach, scan e mutações relevantes, hole/shield.
+- Medido no dev: em repouso **0 rects do engine, 0 do track e 0 draw calls**
+  em 2,5 s (os 128 rects do total são dos componentes da landing). Uma roda
+  acorda: 9 rects + 126 draws em 1,5 s.
+- Chat (palco 281/370 px) e filtro Lua (36→9 cards, 0 de 3 exploradas)
+  continuam alinhados; screenshots conferidos. Unit 159/159, typecheck e
+  lint limpos.
+- Próximo: os ~51 rects/s dos componentes da landing (globo/parallax),
+  ficha/mobile, streaming do chat e preloader.
