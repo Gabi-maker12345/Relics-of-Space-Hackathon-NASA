@@ -1195,3 +1195,4 @@ diário aberto pelo cartão.
 - **Admin:** uma chamada a `/api/auth/me` e uma à lista admin por page load; o `watch(user)` duplicado foi removido.
 - **Rede:** preload da primeira capa; prefetch do detalhe no hover/focus do cartão. TTFB medido no ambiente de teste: lista **0,15–0,52 s**, detalhe **0,83–1,56 s** no primeiro hit; Vercel em `iad1`, edge `cpt1`. Medição de Angola fica registada na #85.
 - **Qualidade:** 159 unitários, 38 integração, typecheck, lint e build verdes; QA manual confirma 1 lista no arranque, 0 auth/me no público, 0 lista extra na cena/filtros.
+- **Produção (build ea007257):** 1 lista/0 auth no arranque, 0 listas extra na cena/filtros, 36 cartões (15 em Marte), 0 erros de consola.
