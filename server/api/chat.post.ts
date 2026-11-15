@@ -140,6 +140,7 @@ export default defineEventHandler(async (event) => {
 
   const model = process.env.QUIZ_AI_MODEL || 'gpt-4o-mini'
   const baseUrl = (process.env.QUIZ_AI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '')
+  let diagnostics = ''
 
   /** Uma chamada ao provider; devolve o texto (ou '' se vier sem conteúdo). */
   async function callProvider(system: string, temperature: number): Promise<string> {
@@ -169,8 +170,16 @@ export default defineEventHandler(async (event) => {
         throw new Error(`provider respondeu ${response.status}${detail ? `: ${detail.slice(0, 160)}` : ''}`)
       }
 
-      const json = (await response.json()) as { choices?: { message?: { content?: string } }[] }
-      return json.choices?.[0]?.message?.content?.trim() ?? ''
+      const json = (await response.json()) as {
+        choices?: { finish_reason?: string, message?: { content?: string, reasoning?: string } }[]
+        usage?: unknown
+      }
+      const content = json.choices?.[0]?.message?.content?.trim() ?? ''
+      if (!content) {
+        const choice = json.choices?.[0]
+        diagnostics = `finish=${choice?.finish_reason ?? '?'} reasoning=${choice?.message?.reasoning?.length ?? 0} usage=${JSON.stringify(json.usage ?? null)}`
+      }
+      return content
     }
     finally {
       clearTimeout(timer)
@@ -182,7 +191,7 @@ export default defineEventHandler(async (event) => {
     // O modelo de raciocínio às vezes devolve conteúdo vazio: segunda tentativa
     // com contexto compacto e orçamento de tokens explícito.
     if (!reply) reply = await callProvider(buildSystemPrompt(lang, relic, true), 0.3)
-    if (!reply) throw new Error('resposta vazia')
+    if (!reply) throw new Error(`resposta vazia ${diagnostics}`)
 
     return { reply, relic: relic?.name ?? null, lang }
   }
