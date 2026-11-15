@@ -2128,16 +2128,55 @@ html.chat-open .fr-filters--overlay .fr-filters__count {
   display: none;
 }
 
+/*
+ * Com o chat aberto a coluna esquerda é um palco de telemóvel 390×844,
+ * escalado para caber: cartões, tipografia, filtros e chrome no mesmo tamanho
+ * do mobile. O GL segue os rects transformados e escala o texto pela escala.
+ */
+@media (min-width: 1024px) {
+  html.chat-open .gate.is-scene .gate__scene {
+    left: 0;
+    right: auto;
+    top: 84px;
+    bottom: auto;
+    width: 390px;
+    height: 844px;
+    transform: translateX(calc(21vw - 195px)) scale(var(--chat-stage-scale, 1));
+    transform-origin: 50% 0;
+    overflow: hidden;
+  }
+}
+
+/* Filtros e chrome entram no mesmo palco (são teleportados para o body). */
+@media (min-width: 1024px) {
+  html.chat-open .gate-filters,
+  html.chat-open .gate-chrome {
+    left: 0;
+    right: auto;
+    top: 84px;
+    bottom: auto;
+    width: 390px;
+    height: 844px;
+    transform: translateX(calc(21vw - 195px)) scale(var(--chat-stage-scale, 1));
+    transform-origin: 50% 0;
+  }
+
+  html.chat-open .gate-filters {
+    top: 84px;
+    height: auto;
+  }
+}
+
 html.chat-open .gate.is-scene [data-carousel] {
   top: 0 !important;
   flex-direction: column;
   gap: 6vh 0;
   transform: none;
-  padding-inline: clamp(12px, 2vw, 24px);
+  padding-inline: 0;
 }
 
 html.chat-open .gate.is-scene [data-carousel] [data-gl='card'] {
-  width: min(100%, 380px);
+  width: 76%;
   height: auto;
   max-height: none;
   margin-inline: auto;

@@ -76,8 +76,24 @@ function onKeydown(event: KeyboardEvent): void {
   closeChat()
 }
 
+function applyChatStage(): void {
+  const root = document.documentElement
+  const engine = getGlEngine()
+  if (!root.classList.contains('chat-open') || window.innerWidth < 1024) {
+    root.style.removeProperty('--chat-stage-scale')
+    engine?.setChatStage(1, 0)
+    return
+  }
+  const width = window.innerWidth
+  const height = window.innerHeight
+  const scale = Math.max(0.55, Math.min(1, (width * 0.42 - 48) / 390, (height - 100) / 844))
+  root.style.setProperty('--chat-stage-scale', String(scale))
+  engine?.setChatStage(scale, 844)
+}
+
 watch(open, async (value) => {
   document.documentElement.classList.toggle('chat-open', value)
+  applyChatStage()
   void nextTick(() => {
     const engine = getGlEngine()
     engine?.resetCarousel()
@@ -98,10 +114,12 @@ watch([() => messages.value.length, sending, typedText], async () => {
 
 onMounted(() => {
   window.addEventListener('keydown', onKeydown, true)
+  window.addEventListener('resize', applyChatStage)
   reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown, true)
+  window.removeEventListener('resize', applyChatStage)
   cancelTyping()
   document.documentElement.classList.remove('chat-open')
   getGlEngine()?.resetCarousel()

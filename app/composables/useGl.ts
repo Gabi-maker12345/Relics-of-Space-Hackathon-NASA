@@ -23,6 +23,7 @@ export function getGlEngine(): GlEngine | null {
   return instance
 }
 
+
 /** Descarrega o chunk do engine uma única vez (idempotente). */
 export function loadGlEngine(): Promise<GlEngine> {
   if (instance !== null) return Promise.resolve(instance)

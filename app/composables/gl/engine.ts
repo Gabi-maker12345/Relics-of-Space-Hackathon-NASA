@@ -235,6 +235,8 @@ export class GlEngine {
   private observer: MutationObserver | null = null
   private disposed = false
   private viewport = { w: 1, h: 1, dpr: 1 }
+  private chatStage = { scale: 1, height: 0 }
+  private stageRect = { top: 0, bottom: 0 }
   private bootPromise: Promise<void> | null = null
   private bootedResolve: (() => void) | null = null
 
@@ -783,6 +785,12 @@ export class GlEngine {
   private buildTextCanvas(plane: Plane): void {
     const dpr = this.crispDpr()
     plane.text.fontSpec = readFontSpec(plane.el, dpr)
+    const stageScale = document.documentElement.classList.contains('chat-open') ? this.chatStage.scale : 1
+    if (stageScale !== 1) {
+      plane.text.fontSpec.sizePx *= stageScale
+      plane.text.fontSpec.lineHeightPx *= stageScale
+      plane.text.fontSpec.letterSpacingPx *= stageScale
+    }
     const box = plane.el.getBoundingClientRect()
     // largura/altura do box de layout — scrollWidth/Height incluem o pseudo
     // elemento de hit area (before:-inset-15) e davam canvas de 2 linhas
@@ -868,7 +876,8 @@ export class GlEngine {
   private measureTrack(): void {
     const el = this.trackEl
     if (!el) return
-    const mobile = window.innerWidth < 650 || document.documentElement.classList.contains('chat-open')
+    const chatOpen = document.documentElement.classList.contains('chat-open')
+    const mobile = window.innerWidth < 650 || chatOpen
     this.carousel.axis = mobile ? 'y' : 'x'
     const cards = Array.from(el.querySelectorAll<HTMLElement>('[data-gl="card"]'))
     const first = cards[0]
@@ -877,7 +886,7 @@ export class GlEngine {
       if (mobile) {
         this.carousel.infinite = false
         const anchor = cards[1] ?? first
-        const vh = window.innerHeight
+        const vh = chatOpen && this.chatStage.height > 0 ? this.chatStage.height : window.innerHeight
         const start = vh / 2 - (anchor.offsetTop + anchor.offsetHeight / 2)
         const lastBottom = last.offsetTop + last.offsetHeight
         const end = vh - lastBottom
@@ -982,7 +991,8 @@ export class GlEngine {
     const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
     const delta = e.deltaMode === 1 ? raw * 16 : raw
     e.preventDefault()
-    this.nudge(delta)
+    const chat = document.documentElement.classList.contains('chat-open')
+    this.nudge(chat && this.chatStage.scale > 0 ? delta / this.chatStage.scale : delta)
   }
 
   private nudge(deltaPx: number): void {
@@ -1064,7 +1074,9 @@ export class GlEngine {
     this.pointer.x = e.clientX
     this.pointer.y = e.clientY
     this.lastDragPx = Math.max(this.lastDragPx, fromStart)
-    const delta = this.carousel.axis === 'x' ? -dx : -dy
+    const chat = document.documentElement.classList.contains('chat-open')
+    const screenDelta = this.carousel.axis === 'x' ? -dx : -dy
+    const delta = chat && this.chatStage.scale > 0 ? screenDelta / this.chatStage.scale : screenDelta
     const scaled = this.carousel.target + (delta / this.carousel.max) * 1.6
     this.carousel.target = this.carousel.infinite
       ? scaled
@@ -1105,6 +1117,12 @@ export class GlEngine {
     this.runTweens(this.lastTickAt)
     this.runMarks(this.lastTickAt)
     this.advanceCarousel()
+    const scene = document.querySelector<HTMLElement>('.gate.is-scene .gate__scene')
+    if (scene !== null) {
+      const r = scene.getBoundingClientRect()
+      this.stageRect.top = r.top
+      this.stageRect.bottom = r.bottom
+    }
     for (const plane of this.planes) {
       if (plane.kind === 'text' && plane.dirty) {
         this.buildTextCanvas(plane)
@@ -1213,6 +1231,18 @@ export class GlEngine {
     }
   }
 
+  /** Define o palco de telemóvel usado com o chat aberto (escala e altura). */
+  setChatStage(scale: number, height: number): void {
+    const next = Number.isFinite(scale) && scale > 0 ? scale : 1
+    if (next !== this.chatStage.scale) {
+      for (const plane of this.planes) {
+        if (plane.kind === 'text') plane.dirty = true
+      }
+    }
+    this.chatStage.scale = next
+    this.chatStage.height = Number.isFinite(height) && height > 0 ? height : 0
+  }
+
   /** Re-mede e recentra (usado quando o track passa a ter cópias). */
   resetCarousel(): void {
     this.hasCenteredInitial = false
@@ -1260,6 +1290,12 @@ export class GlEngine {
       return
     }
     plane.mesh.visible = true
+    // O palco do chat muda a largura do texto (e a fonte) sem mutação de DOM:
+    // reconstrói o canvas quando o box de layout muda.
+    if (plane.kind === 'text' && Math.abs(plane.widthPx - rect.width) > 1) {
+      this.buildTextCanvas(plane)
+      this.drawTextCanvas(plane)
+    }
     const hash = `${rect.left.toFixed(1)}|${rect.top.toFixed(1)}|${rect.width.toFixed(1)}|${rect.height.toFixed(1)}`
     if (hash !== plane.lastRectHash && plane.kind !== 'text') {
       if (plane.kind === 'bar' || plane.kind === 'pill') {
@@ -1276,9 +1312,18 @@ export class GlEngine {
     const elOpacity = parseFloat(styles.opacity) || 1
     // Com o chat aberto os cartões entram por uma borda superior suave.
     const chatOpen = document.documentElement.classList.contains('chat-open')
-    const topFade = chatOpen && this.isInTrack(plane.el)
-      ? Math.max(0, Math.min(1, (rect.top - 70) / 110))
-      : 1
+    let topFade = 1
+    if (chatOpen && this.isInTrack(plane.el)) {
+      const upStart = this.stageRect.top + 60
+      const upEnd = this.stageRect.top + 170
+      const downStart = this.stageRect.bottom - 40
+      const downEnd = this.stageRect.bottom - 150
+      const up = Math.max(0, Math.min(1, (rect.top - upStart) / (upEnd - upStart)))
+      const down = rect.bottom > downStart
+        ? Math.max(0, Math.min(1, (downEnd - rect.bottom) / (downEnd - downStart)))
+        : 1
+      topFade = Math.min(up, down)
+    }
     const glOwned = plane.el.hasAttribute('data-gl') || plane.el.hasAttribute('data-title')
     const invisClass = plane.el.classList.contains('invisible')
     const domHidden = styles.display === 'none' || (styles.visibility === 'hidden' && !glOwned) || (invisClass && plane.kind === 'text')

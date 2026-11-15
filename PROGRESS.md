@@ -1038,3 +1038,19 @@ diário aberto pelo cartão.
 - **QA**: 1440×900 e 390×844 — abertura/fecho, pergunta centrada, typewriter a crescer
   (0→118 chars), clique em Apollo → introdução, filtros compactos, fundo cosmos nas duas
   metades; 152 testes, typecheck/lint verdes.
+
+## Iteração 52 — palco de telemóvel na coluna do chat
+
+- A coluna esquerda com o chat aberto passa a ser um **palco 390×844** (o viewport
+  mobile) escalado por `--chat-stage-scale` para caber (≈0,95 a 1440×900), com
+  cantos/overflow do palco: cartões, títulos, legendas, filtros, VOLTAR/RELÍQUIAS
+  e tipografia ficam todos no tamanho do telemóvel, em vez de só os painéis.
+- Filtros e chrome (teleportados para o body) são transformados com a mesma
+  escala/origem e alinhados ao palco.
+- Engine: `setChatStage(escala, altura)`; o eixo vertical mede com a altura do
+  palco (844), a roda/arrasto passam a 1:1 com a escala, e os canvas de texto
+  são reconstruídos quando o box de layout muda (a largura passava de 625 para
+  213 sem mutação de DOM — os títulos desenhavam-se fora do cartão).
+- QA: 1440×900 com o palco (cartões 281 visuais = 296 design), filtros/chrome
+  dentro do palco, texto dos cartões nos cartões, roda no palco move, roda no
+  chat não; 390×844 mantém a gaveta e cartões 296; 152 testes e typecheck verdes.
