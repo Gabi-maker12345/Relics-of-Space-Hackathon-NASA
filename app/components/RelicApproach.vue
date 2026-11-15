@@ -46,6 +46,9 @@ const rx = ref(0)
 const ry = ref(0)
 const pathOpacity = ref(0)
 let observer: IntersectionObserver | null = null
+let noteEl = ref<HTMLElement | null>(null)
+let noteRaf = 0
+let headerEl: HTMLElement | null = null
 let resize: ResizeObserver | null = null
 
 /**
@@ -162,6 +165,21 @@ function wake(): void {
   raf = requestAnimationFrame(render)
 }
 
+/** A legenda desvanece antes de cruzar o cabeçalho fixo (sem texto por baixo). */
+function updateNoteFade(): void {
+  noteRaf = 0
+  const note = noteEl.value
+  if (!note) return
+  headerEl ??= document.querySelector<HTMLElement>('.fr-header')
+  const edge = (headerEl?.getBoundingClientRect().bottom ?? 0) + 16
+  const fade = clamp((note.getBoundingClientRect().top - edge) / 72, 0, 1)
+  note.style.opacity = fade.toFixed(3)
+}
+
+function onScroll(): void {
+  if (!noteRaf) noteRaf = requestAnimationFrame(updateNoteFade)
+}
+
 /** Arrastar gira a órbita; a velocidade extra morre na inércia. */
 function onPointerDown(event: PointerEvent): void {
   if (event.pointerType === 'mouse' && event.button !== 0) return
@@ -220,10 +238,17 @@ onMounted(() => {
     visible = true
     wake()
   }
+
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onScroll)
+  updateNoteFade()
 })
 
 onBeforeUnmount(() => {
   cancelAnimationFrame(raf)
+  cancelAnimationFrame(noteRaf)
+  window.removeEventListener('scroll', onScroll)
+  window.removeEventListener('resize', onScroll)
   observer?.disconnect()
   resize?.disconnect()
 })
@@ -270,8 +295,8 @@ onBeforeUnmount(() => {
         </header>
       </div>
 
-      <p class="fr-approach__note">
-        Entre 1969 e 1982, a humanidade deixou na Lua e em Marte máquinas que continuam exactamente onde pararam.
+      <p ref="noteEl" class="fr-approach__note">
+        {{ t('approach.note') }}
       </p>
     </div>
   </section>

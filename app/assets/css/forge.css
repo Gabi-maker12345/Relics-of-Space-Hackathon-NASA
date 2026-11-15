@@ -2213,6 +2213,39 @@ html.chat-open .gate.is-scene [data-carousel] {
   }
 }
 
+/* Telemóvel: a pilha de cartões nasce abaixo da barra de filtros/pesquisa
+   (a altura vem medida pelo CosmosGate) e ganha folga para rolar até ao fim. */
+@media (max-width: 639px) {
+  .gate.is-scene [data-carousel] {
+    top: calc(var(--gate-filters-bottom, 0px) + 12px);
+    padding-bottom: 96px;
+  }
+}
+
+/* Telemóvel/tablet: o rótulo de secção é redundante e colidia com os cartões;
+   o VOLTAR fica opaco para se ler e clicar sobre a cena. */
+@media (max-width: 1023px) {
+  /* O chrome é teleportado para o <body>: o estado vem do atributo no <html>. */
+  html[data-act='scene'] .gate-chrome .gate__label {
+    display: none;
+  }
+
+  /* Faixa inferior própria: os cartões desvanecem antes de chegar ao VOLTAR. */
+  html[data-act='scene'] .gate-chrome::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 118px;
+    background: linear-gradient(to top, #000 34%, transparent);
+    pointer-events: none;
+  }
+
+  html[data-act='scene'] .gate__back {
+    background: rgb(8 10 16 / 0.86);
+  }
+}
+
 /* O cartão é um botão: sem seleção nem drag nativo da imagem (roubava o
    pointerup e deixava o carrossel a arrastar sozinho). */
 [data-carousel] [data-gl='card'] {

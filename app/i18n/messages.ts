@@ -46,6 +46,7 @@ export const messages = {
     'hero.phaseTwoDeck': 'Cada relíquia guarda um diário de missão. Desça para ouvir o que elas têm para contar.',
 
     'approach.title': 'As relíquias',
+    'approach.note': 'Entre 1967 e 2024, a humanidade deixou na Lua, em Marte e no espaço profundo máquinas que já não voltarão para casa.',
 
     'passport.stamp': 'Explorado',
     'passport.progress': '{count} de {total} exploradas',
@@ -334,6 +335,7 @@ export const messages = {
     'hero.phaseTwoDeck': 'Every relic keeps a mission log. Scroll down to hear what they have to say.',
 
     'approach.title': 'The relics',
+    'approach.note': 'Between 1967 and 2024, humanity left machines on the Moon, on Mars and in deep space that will never come home.',
 
     'passport.stamp': 'Explored',
     'passport.progress': '{count} of {total} explored',

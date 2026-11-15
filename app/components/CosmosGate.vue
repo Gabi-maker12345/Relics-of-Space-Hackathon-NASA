@@ -2,6 +2,45 @@
 const { act, back, enter } = useAct()
 const { t } = useI18n()
 
+/**
+ * Barra de filtros (telemóvel): a cena começa abaixo dela. A altura é medida
+ * porque a barra abre o painel e cresce com a busca/categorias.
+ */
+let filtersObserver: ResizeObserver | null = null
+
+function measureFilters(): void {
+  const el = document.querySelector<HTMLElement>('.gate-filters')
+  if (!el) {
+    document.documentElement.style.removeProperty('--gate-filters-bottom')
+    return
+  }
+  const bottom = Math.max(0, Math.round(el.getBoundingClientRect().bottom))
+  document.documentElement.style.setProperty('--gate-filters-bottom', `${bottom}px`)
+}
+
+function stopTrackingFilters(): void {
+  filtersObserver?.disconnect()
+  filtersObserver = null
+  document.documentElement.style.removeProperty('--gate-filters-bottom')
+}
+
+watch(act, async (value) => {
+  if (value !== 'scene') {
+    stopTrackingFilters()
+    return
+  }
+  await nextTick()
+  measureFilters()
+  const el = document.querySelector<HTMLElement>('.gate-filters')
+  if (el && typeof ResizeObserver !== 'undefined') {
+    filtersObserver?.disconnect()
+    filtersObserver = new ResizeObserver(measureFilters)
+    filtersObserver.observe(el)
+  }
+}, { flush: 'post' })
+
+onBeforeUnmount(stopTrackingFilters)
+
 /** No telemóvel não há roda: um toque ou um swipe para cima atravessa. */
 let tracking = false
 let startY = 0
