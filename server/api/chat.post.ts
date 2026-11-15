@@ -90,7 +90,7 @@ async function loadContext(
   }
 }
 
-function buildSystemPrompt(lang: string, relic: ChatContext | null): string {
+function buildSystemPrompt(lang: string, relic: ChatContext | null, compact = false): string {
   const language = lang === 'en' ? 'inglês britânico' : 'português europeu'
   const lines = [
     'És o guia do arquivo "Space Relics", um arquivo de máquinas espaciais abandonadas na Lua, em Marte e no espaço profundo.',
@@ -101,9 +101,9 @@ function buildSystemPrompt(lang: string, relic: ChatContext | null): string {
 
   if (relic) {
     lines.push('', `Relíquia em foco: ${relic.name}`, `Resumo: ${relic.summary}`)
-    if (relic.story) lines.push(`História: ${relic.story.slice(0, 1400)}`)
+    if (relic.story) lines.push(`História: ${relic.story.slice(0, compact ? 500 : 1400)}`)
     if (relic.facts.length > 0) lines.push(`Ficha técnica: ${relic.facts.join('; ')}`)
-    if (relic.scenes.length > 0) lines.push(`Cenas do arquivo: ${relic.scenes.slice(0, 6).join(' | ')}`)
+    if (relic.scenes.length > 0) lines.push(`Cenas do arquivo: ${relic.scenes.slice(0, compact ? 3 : 6).join(' | ')}`)
   }
 
   return lines.join('\n')
@@ -140,34 +140,48 @@ export default defineEventHandler(async (event) => {
 
   const model = process.env.QUIZ_AI_MODEL || 'gpt-4o-mini'
   const baseUrl = (process.env.QUIZ_AI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '')
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 45_000)
+
+  /** Uma chamada ao provider; devolve o texto (ou '' se vier sem conteúdo). */
+  async function callProvider(system: string, temperature: number): Promise<string> {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 45_000)
+    try {
+      const response = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          temperature,
+          max_tokens: 1200,
+          messages: [
+            { role: 'system', content: system },
+            ...body.messages,
+          ],
+        }),
+        signal: controller.signal,
+      })
+
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '')
+        throw new Error(`provider respondeu ${response.status}${detail ? `: ${detail.slice(0, 160)}` : ''}`)
+      }
+
+      const json = (await response.json()) as { choices?: { message?: { content?: string } }[] }
+      return json.choices?.[0]?.message?.content?.trim() ?? ''
+    }
+    finally {
+      clearTimeout(timer)
+    }
+  }
 
   try {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        temperature: 0.6,
-        messages: [
-          { role: 'system', content: buildSystemPrompt(lang, relic) },
-          ...body.messages,
-        ],
-      }),
-      signal: controller.signal,
-    })
-
-    if (!response.ok) {
-      const detail = await response.text().catch(() => '')
-      throw new Error(`provider respondeu ${response.status}${detail ? `: ${detail.slice(0, 160)}` : ''}`)
-    }
-
-    const json = (await response.json()) as { choices?: { message?: { content?: string } }[] }
-    const reply = json.choices?.[0]?.message?.content?.trim() ?? ''
+    let reply = await callProvider(buildSystemPrompt(lang, relic), 0.6)
+    // O modelo de raciocínio às vezes devolve conteúdo vazio: segunda tentativa
+    // com contexto compacto e orçamento de tokens explícito.
+    if (!reply) reply = await callProvider(buildSystemPrompt(lang, relic, true), 0.3)
     if (!reply) throw new Error('resposta vazia')
 
     return { reply, relic: relic?.name ?? null, lang }
@@ -175,8 +189,5 @@ export default defineEventHandler(async (event) => {
   catch (error) {
     const message = error instanceof Error ? error.message : 'erro desconhecido'
     throw createError({ statusCode: 502, message: `Falha no chat: ${message}` })
-  }
-  finally {
-    clearTimeout(timer)
   }
 })
