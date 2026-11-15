@@ -1127,3 +1127,15 @@ diário aberto pelo cartão.
 - QA: 390×844 — arrasto move os painéis, barra transparente e cartões cortados
   na barra; bot full-screen com cosmos; menu abre sobre o bot e fecha no X;
   click point devolve `.chat` (nada abaixo); 1440×900 — máscara e menu sobre o chat.
+
+## Iteração 57 — bot acima da ficha: um clique, sem sequência
+
+- O FAB estava abaixo do scrim da ficha (z 80 < 90), por isso o clique caía na
+  ficha (fechava-a) e só o clique seguinte abria o bot. FAB z 96 e chat z 95
+  (acima da ficha 90; abaixo do menu, que sobe com o header para 400 quando abre).
+- `openChat` fecha a ficha do projeto no mesmo gesto (`useProjectModal.close()`)
+  e a animação de saída da ficha é saltada quando `html.chat-switching` — o bot
+  abre já com o cosmos, sem ficha por trás do fundo translúcido.
+- QA 390×844: com ficha aberta, `elementFromPoint` no FAB devolve FAB; um clique
+  → `modal:false chat:true` em 100 ms; chat top 0, header escondido; ficha por
+  baixo do chat nunca visível; menu continua acima de tudo (header 400 ao abrir).

@@ -26,6 +26,16 @@ export function useRelicChat() {
   const error = useState('relic-chat-error', () => '')
 
   function openChat(): void {
+    // Abrir o bot com uma ficha aberta: fecha a ficha no mesmo gesto e sem a
+    // animação de saída (o bot é full-screen; nada da ficha fica por trás).
+    if (import.meta.client) {
+      const project = useProjectModal()
+      if (project.activeSlug.value !== null) {
+        document.documentElement.classList.add('chat-switching')
+        project.close()
+        window.setTimeout(() => document.documentElement.classList.remove('chat-switching'), 700)
+      }
+    }
     open.value = true
     error.value = ''
   }

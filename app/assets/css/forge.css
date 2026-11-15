@@ -108,7 +108,7 @@
 .fr-header {
   position: fixed;
   inset: 0 0 auto;
-  z-index: 300;
+  z-index: 70;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -534,6 +534,12 @@ html.is-menu-open,
 html.is-menu-open body {
   overflow: hidden;
   overscroll-behavior: none;
+}
+
+/* Com o menu aberto o header (e o menu, seu filho) sobe acima do chat/modal;
+   o botão X do menu continua visível/clicável. */
+html.is-menu-open .fr-header {
+  z-index: 400;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2188,7 +2194,8 @@ html.chat-open .gate.is-scene [data-carousel] {
    (só fica o cosmos) e a barra/chrome não ficam a espreitar pela translucidez. */
 @media (max-width: 1023px) {
   html.chat-open .gate-filters,
-  html.chat-open .gate-chrome {
+  html.chat-open .gate-chrome,
+  html.chat-open .fr-header {
     visibility: hidden;
     opacity: 0;
     pointer-events: none;

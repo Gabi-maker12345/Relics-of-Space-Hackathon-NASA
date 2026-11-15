@@ -179,6 +179,12 @@ async function onEnter(el: Element, done: () => void): Promise<void> {
 }
 
 async function onLeave(el: Element, done: () => void): Promise<void> {
+  // O bot abriu por cima: a ficha sai de imediato (sem animação por trás do
+  // fundo translúcido do chat).
+  if (document.documentElement.classList.contains('chat-switching')) {
+    done()
+    return
+  }
   let gsap: typeof import('gsap').default
   try {
     gsap = await loadGsap()
