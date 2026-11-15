@@ -30,12 +30,12 @@ const BALL_SIZE = 6
  * usa 1 unidade = 1 css px em z=0, então H = h/2 e W = w/2.
  */
 const CAMERA_FOV = 53.4
-const SHEET_DEPTH = 0.2 // D = W*depth (desktop WF=.2; mobile .18)
-const SHEET_DEPTH_SMALL = 0.18
+const SHEET_DEPTH = 0.1 // D = W*depth (curvatura contida)
+const SHEET_DEPTH_SMALL = 0.1
 const SHEET_SPAN = 1.15 // T (desktop $F; mobile 1)
 const SHEET_SPAN_SMALL = 1
-const SHEET_VELOCITY = 0.6 // qF: D cresce com a velocidade
-const LEAN_DOOR = -0.12 // door (desktop ZF; mobile 0)
+const SHEET_VELOCITY = 0.25 // qF: D cresce com a velocidade (contido)
+const LEAN_DOOR = -0.07 // door (desktop ZF; mobile 0)
 const DENT = 0.1 // u_dent
 const TITLE_SCRIM = 0.45 // gradiente escuro no rodapé do card sob o título
 const FLOOR_RUN = 6 // Mi.run (em meias-alturas)
@@ -245,6 +245,7 @@ export class GlEngine {
   private readonly carousel = { p: 0, target: 0, max: 1, axis: 'x' as 'x' | 'y', infinite: false, copySpan: 0, perCopy: 0 }
   private mobileRange = { start: 0, end: 0 }
   private readonly pointer = { down: false, id: -1, x: 0, y: 0, startX: 0, startY: 0, moved: false }
+  private lastPointerAt = 0
   private carouselDriven = false
   private trackJump = 0
   private trackX = 0
@@ -852,6 +853,8 @@ export class GlEngine {
       window.addEventListener('pointerdown', this.onPointerDown)
       window.addEventListener('pointermove', this.onPointerMove)
       window.addEventListener('pointerup', this.onPointerUp)
+      window.addEventListener('pointercancel', this.onPointerCancel)
+      window.addEventListener('blur', this.onPointerCancel)
       this.listenersOn = true
     }
   }
@@ -943,6 +946,9 @@ export class GlEngine {
 
   /** Foco por teclado: centraliza o card correspondente (comportamento do original). */
   private onFocusIn = (e: FocusEvent): void => {
+    // Foco vindo de um clique/rato não deve recentrar a faixa: o cartão saía
+    // debaixo do cursor e o clique perdia-se (o "scroll aleatório").
+    if (this.pointer.down || performance.now() - this.lastPointerAt < 1500) return
     const target = e.target as HTMLElement | null
     if (!target) return
     let card: HTMLElement | null = target.closest('[data-gl="card"]')
@@ -1030,6 +1036,8 @@ export class GlEngine {
 
   private onPointerDown = (e: PointerEvent): void => {
     if (e.pointerType === 'mouse' && e.button !== 0) return
+    // qualquer pressão (incl. fechar o painel) marca o foco como "de rato"
+    this.lastPointerAt = performance.now()
     const target = e.target as HTMLElement | null
     if (target === null || !target.closest('[data-gl="card"]')) return
     this.pointer.down = true
@@ -1040,7 +1048,10 @@ export class GlEngine {
     this.pointer.startY = e.clientY
     this.pointer.moved = false
     this.lastDragPx = 0
-    this.carousel.target = this.carousel.p
+        this.carousel.target = this.carousel.p
+    // Um clique durante o damping/sheet: cola os planos ao DOM para o alvo do
+    // clique coincidir com o cartão que o utilizador está a ver.
+    this.snapPlanes()
   }
 
   private stopCarouselTween(): void {
@@ -1058,6 +1069,11 @@ export class GlEngine {
   }
 
   private onPointerMove = (e: PointerEvent): void => {
+    if (this.pointer.down && e.buttons === 0) {
+      // o botão foi libertado fora da janela/gesto cancelado: não arrastar
+      this.resetPointer()
+      return
+    }
     if (!this.pointer.down || e.pointerId !== this.pointer.id) return
     const totalX = e.clientX - this.pointer.startX
     const totalY = e.clientY - this.pointer.startY
@@ -1071,7 +1087,7 @@ export class GlEngine {
 
     const dx = e.clientX - this.pointer.x
     const dy = e.clientY - this.pointer.y
-    this.pointer.x = e.clientX
+        this.pointer.x = e.clientX
     this.pointer.y = e.clientY
     this.lastDragPx = Math.max(this.lastDragPx, fromStart)
     const chat = document.documentElement.classList.contains('chat-open')
@@ -1089,6 +1105,17 @@ export class GlEngine {
     if (e.pointerId !== this.pointer.id) return
     this.pointer.down = false
     this.pointer.id = -1
+  }
+
+  private onPointerCancel = (): void => {
+    this.resetPointer()
+  }
+
+  private resetPointer(): void {
+    this.pointer.down = false
+    this.pointer.id = -1
+    this.pointer.moved = false
+    this.lastDragPx = 0
   }
 
   private startLoop(): void {
@@ -1659,6 +1686,8 @@ export class GlEngine {
       window.removeEventListener('pointerdown', this.onPointerDown)
       window.removeEventListener('pointermove', this.onPointerMove)
       window.removeEventListener('pointerup', this.onPointerUp)
+      window.removeEventListener('pointercancel', this.onPointerCancel)
+      window.removeEventListener('blur', this.onPointerCancel)
       window.removeEventListener('resize', this.onResize)
       this.listenersOn = false
     }

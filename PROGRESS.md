@@ -1084,3 +1084,23 @@ diário aberto pelo cartão.
   1.1→0.6 — o strip deixa de rodar "louco" em cada gesto.
 - QA: modal admin (17 catálogos, guardar/reabrir), chat com cápsula e resposta a citar
   catálogo, barra transparente, 12 cartões, 152 testes, typecheck/lint verdes.
+
+## Iteração 55 — clique perdido: causa raiz no focus e no drag nativo
+
+- **Diagnóstico (vídeo 04:19)**: cada clique num cartão dá-lhe `focus` (article
+  `tabindex=0`); o `focusin` do engine chamava `driveCarousel()` para centrar o
+  cartão focado. O tween movia a faixa debaixo do cursor entre o `pointerdown` e o
+  `pointerup`, o `click` caía no `TRACK` (não no cartão) e o clique perdia-se —
+  o "scroll aleatório". Só o cartão já centrado abria. Confirmado com stacks:
+  `TARGET 1.0000 :: driveCarousel < onFocusIn`.
+- **Fix**: `focusin` só centra quando o foco não vem de um ponteiro
+  (`pointer.down` ou `lastPointerAt < 1,5 s`); qualquer pressão marca o timestamp.
+- **Drag nativo**: as imagens dos cartões (e o article) deixam de ser arrastáveis
+  (`draggable=false`, `dragstart.prevent`, `-webkit-user-drag:none`,
+  `pointer-events:none` na img) — o drag de imagem roubava o `pointerup`.
+  `pointercancel`, `blur` e `pointermove` com `buttons=0` repõem o estado.
+- **Rotações**: sheet moderado (D .2→.1, lean −.12→−.07, bank −.16→−.1,
+  VTWIST 1.8→.5, diag .03→.02) — o strip já não roda "louco" nos gestos.
+- QA: cliques em cartões laterais (esq./dir.) abrem a ficha certa sem mover a
+  faixa; fechar com clique real não recentra; arrasto move 1:1 e não abre;
+  no chat o clique com jitter inicia a pergunta e a faixa vertical não salta.

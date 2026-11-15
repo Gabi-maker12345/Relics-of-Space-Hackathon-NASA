@@ -106,6 +106,8 @@ function openRelic(id: string, fromPointer = true, name = ''): void {
       :data-id="card.id"
       data-gl="card"
       :data-texture="imageVariant(card.image, 960)"
+      draggable="false"
+      @dragstart.prevent
       :aria-hidden="card.copy === 1 || copies === 1 ? undefined : 'true'"
       :tabindex="card.copy === 0 ? 0 : -1"
       role="button"

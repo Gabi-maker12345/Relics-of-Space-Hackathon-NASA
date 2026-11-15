@@ -2175,6 +2175,18 @@ html.chat-open .gate.is-scene [data-carousel] {
   padding-inline: 0;
 }
 
+/* O cartão é um botão: sem seleção nem drag nativo da imagem (roubava o
+   pointerup e deixava o carrossel a arrastar sozinho). */
+[data-carousel] [data-gl='card'] {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+[data-carousel] [data-gl='card'] img {
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
 html.chat-open .gate.is-scene [data-carousel] [data-gl='card'] {
   width: 76%;
   height: auto;
