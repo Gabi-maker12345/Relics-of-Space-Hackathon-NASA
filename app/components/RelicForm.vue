@@ -1070,6 +1070,8 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 130;
   display: grid;
+  /* a faixa 1fr (min 0) impede o conteúdo de esticar a folha para além da tela */
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: 24px;
 }
@@ -1088,7 +1090,8 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   width: min(1240px, 100%);
-  max-height: min(92vh, 1080px);
+  min-width: 0;
+  max-height: min(92dvh, 1080px);
   color: var(--fr-fg, #e8e6e1);
   background:
     radial-gradient(80% 40% at 50% -6%, color-mix(in srgb, var(--accent, #7aa2ff) 14%, transparent), transparent 72%),
@@ -1293,7 +1296,7 @@ onBeforeUnmount(() => {
 
 .rform__pairRow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 14px;
 }
 
@@ -1520,20 +1523,25 @@ onBeforeUnmount(() => {
 .form-enter-from, .form-leave-to { opacity: 0; }
 
 @media (max-width: 900px) {
-  .rform__group { grid-template-columns: 1fr; gap: 14px; }
-  .rform__groupHead { flex-direction: row; align-items: center; gap: 14px; position: static; }
+  .rform__group { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .rform__groupHead { flex-direction: row; align-items: center; gap: 6px 14px; position: static; flex-wrap: wrap; }
+  .rform__groupHead > * { min-width: 0; }
+  .rform__groupHead .rform__hint { flex: 1 1 100%; }
   .rform__num { font-size: 24px; }
-  .rform__media { grid-template-columns: 1fr; }
+  .rform__media { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 640px) {
   .rform { padding: 12px; }
   .rform__body { padding: 0 20px 8px; }
-  .rform__head { padding: 24px 20px 18px; }
+  .rform__head { padding: 24px 20px 18px; flex-wrap: wrap; gap: 14px; }
+  .rform__headActions { flex-wrap: wrap; }
   .rform__foot { padding: 16px 20px 20px; flex-wrap: wrap; }
   .rform__footNote { display: none; }
-  .rform__pairRow { grid-template-columns: 1fr; }
-  .rform__factRow { grid-template-columns: 1fr 38px; }
+  .rform__pairRow { grid-template-columns: minmax(0, 1fr); }
+  .rform__sceneHead,
+  .rform__sceneTools { flex-wrap: wrap; }
+  .rform__factRow { grid-template-columns: minmax(0, 1fr) 38px; }
   .rform__factRow .rform__input:nth-child(2) { grid-column: 1; }
 }
 
@@ -1694,7 +1702,7 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 900px) {
-  .rform__sceneGrid { grid-template-columns: 1fr; }
+  .rform__sceneGrid { grid-template-columns: minmax(0, 1fr); }
   .rform__scenePreview { max-width: 220px; }
 }
 </style>

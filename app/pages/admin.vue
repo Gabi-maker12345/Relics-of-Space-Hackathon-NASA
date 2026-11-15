@@ -548,5 +548,9 @@ function requestLogin(): void {
 @media (max-width: 620px) {
   .admin { padding-top: 120px; }
   .admin__grid { grid-template-columns: 1fr; }
+  .admin__head { gap: 18px; }
+  .admin__actions { flex-wrap: wrap; width: 100%; }
+  .admin__ghost,
+  .admin__primary { flex: 1 1 calc(50% - 10px); justify-content: center; }
 }
 </style>

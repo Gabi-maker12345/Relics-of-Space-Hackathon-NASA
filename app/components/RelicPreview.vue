@@ -482,4 +482,31 @@ onBeforeUnmount(() => {
   .preview__kicker { display: none; }
   .preview__note { display: none; }
 }
+
+/* Telemóvel: o preview sobrepõe o formulário a ecrã inteiro (o .rform é z 130).
+   Fechar aqui volta ao modal de edição com os dados já preenchidos. */
+@media (max-width: 700px) {
+  .preview {
+    inset: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    z-index: 140;
+    overflow: hidden;
+    border-radius: 0;
+  }
+
+  .preview__stage {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .preview__scale {
+    transform: none !important;
+  }
+
+  .preview__expand,
+  .preview__foot {
+    display: none;
+  }
+}
 </style>
