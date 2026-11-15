@@ -139,8 +139,8 @@
 
 .fr-logo {
   /* slot medido pelo preloader: a logo voa para este rect */
-  --logo-w: clamp(110px, 11vw, 170px);
-  width: min(var(--logo-w), calc((var(--fr-header) - 20px) * 1.36));
+  --logo-w: clamp(64px, 5.4vw, 80px);
+  width: min(var(--logo-w), calc((var(--fr-header) - 48px) * 1.36));
   aspect-ratio: 1.36;
 }
 

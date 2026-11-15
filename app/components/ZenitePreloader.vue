@@ -159,6 +159,10 @@ function settle(): void {
   const svg = svgEl()
   const slot = slotEl()
   if (svg && slot) {
+    // garante o estado final mesmo quando o settle vem do timeout de segurança
+    gsap.set(['#letter-1-z', '#letter-2-e-acento', '#letter-3-n', '#letter-4-i', '#letter-5-t', '#letter-6-e'], { opacity: 1, y: 0 })
+    gsap.set(['#reveal-arc-left', '#reveal-arc-right'], { strokeDasharray: 1, strokeDashoffset: 0 })
+    gsap.set('#star', { opacity: 1, scale: 1, rotation: 0, transformOrigin: '50% 50%' })
     gsap.set(svg, { clearProps: 'all' })
     slot.appendChild(svg)
     svg.classList.add('zenite-logo--header')
@@ -186,6 +190,11 @@ function fadeOutAndSettle(duration: number): void {
   gsap.to(root, { opacity: 0, duration, onComplete: settle })
 }
 
+/** Torna a logo visível só depois de o JS ter posto os estados iniciais. */
+function revealLogo(): void {
+  document.documentElement.setAttribute('data-preload-ready', '')
+}
+
 /** A página pronta para receber a logo no cabeçalho (fontes + load). */
 function pageReady(): Promise<void> {
   const tasks: Array<Promise<unknown>> = []
@@ -207,6 +216,7 @@ function runShort(): void {
   gsap.set(['#wordmark', '#letter-1-z', '#letter-2-e-acento', '#letter-3-n', '#letter-4-i', '#letter-5-t', '#letter-6-e'], { opacity: 1, y: 0 })
   gsap.set(['#reveal-arc-left', '#reveal-arc-right'], { strokeDasharray: 1, strokeDashoffset: 0 })
   gsap.set('#star', { scale: 1, rotation: 0, opacity: 1, transformOrigin: '50% 50%' })
+  revealLogo()
 
   const tl = gsap.timeline({ onComplete: settle })
   tl.to(svg, {
@@ -230,6 +240,7 @@ function runReduced(): void {
   gsap.set(['#letter-1-z', '#letter-2-e-acento', '#letter-3-n', '#letter-4-i', '#letter-5-t', '#letter-6-e'], { opacity: 1, y: 0 })
   gsap.set(['#reveal-arc-left', '#reveal-arc-right'], { strokeDasharray: 1, strokeDashoffset: 0 })
   gsap.set('#star', { scale: 1, rotation: 0, opacity: 1, transformOrigin: '50% 50%' })
+  revealLogo()
   fadeOutAndSettle(T.reducedFade)
 }
 
@@ -254,6 +265,8 @@ function runFull(): void {
   const tl = gsap.timeline({ onComplete: settle })
   timeline = tl
 
+  revealLogo()
+
   tl.fromTo(
     letters,
     { opacity: 0, y: T.letterRise },
@@ -261,7 +274,19 @@ function runFull(): void {
     T.lettersStart,
   )
 
-  tl.to(guides, { strokeDashoffset: 0, duration: T.arcsDuration, ease: EASE.arcs }, T.arcsStart)
+  const guideEls = guides
+    .map((sel) => document.querySelector<SVGPathElement>(sel))
+    .filter((el): el is SVGPathElement => el !== null)
+  const arcProgress = { v: 1 }
+  tl.to(arcProgress, {
+    v: 0,
+    duration: T.arcsDuration,
+    ease: EASE.arcs,
+    onUpdate: () => {
+      const value = `${arcProgress.v}px`
+      for (const el of guideEls) el.style.strokeDashoffset = value
+    },
+  }, T.arcsStart)
 
   tl.to(star, { scale: 1, duration: T.starScale, ease: EASE.starScale }, T.starStart)
   tl.to(star, { rotation: 0, duration: T.starScale, ease: EASE.starRotation }, T.starStart)
@@ -281,7 +306,6 @@ function runFull(): void {
     transformOrigin: '0 0',
     duration: T.flight,
     ease: EASE.flight,
-    paused: true,
     onStart: () => { isFlying = true },
     onComplete: () => { isFlying = false },
   })
@@ -406,13 +430,38 @@ html.js[data-preloading] .fr-header {
   position: relative;
   display: grid;
   place-items: center;
-  width: clamp(280px, 42vw, 620px);
+  width: clamp(200px, 30vw, 420px);
 }
 
 .preloader__logo {
   width: 100%;
   color: #fff;
   will-change: transform;
+}
+
+/* Antes de o JS montar a timeline, nada do estado final pode aparecer. */
+html.js[data-preloading] .preloader__logo {
+  opacity: 0;
+}
+
+html.js[data-preload-ready] .preloader__logo {
+  opacity: 1;
+}
+
+html.js[data-preloading] #letter-1-z,
+html.js[data-preloading] #letter-2-e-acento,
+html.js[data-preloading] #letter-3-n,
+html.js[data-preloading] #letter-4-i,
+html.js[data-preloading] #letter-5-t,
+html.js[data-preloading] #letter-6-e,
+html.js[data-preloading] #star {
+  opacity: 0;
+}
+
+html.js[data-preloading] #reveal-arc-left,
+html.js[data-preloading] #reveal-arc-right {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
 }
 
 .preloader__logo svg,
