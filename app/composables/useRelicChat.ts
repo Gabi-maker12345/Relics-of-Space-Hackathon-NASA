@@ -25,15 +25,9 @@ export function useRelicChat() {
   const sending = useState('relic-chat-sending', () => false)
   const error = useState('relic-chat-error', () => '')
 
-  function ensureGreeting(): void {
-    if (messages.value.length > 0) return
-    messages.value = [{ id: nextId(), role: 'assistant', content: t('chat.greeting') }]
-  }
-
   function openChat(): void {
     open.value = true
     error.value = ''
-    ensureGreeting()
   }
 
   function closeChat(): void {
@@ -79,7 +73,6 @@ export function useRelicChat() {
   async function send(text: string): Promise<void> {
     const content = text.trim()
     if (!content || sending.value) return
-    ensureGreeting()
     messages.value = [...messages.value, { id: nextId(), role: 'user', content }]
     await request()
   }

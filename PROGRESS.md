@@ -1015,3 +1015,26 @@ diário aberto pelo cartão.
   em ~11 s. Fica um retry compacto e o diagnóstico do provider em caso de conteúdo vazio.
 - **QA**: produção (`relics-of-space.vercel.app`) — painel Apollo → "Fala-me sobre…" →
   introdução de 3 frases, sem modal e sem erro; local igual.
+
+## Iteração 51 — Zénite Bot: cosmos partilhado, layout ampliado e escrita
+
+- **Layout**: chat com 58vw (≈811 px a 1440) e painéis na coluna restante com a largura do
+  telemóvel (`min(100%, 380px)`); em ecrãs <1024 o chat é gaveta inferior (86% opaca) e a barra
+  de filtros volta a ocupar a largura toda. Na coluna estreita os filtros passam a dropdown
+  (pesquisa + Filtrar), como no telemóvel.
+- **Fundo único**: em modo chat a gate fica transparente, o `site__main` esconde-se e o piso GL
+  desliga, deixando o cosmos (CosmosBackground) por trás das duas metades; o painel do chat é
+  translúcido (44% / 86% no telemóvel) com blur leve. Removidos os gradientes e brilhos dourados
+  (FAB, bolhas, foco e contexto passam a neutros).
+- **Topo**: os cartões entram por uma fade superior (opacidade 0 em top≤70 → 1 em top≥180,
+  calculada no engine) em vez de aparecerem por cima da chrome.
+- **Scroll independente**: a roda sobre `.chat` é ignorada pelo carrossel (engine), pelo que a
+  conversa rola sem mover os painéis; confirmado com roda sobre o chat (track parado) e sobre a
+  coluna (track move).
+- **Conteúdo**: "Chat AI" → **Zénite Bot**; contactos do header → Zénite Team
+  (`contacto@zenite.team`, perfis @zenite.team/zeniteteam); a pergunta inicial passa a texto
+  serif grande centrado na janela (não é mensagem); respostas com efeito de escrita letra a
+  letra (16 ms/2 chars, respeita `prefers-reduced-motion`).
+- **QA**: 1440×900 e 390×844 — abertura/fecho, pergunta centrada, typewriter a crescer
+  (0→118 chars), clique em Apollo → introdução, filtros compactos, fundo cosmos nas duas
+  metades; 152 testes, typecheck/lint verdes.

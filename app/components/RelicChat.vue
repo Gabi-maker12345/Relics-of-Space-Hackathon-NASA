@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ChatMessage } from '~/composables/useRelicChat'
+
 const {
   open,
   messages,
@@ -16,6 +18,47 @@ const { t } = useI18n()
 const text = ref('')
 const logEl = ref<HTMLElement | null>(null)
 const inputEl = ref<HTMLInputElement | null>(null)
+
+/* Efeito de escrita: as respostas aparecem letra a letra. */
+const typedId = ref<string | null>(null)
+const typedText = ref('')
+let typeTimer: ReturnType<typeof setTimeout> | null = null
+let reduced = false
+
+function cancelTyping(): void {
+  if (typeTimer) {
+    clearTimeout(typeTimer)
+    typeTimer = null
+  }
+  typedId.value = null
+  typedText.value = ''
+}
+
+function typeOut(message: ChatMessage): void {
+  cancelTyping()
+  if (reduced) return
+  typedId.value = message.id
+  typedText.value = ''
+  let index = 0
+  const step = (): void => {
+    index += 2
+    typedText.value = message.content.slice(0, index)
+    if (index < message.content.length) typeTimer = setTimeout(step, 16)
+    else {
+      typeTimer = null
+      typedId.value = null
+      typedText.value = ''
+    }
+  }
+  typeTimer = setTimeout(step, 16)
+}
+
+watch(() => messages.value.length, (length, previous = 0) => {
+  if (length <= previous) return
+  const last = messages.value[length - 1]
+  if (!last || last.role !== 'assistant') return
+  typeOut(last)
+})
 
 const canSend = computed(() => text.value.trim().length > 0 && !sending.value)
 
@@ -39,21 +82,27 @@ watch(open, async (value) => {
     const engine = getGlEngine()
     engine?.resetCarousel()
     engine?.snapPlanes()
+    // a coluna muda de largura depois do primeiro layout: cola outra vez
+    window.setTimeout(() => engine?.snapPlanes(), 140)
   })
   if (!value) return
   await nextTick()
   inputEl.value?.focus()
 })
 
-watch([() => messages.value.length, sending], async () => {
+watch([() => messages.value.length, sending, typedText], async () => {
   await nextTick()
   const el = logEl.value
   if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
 })
 
-onMounted(() => window.addEventListener('keydown', onKeydown, true))
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown, true)
+  reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+})
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown, true)
+  cancelTyping()
   document.documentElement.classList.remove('chat-open')
   getGlEngine()?.resetCarousel()
   getGlEngine()?.snapPlanes()
@@ -76,8 +125,6 @@ onBeforeUnmount(() => {
       <span>{{ t('chat.fab') }}</span>
     </button>
 
-    <div v-if="open" class="chat-scrim" aria-hidden="true" />
-
     <Transition name="chat-panel">
       <aside v-if="open" class="chat" role="dialog" :aria-label="t('chat.title')">
         <header class="chat__head">
@@ -95,13 +142,18 @@ onBeforeUnmount(() => {
         </header>
 
         <div ref="logEl" class="chat__log" aria-live="polite">
+          <div v-if="messages.length === 0" class="chat__empty">
+            <p class="chat__emptyKicker">{{ t('chat.kicker') }}</p>
+            <p class="chat__emptyText">{{ t('chat.greeting') }}</p>
+          </div>
+
           <div
             v-for="message in messages"
             :key="message.id"
             class="chat__msg"
             :class="`chat__msg--${message.role}`"
           >
-            <p>{{ message.content }}</p>
+            <p>{{ message.id === typedId ? typedText : message.content }}</p>
           </div>
           <p v-if="sending" class="chat__typing">
             <span /><span /><span />
@@ -164,7 +216,7 @@ onBeforeUnmount(() => {
   box-shadow:
     0 0 0 1px rgb(255 255 255 / 0.25),
     0 12px 32px rgb(0 0 0 / 0.5),
-    0 0 22px rgb(197 160 100 / 0.45);
+    0 0 22px rgb(255 255 255 / 0.28);
   animation: chat-fab-glow 3s ease-in-out infinite;
   transition: transform 0.25s cubic-bezier(0.23, 1, 0.32, 1);
 }
@@ -186,13 +238,13 @@ onBeforeUnmount(() => {
     box-shadow:
       0 0 0 1px rgb(255 255 255 / 0.25),
       0 12px 32px rgb(0 0 0 / 0.5),
-      0 0 18px rgb(197 160 100 / 0.35);
+      0 0 18px rgb(255 255 255 / 0.22);
   }
   50% {
     box-shadow:
       0 0 0 1px rgb(255 255 255 / 0.4),
       0 12px 32px rgb(0 0 0 / 0.55),
-      0 0 32px rgb(197 160 100 / 0.7);
+      0 0 32px rgb(255 255 255 / 0.42);
   }
 }
 
@@ -206,20 +258,9 @@ onBeforeUnmount(() => {
   }
 }
 
-.chat-scrim {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 63;
-  width: 50vw;
-  height: 190px;
-  background: linear-gradient(to bottom, #05060a 0%, #05060a 62%, rgb(5 6 10 / 0.86) 78%, transparent 100%);
-  pointer-events: none;
-}
-
 .chat {
   position: fixed;
-  top: clamp(84px, 10vh, 112px);
+  top: clamp(76px, 9vh, 100px);
   right: clamp(12px, 2vw, 24px);
   bottom: clamp(12px, 2vw, 24px);
   z-index: 90;
@@ -227,17 +268,14 @@ onBeforeUnmount(() => {
   flex-direction: column;
   width: var(--chat-w, clamp(360px, 32vw, 480px));
   overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 0.14);
+  border: 1px solid rgb(255 255 255 / 0.16);
   border-radius: 18px;
   color: #f2f1ed;
   font-family: "Inter Variable", Arial, sans-serif;
-  background:
-    radial-gradient(120% 70% at 82% 0%, rgb(197 160 100 / 0.1), transparent 62%),
-    radial-gradient(110% 70% at 0% 100%, rgb(90 120 255 / 0.1), transparent 64%),
-    rgb(5 6 10 / 0.76);
-  backdrop-filter: blur(22px) saturate(118%);
-  -webkit-backdrop-filter: blur(22px) saturate(118%);
-  box-shadow: 0 30px 80px rgb(0 0 0 / 0.55);
+  background: rgb(4 5 9 / 0.44);
+  backdrop-filter: blur(9px) saturate(108%);
+  -webkit-backdrop-filter: blur(9px) saturate(108%);
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.45);
 }
 
 .chat__head {
@@ -271,7 +309,7 @@ onBeforeUnmount(() => {
   margin: 8px 0 0;
   font-size: 11px;
   line-height: 1.4;
-  color: rgb(197 160 100 / 0.9);
+  color: rgb(242 241 237 / 0.55);
 }
 
 .chat__close {
@@ -315,6 +353,36 @@ onBeforeUnmount(() => {
   scrollbar-width: thin;
 }
 
+.chat__empty {
+  display: grid;
+  place-content: center;
+  gap: 14px;
+  flex: 1 1 auto;
+  padding: 24px 10px;
+  text-align: center;
+}
+
+.chat__emptyKicker {
+  margin: 0;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgb(242 241 237 / 0.38);
+}
+
+.chat__emptyText {
+  margin: 0 auto;
+  max-width: 16ch;
+  font-family: "Newsreader Variable", Georgia, serif;
+  font-size: clamp(24px, 2.4vw, 34px);
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  color: rgb(242 241 237 / 0.92);
+}
+
 .chat__msg {
   max-width: 88%;
   padding: 10px 12px;
@@ -337,9 +405,9 @@ onBeforeUnmount(() => {
 
 .chat__msg--user {
   align-self: flex-end;
-  border: 1px solid rgb(197 160 100 / 0.24);
+  border: 1px solid rgb(255 255 255 / 0.16);
   border-bottom-right-radius: 4px;
-  background: rgb(197 160 100 / 0.12);
+  background: rgb(255 255 255 / 0.07);
   color: #f2f1ed;
 }
 
@@ -413,8 +481,8 @@ onBeforeUnmount(() => {
 }
 
 .chat__field:focus-within {
-  border-color: rgb(197 160 100 / 0.55);
-  box-shadow: 0 0 0 3px rgb(197 160 100 / 0.12);
+  border-color: rgb(255 255 255 / 0.45);
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 0.08);
 }
 
 .chat__input {
@@ -501,10 +569,9 @@ onBeforeUnmount(() => {
     top: auto;
     width: auto;
     height: min(64svh, 560px);
-  }
-
-  .chat-scrim {
-    display: none;
+    background: rgb(4 5 9 / 0.86);
+    backdrop-filter: blur(18px) saturate(108%);
+    -webkit-backdrop-filter: blur(18px) saturate(108%);
   }
 
   .chat-fab {

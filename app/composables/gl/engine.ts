@@ -360,7 +360,9 @@ export class GlEngine {
   private syncFloor(): void {
     const mesh = this.floorMesh
     if (!mesh) return
-    const on = this.viewport.w >= 650
+    // Com o chat aberto o piso sai: as duas metades mostram o cosmos.
+    const chatOpen = document.documentElement.classList.contains('chat-open')
+    const on = this.viewport.w >= 650 && !chatOpen
     mesh.visible = on
     if (!on) return
     const { H, W } = this.sheet
@@ -975,6 +977,8 @@ export class GlEngine {
     if (this.pointer.down) return
     const target = e.target
     if (target instanceof Element && target.closest('[data-modal]')) return
+    // O chat tem scroll próprio: a roda sobre ele não move o carrossel.
+    if (target instanceof Element && target.closest('.chat')) return
     const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
     const delta = e.deltaMode === 1 ? raw * 16 : raw
     e.preventDefault()
@@ -1270,6 +1274,11 @@ export class GlEngine {
     const styles = getComputedStyle(plane.el)
     const hiddenByGroup = plane.group ? !this.isShieldOpen(plane.group) : false
     const elOpacity = parseFloat(styles.opacity) || 1
+    // Com o chat aberto os cartões entram por uma borda superior suave.
+    const chatOpen = document.documentElement.classList.contains('chat-open')
+    const topFade = chatOpen && this.isInTrack(plane.el)
+      ? Math.max(0, Math.min(1, (rect.top - 70) / 110))
+      : 1
     const glOwned = plane.el.hasAttribute('data-gl') || plane.el.hasAttribute('data-title')
     const invisClass = plane.el.classList.contains('invisible')
     const domHidden = styles.display === 'none' || (styles.visibility === 'hidden' && !glOwned) || (invisClass && plane.kind === 'text')
@@ -1277,7 +1286,7 @@ export class GlEngine {
     // o portal escurece os cards e o piso; títulos/pills seguem visíveis
     const inStrip = plane.group === null && this.isInTrack(plane.el)
     const portalDim = inStrip && plane.kind === 'card' ? 1 - 0.72 * this.hole.p : 1
-    const targetOpacity = elOpacity * visibility * (plane.entered ? 1 : 0) * plane.enterAlpha * portalDim
+    const targetOpacity = elOpacity * visibility * (plane.entered ? 1 : 0) * plane.enterAlpha * portalDim * topFade
     const uniforms = plane.uniforms
     uniforms.uOpacity.value += (targetOpacity - uniforms.uOpacity.value) * FOLLOW_LERP
     plane.mesh.scale.set(anchor.w * plane.scaleBridge.x, anchor.h * plane.scaleBridge.y, 1)
@@ -1304,7 +1313,6 @@ export class GlEngine {
     // Superfície: cards/títulos/pills do strip compartilham sheet + lean;
     // texto de página (chrome, painéis, modal) fica plano.
     // Com o chat aberto os painéis ficam numa coluna: nada de warping de strip.
-    const chatOpen = document.documentElement.classList.contains('chat-open')
     const onStrip = this.isInTrack(plane.el) && this.viewport.w >= 650 && !chatOpen
     const sheetTarget = onStrip && plane.kind !== 'bar' ? 1 : 0
     uniforms.uSheetP.value += (sheetTarget - uniforms.uSheetP.value) * 0.2
