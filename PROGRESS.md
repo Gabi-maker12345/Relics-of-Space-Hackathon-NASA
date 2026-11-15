@@ -1139,3 +1139,12 @@ diário aberto pelo cartão.
 - QA 390×844: com ficha aberta, `elementFromPoint` no FAB devolve FAB; um clique
   → `modal:false chat:true` em 100 ms; chat top 0, header escondido; ficha por
   baixo do chat nunca visível; menu continua acima de tudo (header 400 ao abrir).
+
+## Iteração 58 — transição ficha → bot sem fantasmas
+
+- Os planos do track no chat mobile passam a opacidade 0 **no próprio frame**
+  (antes o damp de ~0.1/frame deixava os cartões/ficha a espreitar pelo fundo
+  translúcido do bot).
+- Verificado: ficha aberta → FAB (z 96) acessível (elementFromPoint = FAB) → um
+  clique fecha a ficha e abre o chat; 300 ms depois o fundo é só cosmos/estrelas,
+  sem cartões nem ficha; header escondido; chat top 0.

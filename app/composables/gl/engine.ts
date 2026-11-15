@@ -1389,7 +1389,13 @@ export class GlEngine {
     const portalDim = inStrip && plane.kind === 'card' ? 1 - 0.72 * this.hole.p : 1
     const targetOpacity = elOpacity * visibility * (plane.entered ? 1 : 0) * plane.enterAlpha * portalDim * topFade * (hideTrack ? 0 : 1)
     const uniforms = plane.uniforms
-    uniforms.uOpacity.value += (targetOpacity - uniforms.uOpacity.value) * FOLLOW_LERP
+    if (hideTrack) {
+      // O bot mobile cobre a cena: os painéis somem já (sem fade de ~0,5 s a
+      // aparecer por trás do fundo translúcido do chat).
+      uniforms.uOpacity.value = 0
+    } else {
+      uniforms.uOpacity.value += (targetOpacity - uniforms.uOpacity.value) * FOLLOW_LERP
+    }
     plane.mesh.scale.set(anchor.w * plane.scaleBridge.x, anchor.h * plane.scaleBridge.y, 1)
     const worldX = rect.left + rect.width / 2 - this.viewport.w / 2
     const worldY = -(rect.top + rect.height / 2 - this.viewport.h / 2) + plane.lift
