@@ -1054,3 +1054,13 @@ diário aberto pelo cartão.
 - QA: 1440×900 com o palco (cartões 281 visuais = 296 design), filtros/chrome
   dentro do palco, texto dos cartões nos cartões, roda no palco move, roda no
   chat não; 390×844 mantém a gaveta e cartões 296; 152 testes e typecheck verdes.
+
+## Iteração 53 — coluna do palco justa e chat maior
+
+- A coluna esquerda passa a medir apenas o palco + gutters de 24 px
+  (`--chat-left` = 390·escala + 48 ≈ 418 px a 1440×900), em vez de 42vw; o chat
+  ocupa o resto (`--chat-w` = 100vw − left − gutter ≈ 998 px).
+- A escala do palco vem só da altura disponível (`min(1, (vh−100)/844)`), pelo
+  que a coluna nunca sobra; filtros/chrome continuam dentro do palco.
+- QA: 1440×900 palco 370 em x24, chat x418 w998; 1024×768 palco 309, chat 647;
+  390×844 gaveta 366 e sem `--chat-left`; typecheck verde.

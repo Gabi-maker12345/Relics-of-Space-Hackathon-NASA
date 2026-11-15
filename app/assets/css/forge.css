@@ -2033,7 +2033,7 @@ html[data-archive-flip] .cosmos {
 /* Chat da cena: os painéis recolhem para uma coluna à esquerda. */
 html.chat-open {
   /* O chat ocupa mais espaço; os painéis ficam com a largura do telemóvel. */
-  --chat-w: calc(58vw - clamp(12px, 2vw, 24px));
+  --chat-w: calc(100vw - var(--chat-left, 42vw) - clamp(12px, 2vw, 24px));
 }
 
 html.chat-open .gate.is-scene .gate__scene {
@@ -2141,7 +2141,7 @@ html.chat-open .fr-filters--overlay .fr-filters__count {
     bottom: auto;
     width: 390px;
     height: 844px;
-    transform: translateX(calc(21vw - 195px)) scale(var(--chat-stage-scale, 1));
+    transform: translateX(calc(var(--chat-left, 42vw) / 2 - 195px)) scale(var(--chat-stage-scale, 1));
     transform-origin: 50% 0;
     overflow: hidden;
   }
@@ -2157,7 +2157,7 @@ html.chat-open .fr-filters--overlay .fr-filters__count {
     bottom: auto;
     width: 390px;
     height: 844px;
-    transform: translateX(calc(21vw - 195px)) scale(var(--chat-stage-scale, 1));
+    transform: translateX(calc(var(--chat-left, 42vw) / 2 - 195px)) scale(var(--chat-stage-scale, 1));
     transform-origin: 50% 0;
   }
 

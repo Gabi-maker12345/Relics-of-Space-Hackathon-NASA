@@ -81,13 +81,15 @@ function applyChatStage(): void {
   const engine = getGlEngine()
   if (!root.classList.contains('chat-open') || window.innerWidth < 1024) {
     root.style.removeProperty('--chat-stage-scale')
+    root.style.removeProperty('--chat-left')
     engine?.setChatStage(1, 0)
     return
   }
-  const width = window.innerWidth
   const height = window.innerHeight
-  const scale = Math.max(0.55, Math.min(1, (width * 0.42 - 48) / 390, (height - 100) / 844))
+  const scale = Math.max(0.55, Math.min(1, (height - 100) / 844))
+  const left = Math.round(390 * scale + 48)
   root.style.setProperty('--chat-stage-scale', String(scale))
+  root.style.setProperty('--chat-left', `${left}px`)
   engine?.setChatStage(scale, 844)
 }
 
