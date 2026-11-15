@@ -3,8 +3,11 @@ import type { Relic, RelicScene } from '~/data/relics'
 import { relicLocation, relicStatus } from '~/utils/relics'
 const { t } = useI18n()
 
-const props = defineProps<{ relic: Relic; index: number; armed?: boolean }>()
-const emit = defineEmits<{ 'update:index': [index: number]; 'open-media': [scene: RelicScene]; typing: [active: boolean] }>()
+const props = defineProps<{ relic: Relic; index: number; armed?: boolean; state?: 'loading' | 'ready' | 'error' }>()
+const emit = defineEmits<{ 'update:index': [index: number]; 'open-media': [scene: RelicScene]; typing: [active: boolean]; retry: [] }>()
+
+/** 'loading' = à espera da API; 'error' = falhou (8 s/erro de rede). */
+const state = computed(() => props.state ?? 'ready')
 
 const { mode: narrationMode, captions: narrationCaptions, currentTime, duration, speechProgress, steps: narrationSteps, stepIndex } = useNarration()
 
@@ -184,6 +187,19 @@ defineExpose({ goTo })
     </aside>
 
     <div class="rsheet__stage">
+      <div v-if="state !== 'ready'" class="rsheet__status" :class="`rsheet__status--${state}`">
+        <template v-if="state === 'loading'">
+          <span class="rsheet__pulse" aria-hidden="true" />
+          <p class="fr-label">{{ t('sheet.loading') }}</p>
+        </template>
+        <template v-else>
+          <p class="rsheet__status-title">{{ t('sheet.error') }}</p>
+          <p class="rsheet__status-body">{{ t('sheet.errorBody') }}</p>
+          <button type="button" class="fr-chip is-on" @click="emit('retry')">{{ t('common.retry') }}</button>
+        </template>
+      </div>
+
+      <template v-else>
       <div ref="scroller" class="rsheet__scroll" data-lenis-prevent @scroll.passive="onScroll">
         <section
           v-for="(scene, i) in scenes"
@@ -239,11 +255,58 @@ defineExpose({ goTo })
           @click="goTo(i)"
         />
       </div>
+      </template>
     </div>
   </div>
 </template>
 
 <style scoped>
+.rsheet__status {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1.2rem;
+  min-height: 42svh;
+  padding: 2rem;
+  text-align: center;
+}
+
+.rsheet__status-title {
+  margin: 0;
+  font-family: var(--fr-serif);
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+  font-weight: 300;
+}
+
+.rsheet__status-body {
+  max-width: 32ch;
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  opacity: 0.7;
+}
+
+.rsheet__pulse {
+  display: block;
+  width: min(62vw, 34rem);
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+  background:
+    linear-gradient(100deg, rgb(255 255 255 / 0.04) 20%, rgb(255 255 255 / 0.1) 40%, rgb(255 255 255 / 0.04) 60%)
+    rgb(255 255 255 / 0.02);
+  background-size: 240% 100%;
+  animation: rsheet-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes rsheet-pulse {
+  from { background-position: 180% 0; }
+  to { background-position: -60% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rsheet__pulse { animation: none; }
+}
+
 .rsheet__state {
   display: flex;
   align-items: center;

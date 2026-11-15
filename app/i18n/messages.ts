@@ -13,6 +13,7 @@ export const messages = {
     'common.play': 'Reproduzir',
     'common.pause': 'Pausar',
     'common.remove': 'Remover',
+    'common.retry': 'Tentar de novo',
 
     'nav.home': 'início',
     'a11y.skip': 'Saltar para o conteúdo',
@@ -95,8 +96,12 @@ export const messages = {
     'gate.tap': 'Toque para atravessar',
     'gate.end': 'Fim da transmissão',
     'gate.relics': 'Relíquias',
+    'gate.offline': 'Sem ligação ao arquivo — a mostrar a cópia local.',
 
     'sheet.extra': 'Extra',
+    'sheet.loading': 'A abrir o diário…',
+    'sheet.error': 'Não foi possível abrir o diário.',
+    'sheet.errorBody': 'Verifica a ligação e tenta de novo.',
     'sheet.source': 'Fonte oficial',
     'sheet.openMedia': 'Ver {label} em ecrã inteiro',
     'sheet.close': 'Fechar',
@@ -305,6 +310,7 @@ export const messages = {
     'common.play': 'Play',
     'common.pause': 'Pause',
     'common.remove': 'Remove',
+    'common.retry': 'Try again',
 
     'nav.home': 'home',
     'a11y.skip': 'Skip to content',
@@ -387,8 +393,12 @@ export const messages = {
     'gate.tap': 'Tap to cross over',
     'gate.end': 'End of transmission',
     'gate.relics': 'Relics',
+    'gate.offline': 'No connection to the archive — showing the local copy.',
 
     'sheet.extra': 'Extra',
+    'sheet.loading': 'Opening the diary…',
+    'sheet.error': 'The diary could not be opened.',
+    'sheet.errorBody': 'Check the connection and try again.',
     'sheet.source': 'Official source',
     'sheet.openMedia': 'View {label} full screen',
     'sheet.close': 'Close',

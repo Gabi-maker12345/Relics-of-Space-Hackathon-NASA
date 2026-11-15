@@ -1,5 +1,6 @@
 import { relics as seedRelics } from '~/data/relics'
 import type { Relic, RelicInput } from '#shared/types/relic'
+import { fetchReliable } from '~/utils/resilient'
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
@@ -52,9 +53,12 @@ export function useRelics() {
       error.value = ''
       try {
         const endpoint = current === 'admin' ? '/api/admin/relics' : '/api/public/relics'
-        const data = await $fetch<Relic[]>(endpoint, {
-          query: current === 'public' ? { lang: currentLang } : undefined,
-        })
+        const data = await fetchReliable<Relic[]>(
+          $fetch,
+          endpoint,
+          { query: current === 'public' ? { lang: currentLang } : undefined },
+          { timeoutMs: 8000, retries: 1 },
+        )
         if (Array.isArray(data)) relics.value = data
         loadedFor.value = current
         loadedLang.value = currentLang

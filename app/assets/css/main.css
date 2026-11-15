@@ -722,7 +722,8 @@ a {
 .bot {
   position: fixed;
   right: clamp(10px, 2vw, 28px);
-  bottom: clamp(4px, 1.2vh, 16px);
+  /* acima do FAB "ZÉNITE BOT" (bottom ≤ 32px + ~40px de altura) */
+  bottom: clamp(76px, 10vh, 104px);
   z-index: 95;
   width: clamp(92px, 12vw, 188px);
   pointer-events: none;

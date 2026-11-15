@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Relic, RelicScene } from '~/data/relics'
+import { fetchReliable } from '~/utils/resilient'
 
 type Gsap = typeof import('gsap').default
 let gsapPromise: Promise<Gsap> | null = null
@@ -20,6 +21,10 @@ const sheet = ref<{ goTo: (index: number) => void } | null>(null)
 let lastFocus: HTMLElement | null = null
 
 const detail = ref<Relic | null>(null)
+const detailState = ref<'loading' | 'ready' | 'error'>('loading')
+const sheetState = computed<'loading' | 'ready' | 'error'>(() =>
+  detail.value && detail.value.id === activeSlug.value ? 'ready' : detailState.value,
+)
 const relic = computed(() => {
   if (detail.value && detail.value.id === activeSlug.value) return detail.value
   return relics.value.find(r => r.id === activeSlug.value) ?? null
@@ -34,13 +39,18 @@ async function loadDetail(slug: string): Promise<void> {
   if (detailRequest && detailRequestSlug === slug) return detailRequest
 
   detailRequestSlug = slug
+  detailState.value = 'loading'
   detailRequest = (async () => {
     try {
-      const full = await $fetch<Relic>(`/api/public/relics/${encodeURIComponent(slug)}`, {
-        query: { lang: lang.value },
-      })
+      const full = await fetchReliable<Relic>(
+        $fetch,
+        `/api/public/relics/${encodeURIComponent(slug)}`,
+        { query: { lang: lang.value } },
+        { timeoutMs: 8000, retries: 1 },
+      )
       if (!full || activeSlug.value !== slug) return
       detail.value = full
+      detailState.value = 'ready'
       relics.value = relics.value.map(r => (r.id === slug ? { ...r, ...full } : r))
       typedNarration.setSteps(full.steps ?? [])
       if (armed.value) {
@@ -49,10 +59,11 @@ async function loadDetail(slug: string): Promise<void> {
       }
     }
     catch {
-      // preserve current: a lista continua a renderizar
+      // a lista continua a renderizar; a ficha mostra o erro com "Tentar de novo"
+      if (activeSlug.value === slug) detailState.value = 'error'
     }
   })().finally(() => {
-    detailRequest = null
+    if (detailRequestSlug === slug) detailRequest = null
   })
 
   return detailRequest
@@ -67,6 +78,16 @@ watch(
   { immediate: true },
 )
 
+/** Repete o detalhe depois de um erro (o prazo de 8 s já não bloqueia). */
+function retryDetail(): void {
+  const slug = activeSlug.value
+  if (!slug) return
+  detailRequest = null
+  detailRequestSlug = ''
+  detailState.value = 'loading'
+  void loadDetail(slug)
+}
+
 watch(
   () => activeSlug.value,
   (slug) => {
@@ -74,6 +95,7 @@ watch(
       detail.value = null
       return
     }
+    detailState.value = 'loading'
     void loadDetail(slug)
   },
   { immediate: true },
@@ -414,16 +436,18 @@ onBeforeUnmount(() => {
             :relic="relic"
             :index="index"
             :armed="armed"
+            :state="sheetState"
             @update:index="index = $event"
             @open-media="lightbox = $event"
             @typing="typing = $event"
+            @retry="retryDetail"
           />
         </SheetFrame>
-        <RelicQuizButton v-if="relic && armed && hasQuiz && atLastScene && !quizOpen" @click="openQuiz" />
+        <RelicQuizButton v-if="relic && armed && sheetState === 'ready' && hasQuiz && atLastScene && !quizOpen" @click="openQuiz" />
         <Transition name="bot">
-          <BotNarrator v-if="relic && armed && !quizOpen" :talking="typing || typedNarration.playing.value" />
+          <BotNarrator v-if="relic && armed && sheetState === 'ready' && !quizOpen" :talking="typing || typedNarration.playing.value" />
         </Transition>
-        <NarrationControls v-if="relic && armed && !quizOpen" />
+        <NarrationControls v-if="relic && armed && sheetState === 'ready' && !quizOpen" />
         <Transition name="lb">
           <MediaLightbox v-if="lightbox" :media="lightbox" @close="lightbox = null" />
         </Transition>

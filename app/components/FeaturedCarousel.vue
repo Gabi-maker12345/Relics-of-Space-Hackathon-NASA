@@ -1,6 +1,7 @@
 <script setup lang="ts">
+const { t } = useI18n()
 const { filters, hasFilters, clear } = useRelicFilters()
-const { relics, pending, error, refresh } = usePublicRelics(filters)
+const { relics, pending, error, refresh, offline } = usePublicRelics(filters)
 
 const { open } = useProjectModal()
 const track = ref<HTMLElement | null>(null)
@@ -98,6 +99,10 @@ function openRelic(id: string, fromPointer = true, name = ''): void {
 </script>
 
 <template>
+  <p v-if="offline && relics.length > 0" class="gate__offline fr" role="status">
+    {{ t('gate.offline') }}
+    <button type="button" class="gate__offline-retry" @click="refresh()">{{ t('common.retry') }}</button>
+  </p>
   <div v-if="error && relics.length === 0" class="gate__empty fr" role="alert">
     <p class="fr-label">Não foi possível carregar o arquivo</p>
     <p class="fr-body">{{ error.message || 'Tenta novamente.' }}</p>
